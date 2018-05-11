@@ -2,6 +2,8 @@ from ubuntu:16.04
 RUN apt-get update && apt-get upgrade 
 RUN apt-get -y install gcc git gcc-multilib 
 RUN apt-get -y install make
-ADD ./FreeRTOS-Sim /FreeRTOS-Sim
+RUN apt-get -y install ruby
+RUN gem install ceedling
+ADD . /
 WORKDIR /FreeRTOS-Sim
-CMD make clean && make all && ./FreeRTOS-Sim
+CMD cd ../ && ceedling test:all && cd FreeRTOS-Sim && make clean && make all && ./FreeRTOS-Sim
