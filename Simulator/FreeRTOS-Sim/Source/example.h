@@ -1,5 +1,5 @@
-#ifndef _HELLO_H
-#define _HELLO_H
+#ifndef _EXAMPLE_H
+#define _EXAMPLE_H
 int someFunc();
 
-#endif // _HELLO_H
+#endif // _EXAMPLE_H
