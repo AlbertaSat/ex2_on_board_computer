@@ -6,4 +6,14 @@ RUN apt-get -y install ruby
 RUN gem install ceedling
 ADD . /
 WORKDIR /FreeRTOS-Sim
+
+
+# create a 100M file in local directory
+CMD dd if=/dev/zero of=./Project/FileSystem/freeRTOS/host/VOL0 bs=1M count=100
+# create the loopback block device 
+# where 7 is the major number of loop device driver, grep loop /proc/devices
+CMD sudo mknod /dev/fake-dev0 b 7 200 
+CMD sudo losetup /dev/fake-dev0  ./Project/FileSystem/freeRTOS/host/VOL0
+CMD ./Project/FileSystem/freeRTOS/host/redimgbld VOL0 --dev=/dev/fake-dev0
+
 CMD cd ../ && ceedling test:all && cd FreeRTOS-Sim && make clean && make all && ./FreeRTOS-Sim

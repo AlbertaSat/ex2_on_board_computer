@@ -1,3 +1,22 @@
+######## Build files for FileSystem ########
+P_BASEDIR ?= $(CURDIR)/FileSystem/reliance-edge
+P_PROJDIR ?= $(CURDIR)/Project/FileSystem/freeRTOS
+B_DEBUG ?= 1
+
+#either freertos, linux, stub, u-boot, win32
+P_OS ?= freertos
+B_OBJEXT ?= o
+
+
+INCLUDES	+=		-I $(P_BASEDIR)/include
+INCLUDES	+=		-I $(P_BASEDIR)/core/include
+INCLUDES	+=		-I $(P_BASEDIR)/os/freertos/include
+INCLUDES	+=		-I $(P_PROJDIR)
+	
+include $(P_BASEDIR)/build/reliance.mk
+
+
+
 ######## Build options ########
 
 verbose = 0
@@ -9,6 +28,7 @@ SRCROOT         = $(CURDIR)
 
 # .o directory
 ODIR            = obj
+
 
 # Source VPATHS
 VPATH           += $(SRCROOT)/Source
@@ -102,10 +122,14 @@ endif
 # MAX_NUMBER_OF_TASKS = max pthreads used in the POSIX port. 
 # Default value is 64 (_POSIX_THREAD_THREADS_MAX), the minimum number required by POSIX.
 CFLAGS += -DMAX_NUMBER_OF_TASKS=300
+CFLAGS += $(INCLUDES) $(CWARNS) -O2 
 
-CFLAGS += $(INCLUDES) $(CWARNS) -O2
 
 ######## Makefile targets ########
+
+
+
+
 
 # Rules
 .PHONY : all
@@ -119,6 +143,7 @@ setup:
 # Fix to place .o files in ODIR
 _OBJS = $(patsubst %,$(ODIR)/%,$(OBJS))
 
+
 $(ODIR)/%.o: %.c
 # If verbose, print gcc execution, else hide
 ifeq ($(verbose),1)
@@ -129,7 +154,8 @@ else
 	@$(CC) $(CFLAGS) -c -o $@ $<
 endif
 
-FreeRTOS-Sim: $(_OBJS)
+# $(REDDRIVOBJ)
+FreeRTOS-Sim: $(_OBJS) $(REDDRIVOBJ)
 	@echo ">> Linking $@..."
 ifeq ($(verbose),1)
 	$(CC) $(CFLAGS) $^ $(LINKFLAGS) $(LIBS) -o $@

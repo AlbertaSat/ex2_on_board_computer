@@ -93,6 +93,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+
+
+
 /* Standard demo includes. */
 #include "AbortDelay.h"
 #include "BlockQ.h"
@@ -114,6 +117,14 @@
 #include "semtest.h"
 #include "TaskNotify.h"
 #include "TimerDemo.h"
+
+
+//File System includes
+#include <redfs.h>
+#include <redposix.h>
+#include <redfse.h>
+#include <redconf.h>
+
 
 /* Priorities at which the tasks are created. */
 #define mainCHECK_TASK_PRIORITY			( configMAX_PRIORITIES - 2 )
