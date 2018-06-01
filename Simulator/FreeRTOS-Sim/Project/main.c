@@ -85,16 +85,12 @@
  *
  */
 
-
 /* Standard includes. */
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
-
-
-
 
 /* Standard demo includes. */
 #include "AbortDelay.h"
@@ -118,82 +114,126 @@
 #include "TaskNotify.h"
 #include "TimerDemo.h"
 
-
 //File System includes
 #include <redfs.h>
 #include <redposix.h>
 #include <redfse.h>
 #include <redconf.h>
+#include <redvolume.h>
+#include <redtests.h>
 
+
+
+// Arguments to mount redfs filesystems
+struct redfs_args
+{
+	const char *fspec;  // Name of device to mount
+	unsigned int flags; // REDFSMNT_* flags
+};
+#define REDFSMNT_FMTONCE 0x1U   // format if volume cannot be mounted
+#define REDFSMNT_FMTALWAYS 0x2U // format always
 
 /* Priorities at which the tasks are created. */
-#define mainCHECK_TASK_PRIORITY			( configMAX_PRIORITIES - 2 )
-#define mainQUEUE_POLL_PRIORITY			( tskIDLE_PRIORITY + 1 )
-#define mainSEM_TEST_PRIORITY			( tskIDLE_PRIORITY + 1 )
-#define mainBLOCK_Q_PRIORITY			( tskIDLE_PRIORITY + 2 )
-#define mainCREATOR_TASK_PRIORITY		( tskIDLE_PRIORITY + 3 )
-#define mainINTEGER_TASK_PRIORITY		( tskIDLE_PRIORITY )
-#define mainGEN_QUEUE_TASK_PRIORITY		( tskIDLE_PRIORITY )
-#define mainFLOP_TASK_PRIORITY			( tskIDLE_PRIORITY )
-#define mainQUEUE_OVERWRITE_PRIORITY	( tskIDLE_PRIORITY )
+#define mainCHECK_TASK_PRIORITY (configMAX_PRIORITIES - 2)
+#define mainQUEUE_POLL_PRIORITY (tskIDLE_PRIORITY + 1)
+#define mainSEM_TEST_PRIORITY (tskIDLE_PRIORITY + 1)
+#define mainBLOCK_Q_PRIORITY (tskIDLE_PRIORITY + 2)
+#define mainCREATOR_TASK_PRIORITY (tskIDLE_PRIORITY + 3)
+#define mainINTEGER_TASK_PRIORITY (tskIDLE_PRIORITY)
+#define mainGEN_QUEUE_TASK_PRIORITY (tskIDLE_PRIORITY)
+#define mainFLOP_TASK_PRIORITY (tskIDLE_PRIORITY)
+#define mainQUEUE_OVERWRITE_PRIORITY (tskIDLE_PRIORITY)
 
-#define mainTIMER_TEST_PERIOD			( 50 )
-
+#define mainTIMER_TEST_PERIOD (50)
 
 /*
  * Prototypes for the standard FreeRTOS callback/hook functions implemented
  * within this file.
  */
-void vApplicationMallocFailedHook( void );
-void vApplicationIdleHook( void );
-void vApplicationTickHook( void );
+void vApplicationMallocFailedHook(void);
+void vApplicationIdleHook(void);
+void vApplicationTickHook(void);
 
 /* Task function to check demo status. */
-static void prvCheckTask( void *pvParameters );
+static void prvCheckTask(void *pvParameters);
 
 /* The variable into which error messages are latched. */
 static char *pcStatusMessage = "OK";
 
 /*-----------------------------------------------------------*/
 
-int main ( void )
+int main(void)
 {
+
+	const char *pszVolume = gaRedVolConf[0].pszPathPrefix;
+	int32_t iErr;
+
+	iErr = red_init();
+	if (iErr == -1)
+	{
+		fprintf(stderr, "Unexpected error %d from red_init()\n", (int)red_errno);
+		exit(red_errno);
+	}
+
+	iErr = red_format(pszVolume);
+	if (iErr == -1)
+	{
+		fprintf(stderr, "Unexpected error %d from red_format()\n", (int)red_errno);
+		exit(red_errno);
+	}
+
+	iErr = red_mount(pszVolume);
+	if (iErr == -1)
+	{
+		fprintf(stderr, "Unexpected error %d from red_mount()\n", (int)red_errno);
+		exit(red_errno);
+	}
+
+	//This might work?
+	iErr = red_mkdir("/stuff");
+	if (iErr == -1)
+	{
+		fprintf(stderr, "mkdir error  %d failed\n", (int)red_errno);
+		exit(red_errno);
+	}
+
+
 	/* Start the check task as described at the top of this file. */
-	xTaskCreate( prvCheckTask, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
+	xTaskCreate(prvCheckTask, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL);
 
 	/* Create the standard demo tasks. */
-	vStartIntegerMathTasks( mainINTEGER_TASK_PRIORITY );
-	vStartMathTasks( mainFLOP_TASK_PRIORITY );
-	vStartBlockingQueueTasks( mainBLOCK_Q_PRIORITY );
-	vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );
-	vStartSemaphoreTasks( mainSEM_TEST_PRIORITY );
+	vStartIntegerMathTasks(mainINTEGER_TASK_PRIORITY);
+	vStartMathTasks(mainFLOP_TASK_PRIORITY);
+	vStartBlockingQueueTasks(mainBLOCK_Q_PRIORITY);
+	vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
+	vStartSemaphoreTasks(mainSEM_TEST_PRIORITY);
 	vStartDynamicPriorityTasks();
 	vCreateBlockTimeTasks();
-	vStartGenericQueueTasks( mainGEN_QUEUE_TASK_PRIORITY );
+	vStartGenericQueueTasks(mainGEN_QUEUE_TASK_PRIORITY);
 	vStartQueuePeekTasks();
 	vStartCountingSemaphoreTasks();
 	vStartRecursiveMutexTasks();
 
 	vCreateAbortDelayTasks();
 	vStartEventGroupTasks();
-	vStartInterruptSemaphoreTasks();
 	vStartQueueSetTasks();
+	vStartInterruptSemaphoreTasks();
 	vStartQueueSetPollingTask();
-	vStartQueueOverwriteTask( mainQUEUE_OVERWRITE_PRIORITY );
+	vStartQueueOverwriteTask(mainQUEUE_OVERWRITE_PRIORITY);
 	vStartTaskNotifyTask();
 
-	#if( configUSE_PREEMPTION != 0  )
+#if (configUSE_PREEMPTION != 0)
 	{
 		/* Don't expect these tasks to pass when preemption is not used. */
-		vStartTimerDemoTask( mainTIMER_TEST_PERIOD );
+		vStartTimerDemoTask(mainTIMER_TEST_PERIOD);
 	}
-	#endif
+#endif
 
 	/* The suicide tasks must be created last as they need to know how many
 	tasks were running prior to their creation.  This then allows them to
 	ascertain whether or not the correct/expected number of tasks are running at
 	any given time. */
-	vCreateSuicidalTasks( mainCREATOR_TASK_PRIORITY );
+	vCreateSuicidalTasks(mainCREATOR_TASK_PRIORITY);
 
 	/* Start the scheduler itself. */
 	vTaskStartScheduler();
@@ -204,119 +244,119 @@ int main ( void )
 }
 /*-----------------------------------------------------------*/
 
-static void prvCheckTask( void *pvParameters )
+static void prvCheckTask(void *pvParameters)
 {
-TickType_t xNextWakeTime;
-const TickType_t xCycleFrequency = pdMS_TO_TICKS( 2500UL );
+	TickType_t xNextWakeTime;
+	const TickType_t xCycleFrequency = pdMS_TO_TICKS(2500UL);
 
 	/* Just to remove compiler warning. */
-	( void ) pvParameters;
+	(void)pvParameters;
 
 	/* Initialise xNextWakeTime - this only needs to be done once. */
 	xNextWakeTime = xTaskGetTickCount();
 
-	for( ;; )
+	for (;;)
 	{
 		/* Place this task in the blocked state until it is time to run again. */
-		vTaskDelayUntil( &xNextWakeTime, xCycleFrequency );
+		vTaskDelayUntil(&xNextWakeTime, xCycleFrequency);
 
-		/* Check the standard demo tasks are running without error. */
-		#if( configUSE_PREEMPTION != 0 )
+/* Check the standard demo tasks are running without error. */
+#if (configUSE_PREEMPTION != 0)
 		{
 			/* These tasks are only created when preemption is used. */
-			if( xAreTimerDemoTasksStillRunning( xCycleFrequency ) != pdTRUE )
+			if (xAreTimerDemoTasksStillRunning(xCycleFrequency) != pdTRUE)
 			{
 				pcStatusMessage = "Error: TimerDemo";
 			}
 		}
-		#endif
+#endif
 
-		if( xAreIntegerMathsTaskStillRunning() != pdTRUE )
-	    {
+		if (xAreIntegerMathsTaskStillRunning() != pdTRUE)
+		{
 			pcStatusMessage = "Error: IntMath";
-	    }
-		else if( xAreMathsTaskStillRunning() != pdTRUE )
+		}
+		else if (xAreMathsTaskStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: Flop";
 		}
-		else if( xAreBlockingQueuesStillRunning() != pdTRUE )
+		else if (xAreBlockingQueuesStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: BlockQueue";
 		}
-	    else if( xArePollingQueuesStillRunning() != pdTRUE )
-	    {
+		else if (xArePollingQueuesStillRunning() != pdTRUE)
+		{
 			pcStatusMessage = "Error: PollQueue";
-	    }
-		else if( xAreSemaphoreTasksStillRunning() != pdTRUE )
-	    {
-		    pcStatusMessage = "Error: SemTest";
-	    }
-		else if( xAreDynamicPriorityTasksStillRunning() != pdTRUE )
+		}
+		else if (xAreSemaphoreTasksStillRunning() != pdTRUE)
+		{
+			pcStatusMessage = "Error: SemTest";
+		}
+		else if (xAreDynamicPriorityTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: Dynamic";
 		}
-		else if( xAreBlockTimeTestTasksStillRunning() != pdTRUE )
+		else if (xAreBlockTimeTestTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: Block time";
 		}
-		else if( xAreGenericQueueTasksStillRunning() != pdTRUE )
+		else if (xAreGenericQueueTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: GenQueue";
 		}
-		else if( xAreQueuePeekTasksStillRunning() != pdTRUE )
+		else if (xAreQueuePeekTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: QueuePeek";
 		}
-		else if( xAreCountingSemaphoreTasksStillRunning() != pdTRUE )
+		else if (xAreCountingSemaphoreTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: CountSem";
 		}
-		else if( xAreRecursiveMutexTasksStillRunning() != pdTRUE )
-	    {
+		else if (xAreRecursiveMutexTasksStillRunning() != pdTRUE)
+		{
 			pcStatusMessage = "Error: RecMutex";
 		}
-		else if( xAreAbortDelayTestTasksStillRunning() != pdTRUE )
+		else if (xAreAbortDelayTestTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: Abort delay";
 		}
-		else if( xAreEventGroupTasksStillRunning() != pdTRUE )
+		else if (xAreEventGroupTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: EventGroup";
 		}
-		else if( xAreInterruptSemaphoreTasksStillRunning() != pdTRUE )
+		else if (xAreInterruptSemaphoreTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: IntSem";
 		}
-		else if( xAreQueueSetTasksStillRunning() != pdTRUE )
+		else if (xAreQueueSetTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: Queue set";
 		}
-		else if( xAreQueueSetPollTasksStillRunning() != pdTRUE )
+		else if (xAreQueueSetPollTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: Queue set polling";
 		}
-		else if( xIsQueueOverwriteTaskStillRunning() != pdPASS )
+		else if (xIsQueueOverwriteTaskStillRunning() != pdPASS)
 		{
 			pcStatusMessage = "Error: Queue overwrite";
 		}
-		else if( xAreTaskNotificationTasksStillRunning() != pdTRUE )
+		else if (xAreTaskNotificationTasksStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error:  Notification";
 		}
-		else if( xIsCreateTaskStillRunning() != pdTRUE )
+		else if (xIsCreateTaskStillRunning() != pdTRUE)
 		{
 			pcStatusMessage = "Error: Death";
 		}
-		
+
 		/* This is the only task that uses stdout so its ok to call printf()
 		directly. */
-		printf( ( char * ) "%s - %u\n", pcStatusMessage, ( unsigned int ) xTaskGetTickCount() );
-		fflush( stdout );
+		printf((char *)"%s - %u\n", pcStatusMessage, (unsigned int)xTaskGetTickCount());
+		fflush(stdout);
 	}
 }
 /*-----------------------------------------------------------*/
 
-void vApplicationMallocFailedHook( void )
+void vApplicationMallocFailedHook(void)
 {
 	/* vApplicationMallocFailedHook() will only be called if
 	configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h.  It is a hook
@@ -328,11 +368,11 @@ void vApplicationMallocFailedHook( void )
 	FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
 	to query the size of free heap space that remains (although it does not
 	provide information on how the remaining heap might be fragmented). */
-	vAssertCalled( __LINE__, __FILE__ );
+	vAssertCalled(__LINE__, __FILE__);
 }
 /*-----------------------------------------------------------*/
 
-void vApplicationIdleHook( void )
+void vApplicationIdleHook(void)
 {
 	/* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
 	to 1 in FreeRTOSConfig.h.  It will be called on each iteration of the idle
@@ -344,28 +384,28 @@ void vApplicationIdleHook( void )
 	function, because it is the responsibility of the idle task to clean up
 	memory allocated by the kernel to any task that has since been deleted. */
 
-		/* Call the idle task processing used by the full demo.  The simple
+	/* Call the idle task processing used by the full demo.  The simple
 		blinky demo does not use the idle task hook. */
-		//vFullDemoIdleFunction();
+	//vFullDemoIdleFunction();
 }
 /*-----------------------------------------------------------*/
 
-void vApplicationTickHook( void )
+void vApplicationTickHook(void)
 {
-	/* This function will be called by each tick interrupt if
+/* This function will be called by each tick interrupt if
 	configUSE_TICK_HOOK is set to 1 in FreeRTOSConfig.h.  User code can be
 	added here, but the tick hook is called from an interrupt context, so
 	code must not attempt to block, and only the interrupt safe FreeRTOS API
 	functions can be used (those that end in FromISR()). */
 
-	/* Call the periodic timer test, which tests the timer API functions that
+/* Call the periodic timer test, which tests the timer API functions that
 	can be called from an ISR. */
-	#if( configUSE_PREEMPTION != 0 )
+#if (configUSE_PREEMPTION != 0)
 	{
 		/* Only created when preemption is used. */
 		vTimerPeriodicISRTests();
 	}
-	#endif
+#endif
 
 	/* Call the periodic queue overwrite from ISR demo. */
 	vQueueOverwritePeriodicISRDemo();
@@ -386,12 +426,12 @@ void vApplicationTickHook( void )
 }
 /*-----------------------------------------------------------*/
 
-void vAssertCalled( unsigned long ulLine, const char * const pcFileName )
+void vAssertCalled(unsigned long ulLine, const char *const pcFileName)
 {
- 	taskENTER_CRITICAL();
+	taskENTER_CRITICAL();
 	{
-        printf("[ASSERT] %s:%lu\n", pcFileName, ulLine);
-        fflush(stdout);
+		printf("[ASSERT] %s:%lu\n", pcFileName, ulLine);
+		fflush(stdout);
 	}
 	taskEXIT_CRITICAL();
 	exit(-1);
