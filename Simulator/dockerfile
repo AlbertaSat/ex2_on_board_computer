@@ -1,0 +1,16 @@
+from ubuntu:16.04
+RUN apt-get update && apt-get -y upgrade 
+RUN apt-get -y install gcc git gcc-multilib 
+RUN apt-get -y install make
+RUN apt-get -y install ruby
+RUN gem install ceedling
+ADD . /
+WORKDIR /FreeRTOS-Sim
+
+#stress test suit that is included in reliance-edge
+CMD cd FileSystem/reliance-edge/projects/linux/ && make fsstress && ./fsstress 0 --dev=img.bin -v -n 100
+CMD cd ../ && ceedling test:all && cd FreeRTOS-Sim && make clean && make all && ./FreeRTOS-Sim
+
+
+
+
