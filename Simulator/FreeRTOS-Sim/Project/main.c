@@ -114,6 +114,8 @@
 #include "TaskNotify.h"
 #include "TimerDemo.h"
 
+
+
 //File System includes
 #include <redfs.h>
 #include <redposix.h>
@@ -122,7 +124,8 @@
 #include <redvolume.h>
 #include <redtests.h>
 
-
+//Custom FileSystem tasks
+#include "FileSystemTasks.h"
 
 // Arguments to mount redfs filesystems
 struct redfs_args
@@ -162,11 +165,14 @@ static char *pcStatusMessage = "OK";
 
 /*-----------------------------------------------------------*/
 
+
+
 int main(void)
 {
 
-	const char *pszVolume = gaRedVolConf[0].pszPathPrefix;
 	int32_t iErr;
+	const char *pszVolume0 = gaRedVolConf[0].pszPathPrefix;
+	const char *pszVolume1 = gaRedVolConf[1].pszPathPrefix;
 
 	iErr = red_init();
 	if (iErr == -1)
@@ -175,28 +181,34 @@ int main(void)
 		exit(red_errno);
 	}
 
-	iErr = red_format(pszVolume);
+	iErr = red_format(pszVolume0);
 	if (iErr == -1)
 	{
 		fprintf(stderr, "Unexpected error %d from red_format()\n", (int)red_errno);
 		exit(red_errno);
 	}
 
-	iErr = red_mount(pszVolume);
+	iErr = red_mount(pszVolume0);
 	if (iErr == -1)
 	{
 		fprintf(stderr, "Unexpected error %d from red_mount()\n", (int)red_errno);
 		exit(red_errno);
 	}
 
-	//This might work?
-	iErr = red_mkdir("/stuff");
+
+	iErr = red_format(pszVolume1);
 	if (iErr == -1)
 	{
-		fprintf(stderr, "mkdir error  %d failed\n", (int)red_errno);
+		fprintf(stderr, "Unexpected error %d from red_format()\n", (int)red_errno);
 		exit(red_errno);
 	}
 
+	iErr = red_mount(pszVolume1);
+	if (iErr == -1)
+	{
+		fprintf(stderr, "Unexpected error %d from red_mount()\n", (int)red_errno);
+		exit(red_errno);
+	}
 
 	/* Start the check task as described at the top of this file. */
 	xTaskCreate(prvCheckTask, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL);
@@ -221,6 +233,9 @@ int main(void)
 	vStartQueueSetPollingTask();
 	vStartQueueOverwriteTask(mainQUEUE_OVERWRITE_PRIORITY);
 	vStartTaskNotifyTask();
+
+	//FileSystem Tasks
+	vStartFSWriteTask(mainCREATOR_TASK_PRIORITY);
 
 #if (configUSE_PREEMPTION != 0)
 	{
