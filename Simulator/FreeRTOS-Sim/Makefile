@@ -37,6 +37,7 @@ VPATH	        += $(SRCROOT)/Source/portable/GCC/POSIX
 VPATH           += $(SRCROOT)/Demo
 VPATH			+= $(SRCROOT)/Project/FileIO
 VPATH			+= $(SRCROOT)/Project
+VPATH			+= $(SRCROOT)/Project/FileSystem
 
 # FreeRTOS Objects
 C_FILES			+= croutine.c
@@ -76,12 +77,15 @@ C_FILES			+= TimerDemo.c
 
 # Main Object
 C_FILES			+= main.c
+C_FILES			+= FileSystemTasks.c
+
 
 # Include Paths
 INCLUDES        += -I$(SRCROOT)/Source/include
 INCLUDES        += -I$(SRCROOT)/Source/portable/GCC/POSIX/
 INCLUDES        += -I$(SRCROOT)/Demo/include
 INCLUDES        += -I$(SRCROOT)/Project
+INCLUDES		+= -I$(SRCROOT)/Project/FileSystem
 
 # Generate OBJS names
 OBJS = $(patsubst %.c,%.o,$(C_FILES))
