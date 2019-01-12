@@ -1,0 +1,11 @@
+eclipse.preferences.version=1
+environment/buildEnvironmentInclude/com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt.debug\#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt\:4.9.3.20150529/CPATH/delimiter=;
+environment/buildEnvironmentInclude/com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt.debug\#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt\:4.9.3.20150529/CPATH/operation=remove
+environment/buildEnvironmentInclude/com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt.debug\#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt\:4.9.3.20150529/C_INCLUDE_PATH/delimiter=;
+environment/buildEnvironmentInclude/com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt.debug\#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt\:4.9.3.20150529/C_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt.debug\#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt\:4.9.3.20150529/append=true
+environment/buildEnvironmentInclude/com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt.debug\#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt\:4.9.3.20150529/appendContributed=true
+environment/buildEnvironmentLibrary/com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt.debug\#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt\:4.9.3.20150529/LIBRARY_PATH/delimiter=;
+environment/buildEnvironmentLibrary/com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt.debug\#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt\:4.9.3.20150529/LIBRARY_PATH/operation=remove
+environment/buildEnvironmentLibrary/com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt.debug\#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt\:4.9.3.20150529/append=true
+environment/buildEnvironmentLibrary/com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt.debug\#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt\:4.9.3.20150529/appendContributed=true
