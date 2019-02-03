@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "compressor", "Console\lossless_ccsds.vcxproj", "{E8B2ADBE-7B4D-DF2E-5A2D-792E21C018C3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "converter", "converter\converter.vcxproj", "{B3953D32-A8DE-487E-9695-15BC36FDC1D1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "decompressor", "decompressor\decompressor.vcxproj", "{44CBB106-498F-432F-A715-8F1EEE74CFDF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E8B2ADBE-7B4D-DF2E-5A2D-792E21C018C3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E8B2ADBE-7B4D-DF2E-5A2D-792E21C018C3}.Debug|Win32.Build.0 = Debug|Win32
+		{E8B2ADBE-7B4D-DF2E-5A2D-792E21C018C3}.Release|Win32.ActiveCfg = Release|Win32
+		{E8B2ADBE-7B4D-DF2E-5A2D-792E21C018C3}.Release|Win32.Build.0 = Release|Win32
+		{B3953D32-A8DE-487E-9695-15BC36FDC1D1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B3953D32-A8DE-487E-9695-15BC36FDC1D1}.Debug|Win32.Build.0 = Debug|Win32
+		{B3953D32-A8DE-487E-9695-15BC36FDC1D1}.Release|Win32.ActiveCfg = Release|Win32
+		{B3953D32-A8DE-487E-9695-15BC36FDC1D1}.Release|Win32.Build.0 = Release|Win32
+		{44CBB106-498F-432F-A715-8F1EEE74CFDF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{44CBB106-498F-432F-A715-8F1EEE74CFDF}.Debug|Win32.Build.0 = Debug|Win32
+		{44CBB106-498F-432F-A715-8F1EEE74CFDF}.Release|Win32.ActiveCfg = Release|Win32
+		{44CBB106-498F-432F-A715-8F1EEE74CFDF}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
