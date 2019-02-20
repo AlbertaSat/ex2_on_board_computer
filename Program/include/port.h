@@ -1,16 +1,17 @@
 
 #include "packet.h"
 
-#ifndef PORT
-#define PORT
+#ifndef PORT_H
+#define PORT_H
 
 #define POSIX_PORT 0
 #include <sys/socket.h>
+#include "protocol_handler.h"
 
-int on_time_out_posix(void *other);
-int on_recv_posix(int sfd, char *msg, struct sockaddr_storage client, void *other);
+
+void ss_error(char *msg);
 void ss_connectionless_server(char *port);
-
+void ss_sendto(Client client);
 
 
 #endif

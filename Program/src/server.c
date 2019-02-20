@@ -26,7 +26,7 @@ This is my file for server.c. It develops a udp server for select.
 
 
 static int exitNow = 0;
-static int packet_len = 320;
+static int new_packet_len;
 
 
 //this code is reused from assignment 1, with small changes
@@ -120,23 +120,27 @@ void prepareSignalHandler()
 
 
 //see header file
-void selectUdp(int sfd, void *other,
-               int (*onRecv)(int sfd, char *msg, struct sockaddr_storage client, void *other),
-               int (*onTimeOut)(void *other))
+void selectUdp(int sfd, int packet_len,
+    int (*onRecv)(int sfd, char *msg, struct sockaddr_storage client, void *other), 
+    int (*onTimeOut)(void *other),
+    void *other)
 {
+
+    new_packet_len = packet_len;
+
     //prepareSignalHandler();
     fd_set masterReadFds;
     FD_ZERO(&masterReadFds);
     FD_SET(STDIN_FILENO, &masterReadFds);
     FD_SET(sfd, &masterReadFds);
-    char *buff = calloc(sizeof(char), packet_len);
+    char *buff = calloc(sizeof(char), new_packet_len);
     checkAlloc(buff, 1);
 
     struct sockaddr_storage *client;
     client = calloc(sizeof(struct sockaddr_storage), 1);
     checkAlloc(client, 1);
 
-    while (1)
+    for (;;)
     {
         struct timeval timeout = {
             .tv_sec = 0,
@@ -168,7 +172,7 @@ void selectUdp(int sfd, void *other,
         {
             
             socklen_t client_len = sizeof(*client);
-            int count = recvfrom(sfd, buff, packet_len, 0, (struct sockaddr*)client, &client_len);
+            int count = recvfrom(sfd, buff, new_packet_len, 0, (struct sockaddr*)client, &client_len);
 
             if (count == -1)
             {

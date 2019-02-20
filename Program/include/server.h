@@ -43,8 +43,9 @@ int prepareUdpHost(char *port);
 ------------------------------------------------------------------------------*/
 void prepareSignalHandler(void);
 
-void selectUdp(int sfd, void *other, 
+void selectUdp(int sfd, int packet_len,
     int (*onRecv)(int sfd, char *msg, struct sockaddr_storage client, void *other), 
-    int (*onTimeOut)(void *other));
+    int (*onTimeOut)(void *other),
+    void *other);
 
 #endif //SERVER_H
