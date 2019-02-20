@@ -4,13 +4,17 @@ INCLUDE += -I$(PROJDIR)/include
 CC = gcc 
 
 #---------------------------File Names---------------------------
-CFILES += port.c
+CFILES += port.c 
+CFILES += utils.c
+CFILES += server.c  #used for poxix port
+
+#entrypoint
 MAIN = main
 
 #---------------------------Compiler Warnings---------------------------
 CWARNS += -W
 CWARNS += -Wall
-CWARNS += -Werror
+#CWARNS += -Werror
 CWARNS += -Wextra
 CWARNS += -Wformat
 CWARNS += -Wmissing-braces
@@ -45,20 +49,17 @@ CFLAGS += -DDEBUG=1
 CFLAGS += -DMAX_NUMBER_OF_TASKS=300
 CFLAGS += $(INCLUDE) $(CWARNS)
 
-
 #---------------------------Build---------------------------
 OBJS_FILES = $(patsubst %.c, %.o, $(CFILES))
 
-
-all: $(MAIN) 
+all: $(MAIN)
 
 .PHONY: clean 
 
 $(MAIN): $(OBJS_FILES)
-	$(CC) $(CFLAGS) $(MAIN).c $^ -o $@ $(OBJS_FILES)
-	
-%.o: %.c
-	$(CC) -c $(CFLAGS) $< -o $@
 
 clean: 
-	rm *.o $(MAIN)
+	rm -f *.o $(MAIN)
+
+
+
