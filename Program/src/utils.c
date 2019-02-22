@@ -18,9 +18,9 @@ to use for general functionality.
 #include <libgen.h>
 
 //see header file
-void checkAlloc(void *mem, int ok)
+void checkAlloc(void *mem, int notOkToFail)
 {
-    if (mem == NULL && ok)
+    if (mem == NULL && notOkToFail)
     {
         perror("malloc");
         exit(EXIT_FAILURE);

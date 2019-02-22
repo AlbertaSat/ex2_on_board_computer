@@ -4,12 +4,10 @@ INCLUDE += -I$(PROJDIR)/include
 CC = gcc 
 
 #---------------------------File Names---------------------------
-CFILES += port.c 
-CFILES += utils.c
-CFILES += server.c  #used for poxix port
+#CFILES += udpClient.c
 
 #entrypoint
-MAIN = main
+MAIN = udpClient
 
 #---------------------------Compiler Warnings---------------------------
 CWARNS += -W
@@ -34,7 +32,7 @@ CWARNS += -Wmissing-prototypes
 
 #---------------------------Libs---------------------------
 LINKFLAGS = 
-LIBS = -pthread
+LIBS = 
 
 #---------------------------Compiler flags---------------------------
 

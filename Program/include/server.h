@@ -41,11 +41,21 @@ int prepareUdpHost(char *port);
     Perameters: void *other: Is the void * we passed into selectUdp
     Return:     None
 ------------------------------------------------------------------------------*/
-void prepareSignalHandler(void);
 
-void selectUdp(int sfd, int packet_len,
+void udpSelectServer(char *port, int packet_len,
     int (*onRecv)(int sfd, char *msg, struct sockaddr_storage client, void *other), 
     int (*onTimeOut)(void *other),
     void *other);
+
+/*-----------------------------CALLBACK onTimeOut-------------------------------
+    Purpose:    This is a simple udp client 
+    Perameters: hostname is the name of an address eg, 127.0.0.1, port is the port 
+    eg, 1111
+    Return:     None
+------------------------------------------------------------------------------*/
+
+
+void udpClient(char *hostname, char*port);
+
 
 #endif //SERVER_H

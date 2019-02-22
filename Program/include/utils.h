@@ -62,10 +62,10 @@ LIST *List(void);
     Purpose:    This function checks to see if the memory is allocated,
                 it exits if ok = 1 and keeps running in ok == 0 
     Perameters: void *mem: 
-                int ok: 
+                int notOkToFail: 
     Return:     returns nothing
 ------------------------------------------------------------------------------*/
-void checkAlloc(void *mem, int ok);
+void checkAlloc(void *mem, int notOkToFail);
 
 /*------------------------------------------------------------------------------
     Purpose:    This function is used to make a configuration struct from the
