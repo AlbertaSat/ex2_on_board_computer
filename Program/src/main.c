@@ -9,12 +9,11 @@
 
 int main() {
 
-
     Protocol_state* p_state = ssp_connectionless_server("1111");
+    sleep(1);
+    Client *client = ssp_connectionless_client("127.0.0.1", "1111");
 
-    sleep(2);
-
-    ssp_connectionless_client("127.0.0.1", "1111");
+    ssp_cleanup_client(client);
     ssp_cleanup(p_state);
     
     return 0;

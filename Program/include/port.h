@@ -14,8 +14,10 @@ Protocol_state *ssp_connectionless_server(char *port);
 void *ssp_connectionless_server_task(void *protocol_state);
 
 
-void ssp_connectionless_client(char *host_name, char*port);
+Client *ssp_connectionless_client(char *host_name, char*port);
+void *ssp_connectionless_client_task(void *params);
+
 void ssp_sendto(Client client);
 void ssp_cleanup(Protocol_state *state);
-
+void ssp_cleanup_client(Client *client);
 #endif

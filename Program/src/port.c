@@ -117,10 +117,60 @@ Protocol_state* ssp_connectionless_server(char *port) {
     #endif
 }
 
+void *ssp_connectionless_client_task(void* params){
 
-void ssp_connectionless_client(char *host_name, char*port) {
+    Client *client = (Client*) params;
+    udpClient(client->host_name, client->client_port);
+    return NULL;
+}
+
+
+Client *ssp_connectionless_client(char *host_name, char *port) {
     #ifdef POSIX_PORT
-        udpClient(host_name, port);
+        int port_len = strnlen(port, 100) + 1;
+        int host_len = strnlen(host_name, 100) + 1;
+
+        Client *client = calloc(sizeof(Client), 1);
+        checkAlloc(client, 1);
+
+        client->host_name = calloc(sizeof(char), host_len);
+        checkAlloc(client->host_name, 1);
+
+        client->client_port = calloc(sizeof(char), port_len);
+        checkAlloc(client->client_port, 1);
+
+        pthread_t *handler = calloc(sizeof(pthread_t), 1);
+        checkAlloc(handler, 1);
+
+        pthread_attr_t *attr = calloc(sizeof(pthread_attr_t), 1); 
+        checkAlloc(attr, 1);
+
+        strncpy(client->client_port, port, port_len);
+        strncpy(client->host_name, host_name, host_len);
+
+        int err = pthread_attr_init(attr);
+        if (0 != err) 
+            perror("pthread_init failed");
+
+        size_t stack_size = STACK_ALLOCATION;
+        err = pthread_attr_setstacksize(attr, stack_size);
+
+        if (0 != err)
+            perror("ERROR pthread_attr_setstacksize %d");
+
+        if (EINVAL == err) {
+            printf("the stack size is less that PTHREAD_STACK_MIN %d\n", PTHREAD_STACK_MIN);
+        }
+
+        err = pthread_create(handler, attr, ssp_connectionless_client_task, client);       
+        if (0 != err)
+            perror("ERROR pthread_create");
+
+
+        client->client_handle = handler;
+        client->client_thread_attributes = attr;
+        return client;
+
     #endif
 
 }
@@ -131,12 +181,27 @@ void ssp_cleanup(Protocol_state *state) {
         pthread_t * handle = (pthread_t*) state->server_handle;
 
         pthread_join(*handle, NULL);
-
         free(state->server_handle);
         free(state->server_port);
         free(state->server_thread_attributes);
         free(state);
 
     #endif
+
+}
+
+void ssp_cleanup_client(Client *client) {
+
+    #ifdef POSIX_PORT
+        pthread_t * handle = (pthread_t*) client->client_handle;
+
+        pthread_join(*handle, NULL);
+        free(client->host_name);
+        free(client->client_handle);
+        free(client->client_port);
+        free(client->client_thread_attributes);
+        free(client);
+    #endif
+
 
 }

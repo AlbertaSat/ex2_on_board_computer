@@ -7,10 +7,19 @@
 
 typedef struct client {
     int sfd;
+
     char *msg;
     //this is type (struct sockaddr_in) in posix
     void *addr;
     int packet_len;
+
+    char* host_name;
+    char* client_port;
+
+    void *client_handle;
+    void *client_thread_attributes;
+
+
 } Client;
 
 
