@@ -55,7 +55,9 @@ void udpSelectServer(char *port, int packet_len,
 ------------------------------------------------------------------------------*/
 
 
-void udpClient(char *hostname, char*port);
+void udpClient(char *hostname, char*port, void *callbackParams,
+    int (*onRecv)(int sfd, char *msg, struct sockaddr_in client, void *callbackParams) 
+);
 
 
 #endif //SERVER_H

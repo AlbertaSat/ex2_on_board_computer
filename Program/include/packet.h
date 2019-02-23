@@ -10,7 +10,7 @@
 #define PACKET_MAX_LEN 524512
 #define PACKET_LEN 1024 + 224 // 1248 limiting the data portion to 56 bytes
 
-typedef struct PDU_header{
+typedef struct pdu_header{
     unsigned int version: 3; 
     unsigned int PDU_type: 1;  //0 File directive, 1 File Data, 
     unsigned int direction: 1; //0 toward file receiver, 1 toward file sender
@@ -27,8 +27,12 @@ typedef struct PDU_header{
     void *source_id;
     void *transaction_seq_num;
     void *destination_id;
-} PDU_header;  
+} Pdu_header;  
 
-
+typedef struct packet {
+    Pdu_header header;
+    uint8_t *data;
+    uint8_t *crc;
+} Packet;
 
 #endif 

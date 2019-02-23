@@ -143,7 +143,9 @@ void udpSelectServer(char* port, int packet_len,
     FD_ZERO(&masterReadFds);
     FD_SET(STDIN_FILENO, &masterReadFds);
     FD_SET(sfd, &masterReadFds);
-    char *buff = calloc(sizeof(char), new_packet_len);
+
+    int buff_size = new_packet_len + 10;
+    char *buff = calloc(sizeof(char), buff_size);
     checkAlloc(buff, 1);
 
     struct sockaddr_storage *client;
@@ -160,9 +162,11 @@ void udpSelectServer(char* port, int packet_len,
         fd_set readFds = masterReadFds;
         int nrdy = select(sfd + 1, &readFds, NULL, NULL, &timeout);
 
-        if (exit_now)
+        if (exit_now){
+            printf("exiting server thread\n");
             break;
-
+        }
+            
         if (nrdy == -1)
         {
             perror("select");
@@ -188,8 +192,8 @@ void udpSelectServer(char* port, int packet_len,
             {
                 perror("recv failed");
             }
-            else if (count == sizeof(buff))
-            {
+            else if (count >= buff_size)
+            {   
                 printf("packet too large\n");
                 continue;
             }
@@ -209,16 +213,17 @@ void udpSelectServer(char* port, int packet_len,
 
 
 //https://www.cs.cmu.edu/afs/cs/academic/class/15213-f99/www/class26/udpclient.c
-void udpClient(char *hostname, char*port //,void *other,
-    //int (*onSend)(int sfd, struct sockaddr_storage client, void *other),
-    //int (*onRecv)(int sfd, char *msg, struct sockaddr_storage client, void *other), 
+void udpClient(char *hostname, char*port, void *callbackParams,
+    int (*onRecv)(int sfd, char *msg, struct sockaddr_in client, void *callbackParams) 
 ) {
 
-    int sfd, n, port_val;
-    int serverlen;
+    int sfd, count, port_val, n;
+    socklen_t serverlen;
     struct sockaddr_in serveraddr;
     struct hostent *server;
-    char *buff = calloc(sizeof(char), new_packet_len);
+
+    int buff_size = new_packet_len + 10;
+    char *buff = calloc(sizeof(char), buff_size);
     checkAlloc(buff, 1);
 
     prepareSignalHandler();
@@ -241,30 +246,44 @@ void udpClient(char *hostname, char*port //,void *other,
     bcopy((char *)server->h_addr_list[0], (char *)&serveraddr.sin_addr.s_addr, server->h_length);
     serveraddr.sin_port = htons(port_val);
 
-    char* msg = "some stuff to send";
-    /* get a message from the user */ 
+    char *msg = "first message?\n";
 
-    memcpy(buff, msg, strnlen(msg, new_packet_len));
+    serverlen = sizeof(serveraddr);
+    
+    /* send the message to the server */
+    n = sendto(sfd, msg, (size_t) strnlen(msg, new_packet_len), 0, (struct sockaddr*)&serveraddr, serverlen);
+    if (n < 0) 
+        perror("ERROR in sendto");
 
+        
     for (;;) {
 
         if (exit_now)
              break;
 
-        /* send the message to the server */
-        serverlen = sizeof(serveraddr);
-        n = sendto(sfd, buff, (size_t) strnlen(buff, new_packet_len), 0, (struct sockaddr*)&serveraddr, serverlen);
-        if (n < 0) 
-            perror("ERROR in sendto");
+        
 
-        sleep(2);
+        
+        sleep(1);
         /* print the server's reply */
-        /*
-        n = recvfrom(sockfd, buf, BUFSIZE, 0, &serveraddr, &serverlen);
-        if (n < 0) 
-            error("ERROR in recvfrom");
-        printf("Echo from server: %s\n", buf);
-        */
+
+        count = recvfrom(sfd, buff, new_packet_len, MSG_DONTWAIT, (struct sockaddr*)&serveraddr, &serverlen);
+
+         if (count == -1)
+            {
+                perror("recv failed");
+            }
+            else if (count >= buff_size)
+            {   
+                printf("packet too large\n");
+                continue;
+            }
+            else
+            {
+                if (onRecv(sfd, buff, serveraddr, callbackParams) == -1)
+                    printf("recv failed\n");
+            }
+        
     }
     free(buff);
     close(sfd);

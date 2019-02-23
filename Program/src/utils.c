@@ -18,13 +18,17 @@ to use for general functionality.
 #include <libgen.h>
 
 //see header file
-void checkAlloc(void *mem, int notOkToFail)
+int checkAlloc(void *mem, int notOkToFail)
 {
     if (mem == NULL && notOkToFail)
     {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
+    else if(mem == NULL && !notOkToFail) {
+        return 1;
+    }
+    return 0;
 }
 
 //see header file
@@ -117,7 +121,7 @@ static NODE *createNode(void *element)
     This function adds a new element into the linked list. returns nothing.
 ------------------------------------------------------------------------------*/
 
-static void addElement(LIST *list, void *element)
+static int addElement(List *list, void *element)
 {
 
     NODE *newNode = createNode(element);
@@ -128,6 +132,7 @@ static void addElement(LIST *list, void *element)
 
     tail->prev->next = newNode;
     tail->prev = newNode;
+    return 0;
 }
 
 /*------------------------------------------------------------------------------
@@ -135,7 +140,7 @@ static void addElement(LIST *list, void *element)
     to print out an element.
 ------------------------------------------------------------------------------*/
 
-static void printList(LIST *list, void (*f)(void *element, void *args), void *args)
+static void printList(List *list, void (*f)(void *element, void *args), void *args)
 {
     NODE *cur = list->head->next;
     while (cur->next != NULL)
@@ -151,7 +156,7 @@ static void printList(LIST *list, void (*f)(void *element, void *args), void *ar
     and -1 if item not found.
 ------------------------------------------------------------------------------*/
 
-static int removeElement(LIST *list, int (*f)(void *element, void *args), void *args)
+static int removeElement(List *list, int (*f)(void *element, void *args), void *args)
 {
     NODE *cur = list->head->next;
     while (cur->next != NULL)
@@ -176,7 +181,7 @@ static int removeElement(LIST *list, int (*f)(void *element, void *args), void *
     a function that frees and elemnent.  Returns nothing,
 ------------------------------------------------------------------------------*/
 
-static void freeList(LIST *list, void (*f)(void *element))
+static void freeList(List *list, void (*f)(void *element))
 {
     NODE *cur = list->head->next;
     while (cur->next != NULL)
@@ -184,7 +189,6 @@ static void freeList(LIST *list, void (*f)(void *element))
         NODE *n = cur;
         cur = cur->next;
         f(n->element);
-        free(n->element);
         free(n);
     }
     free(list->head);
@@ -197,7 +201,7 @@ static void freeList(LIST *list, void (*f)(void *element))
     failure. The return value should be cast to the element type.
 ------------------------------------------------------------------------------*/
 
-static void *findElement(LIST *list, int (*f)(void *element, void *args), void *args)
+static void *findElement(List *list, int (*f)(void *element, void *args), void *args)
 {
 
     NODE *cur = list->head->next;
@@ -215,10 +219,10 @@ static void *findElement(LIST *list, int (*f)(void *element, void *args), void *
 
 //see header file
 
-LIST *List()
+List *linked_list()
 {
-    LIST *newList = calloc(sizeof(LIST), 1);
-    checkAlloc(newList, 1);
+    List *newList = calloc(sizeof(List), 1);
+    checkAlloc(newList, 0);
 
     newList->head = createNode(NULL);
     newList->tail = createNode(NULL);
@@ -237,3 +241,20 @@ LIST *List()
 
     return newList;
 }
+
+
+//TODO write an array list
+/*
+int add_element_array_list(List *list, void *element) {
+}
+
+List *array_list() {
+
+    List *new_list = calloc(sizeof(List), 1);
+    if (checkAlloc(new_list, 0));
+        return NULL;
+
+}
+
+*/
+

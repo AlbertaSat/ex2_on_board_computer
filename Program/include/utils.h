@@ -38,25 +38,25 @@ typedef struct NODE
     Purpose: This is a LIST struct that contains functions useful for 
     doing linked list functionality. 
 ------------------------------------------------------------------------------*/
-typedef struct LIST
+typedef struct List
 {
     struct NODE *head;
     struct NODE *tail;
-    void (*add)(struct LIST *list, void *element);
-    int (*remove)(struct LIST *list, int (*f)(void *element, void *args), void *args);
-    void (*print)(struct LIST *list, void (*f)(void *element, void *args), void *args);
-    void (*free)(struct LIST *list, void (*f)(void *element));
+    int (*add)(struct List *list, void *element);
+    int (*remove)(struct List *list, int (*f)(void *element, void *args), void *args);
+    void (*print)(struct List *list, void (*f)(void *element, void *args), void *args);
+    void (*free)(struct List *list, void (*f)(void *element));
 
     //returns a void pointer that should be cast to the type
-    void *(*find)(struct LIST *list, int (*f)(void *element, void *args), void *args);
-} LIST;
+    void *(*find)(struct List *list, int (*f)(void *element, void *args), void *args);
+} List;
 
 /*------------------------------------------------------------------------------
     Purpose:    This function initializes a linked list LIST *.
     Perameters: empty is just for the compiler errors, TODO use it for something
     Return:     returns a pointer to an initilized LIST * 
 ------------------------------------------------------------------------------*/
-LIST *List(void);
+List *linked_list(void);
 
 /*------------------------------------------------------------------------------
     Purpose:    This function checks to see if the memory is allocated,
@@ -65,7 +65,7 @@ LIST *List(void);
                 int notOkToFail: 
     Return:     returns nothing
 ------------------------------------------------------------------------------*/
-void checkAlloc(void *mem, int notOkToFail);
+int checkAlloc(void *mem, int notOkToFail);
 
 /*------------------------------------------------------------------------------
     Purpose:    This function is used to make a configuration struct from the

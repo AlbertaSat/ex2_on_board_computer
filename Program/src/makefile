@@ -7,6 +7,7 @@ CC = gcc
 CFILES += port.c 
 CFILES += utils.c
 CFILES += server.c  #used for poxix port
+CFILES += protocol_handler.c
 
 #entrypoint
 MAIN = main
