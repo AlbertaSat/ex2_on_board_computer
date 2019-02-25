@@ -49,15 +49,15 @@ void udpSelectServer(char *port, int packet_len,
 
 /*-----------------------------CALLBACK onTimeOut-------------------------------
     Purpose:    This is a simple udp client 
-    Perameters: hostname is the name of an address eg, 127.0.0.1, port is the port 
+    Perameters: hostname is the name of an address eg, 127.0.0.1, port is the por
+                channel_size is the size of the channel in bytes
     eg, 1111
     Return:     None
 ------------------------------------------------------------------------------*/
 
+void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, 
+    int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
+    int (*onRecv)(int sfd, char *msg, uint32_t *buff_size, struct sockaddr_in client, void *onRecvParams));
 
-void udpClient(char *hostname, char*port, void *callbackParams,
-    int (*onRecv)(int sfd, char *msg, struct sockaddr_in client, void *callbackParams) 
-);
-
-
+    
 #endif //SERVER_H

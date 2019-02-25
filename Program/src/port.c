@@ -40,8 +40,6 @@ void ssp_error(char *msg) {
 
 }
 
-
-
 void ssp_sendto(Response res) {
 
     #ifdef POSIX_PORT
@@ -58,24 +56,24 @@ static int on_recv_server(int sfd, char *msg, struct sockaddr_storage addr, void
 
     #ifdef POSIX_PORT
 
-    Protocol_state *state = (Protocol_state *) other;
+    Protocol_state *p_state = (Protocol_state *) other;
     struct sockaddr_in* posix_client = (struct sockaddr_in*) &addr;
 
     Response res;
     res.addr = posix_client;
     res.sfd = sfd;
-    res.packet_len = state->packet_size;
+    res.packet_len = p_state->packet_size;
 
     ssp_printf("Server received: %s\n", msg);
     //printf("addr %d port%d\n",ntohl(((struct in_addr*) posix_client)->s_addr), ntohs(posix_client->sin_port));
 
-    packet_handler_server(res);
+    packet_handler_server(res, p_state);
     return 0;
 
     #endif
 }
 
-static int on_recv_client(int sfd, char *msg, struct sockaddr_in addr, void *other) {
+static int on_recv_client(int sfd, char *msg, uint32_t *buff_size, struct sockaddr_in addr, void *other) {
     
     #ifdef POSIX_PORT
 
@@ -89,12 +87,31 @@ static int on_recv_client(int sfd, char *msg, struct sockaddr_in addr, void *oth
 
     ssp_printf("Client received: %s\n", msg);
 
-    packet_handler_client(res);
+    packet_handler_client(res, p_state);
     return 0;
     
     #endif
 }
 
+static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
+
+
+    #ifdef POSIX_PORT
+    Protocol_state *p_state = (Protocol_state *) other;
+    struct sockaddr_in* posix_client = (struct sockaddr_in*) &addr;
+
+    Response res;
+    res.addr = posix_client;
+    res.sfd = sfd;
+    res.packet_len = p_state->packet_size;
+    res.msg = "some shit\n";
+
+    ssp_sendto(res);
+
+    return 0;
+    #endif
+
+}
 
 //this function is a callback when using  my posix ports
 static  int on_time_out_posix(void *other) {
@@ -163,8 +180,7 @@ void *ssp_connectionless_client_task(void* params){
     Protocol_state *p_state = (Protocol_state *) params;
     
     // TODO find a client function p_state->client_list->find()
-
-    udpClient(p_state->client->host_name, p_state->client->client_port, p_state, on_recv_client);
+    udpClient(p_state->client->host_name, p_state->client->client_port, PACKET_LEN, p_state, p_state, on_send_client, on_recv_client);
     return NULL;
 }
 
@@ -210,9 +226,8 @@ Client *ssp_connectionless_client(char *host_name, char *port, Protocol_state *p
     client->client_handle = handler;
     client->client_thread_attributes = attr;
 
-    //TODO make list work right
-    //p_state->client_list->add(p_state->client_list, client);
-    
+    //add client to a new list of currently active clients
+    p_state->client_list->add(p_state->client_list, client);
     
     p_state->client = client;
     err = pthread_create(handler, attr, ssp_connectionless_client_task, p_state);       
@@ -226,38 +241,25 @@ Client *ssp_connectionless_client(char *host_name, char *port, Protocol_state *p
 }
 
 
-static void cleanup_list(void *client) {
-    
-    Client *client_pointer = (Client*) client; 
-    ssp_cleanup_client(client_pointer);
-}
-
-
-
 void ssp_cleanup(Protocol_state *p_state) {
 
     #ifdef POSIX_PORT
     pthread_t * handle = (pthread_t*) p_state->server_handle;        
     pthread_join(*handle, NULL);
 
-    //p_state->client_list->free(p_state->client_list, cleanup_list);
-
     free(p_state->server_handle);
     free(p_state->server_port);
     free(p_state->server_thread_attributes);
     free(p_state);
-
 
     #endif
 
 }
 
 
-
-
 void ssp_cleanup_client(Client *client) {
 
-#ifdef POSIX_PORT
+    #ifdef POSIX_PORT
     pthread_t * handle = (pthread_t*) client->client_handle;
 
     pthread_join(*handle, NULL);

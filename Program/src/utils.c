@@ -26,9 +26,9 @@ int checkAlloc(void *mem, int notOkToFail)
         exit(EXIT_FAILURE);
     }
     else if(mem == NULL && !notOkToFail) {
-        return 1;
+        return 0;
     }
-    return 0;
+    return 1;
 }
 
 //see header file
@@ -37,6 +37,7 @@ CONFIG *configuration(int argc, char **argv)
     int ch;
     CONFIG *conf = calloc(sizeof(CONFIG), 1);
     checkAlloc(conf, 1);
+
     conf->numOfDecks = 2;
     conf->startingMoney = 100;
     conf->timer = 15;
@@ -176,6 +177,8 @@ static int removeElement(List *list, int (*f)(void *element, void *args), void *
     return -1;
 }
 
+
+
 /*------------------------------------------------------------------------------
     frees the linked list. Takes a free function that is a function pointer to 
     a function that frees and elemnent.  Returns nothing,
@@ -243,7 +246,7 @@ List *linked_list()
 }
 
 
-//TODO write an array list
+//TODO write an array
 /*
 int add_element_array_list(List *list, void *element) {
 }

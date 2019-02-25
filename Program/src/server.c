@@ -34,7 +34,6 @@ This is my file for server.c. It develops a udp server for select.
 
 
 static int exit_now = 0;
-static int new_packet_len;
 
 
 //this code is reused from assignment 1, with small changes
@@ -136,7 +135,6 @@ void udpSelectServer(char* port, int packet_len,
     void *other)
 {
     int sfd = prepareUdpHost(port);
-    new_packet_len = packet_len;
     prepareSignalHandler();
 
     fd_set masterReadFds;
@@ -144,7 +142,7 @@ void udpSelectServer(char* port, int packet_len,
     FD_SET(STDIN_FILENO, &masterReadFds);
     FD_SET(sfd, &masterReadFds);
 
-    int buff_size = new_packet_len + 10;
+    int buff_size = packet_len + 10;
     char *buff = calloc(sizeof(char), buff_size);
     checkAlloc(buff, 1);
 
@@ -186,7 +184,7 @@ void udpSelectServer(char* port, int packet_len,
         {
             
             socklen_t client_len = sizeof(*client);
-            int count = recvfrom(sfd, buff, new_packet_len, 0, (struct sockaddr*)client, &client_len);
+            int count = recvfrom(sfd, buff, packet_len, 0, (struct sockaddr*)client, &client_len);
 
             if (count == -1)
             {
@@ -213,8 +211,9 @@ void udpSelectServer(char* port, int packet_len,
 
 
 //https://www.cs.cmu.edu/afs/cs/academic/class/15213-f99/www/class26/udpclient.c
-void udpClient(char *hostname, char*port, void *callbackParams,
-    int (*onRecv)(int sfd, char *msg, struct sockaddr_in client, void *callbackParams) 
+void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, 
+    int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
+    int (*onRecv)(int sfd, char *msg,  uint32_t *buff_size, struct sockaddr_in client, void *onRecvParams) 
 ) {
 
     int sfd, count, port_val, n;
@@ -222,8 +221,13 @@ void udpClient(char *hostname, char*port, void *callbackParams,
     struct sockaddr_in serveraddr;
     struct hostent *server;
 
-    int buff_size = new_packet_len + 10;
-    char *buff = calloc(sizeof(char), buff_size);
+    uint32_t *buff_size = malloc(sizeof(uint32_t));
+    *buff_size = packet_len + 10;
+
+
+    uint32_t prev_buff_size = *buff_size;
+
+    char *buff = calloc(sizeof(char), prev_buff_size);
     checkAlloc(buff, 1);
 
     prepareSignalHandler();
@@ -249,9 +253,9 @@ void udpClient(char *hostname, char*port, void *callbackParams,
     char *msg = "first message?\n";
 
     serverlen = sizeof(serveraddr);
-    
+
     /* send the message to the server */
-    n = sendto(sfd, msg, (size_t) strnlen(msg, new_packet_len), 0, (struct sockaddr*)&serveraddr, serverlen);
+    n = sendto(sfd, msg, (size_t) strnlen(msg, packet_len), 0, (struct sockaddr*)&serveraddr, serverlen);
     if (n < 0) 
         perror("ERROR in sendto");
 
@@ -260,31 +264,46 @@ void udpClient(char *hostname, char*port, void *callbackParams,
 
         if (exit_now)
              break;
-
         
+        if (*buff_size != prev_buff_size) {
+            prev_buff_size = *buff_size;
 
+            if(checkAlloc(realloc(buff, *buff_size), 0)){
+                prev_buff_size = *buff_size;
+            } 
+            else {
+                printf("packet too large, cannot resize buffer\n");
+            }
         
+        }
         sleep(1);
         /* print the server's reply */
+        if (onSend(sfd, serveraddr, onSendParams)) 
+            printf("send failed\n");
 
-        count = recvfrom(sfd, buff, new_packet_len, MSG_DONTWAIT, (struct sockaddr*)&serveraddr, &serverlen);
 
-         if (count == -1)
-            {
-                perror("recv failed");
-            }
-            else if (count >= buff_size)
-            {   
-                printf("packet too large\n");
-                continue;
-            }
-            else
-            {
-                if (onRecv(sfd, buff, serveraddr, callbackParams) == -1)
-                    printf("recv failed\n");
-            }
+
+        count = recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, (struct sockaddr*)&serveraddr, &serverlen);
+
+        if (count == -1)
+        {
+            perror("recv failed");
+        }
+        else if (count >= *buff_size)
+        {   
+            printf("packet too large\n");
+            continue;
+        }
+        else
+        {
+            if (onRecv(sfd, buff, buff_size, serveraddr, onRecvParams) == -1)
+                printf("recv failed\n");
+        }
         
     }
+
+    free(buff_size);
     free(buff);
     close(sfd);
 }
+

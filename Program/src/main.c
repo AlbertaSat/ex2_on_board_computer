@@ -13,13 +13,14 @@
 int main() {
 
     Protocol_state *p_state = ssp_connectionless_server("1111");
-    //p_state->client_list = linked_list();
+    p_state->client_list = linked_list();
 
     sleep(1);
-    Client *client = ssp_connectionless_client("127.0.0.1", "1111", p_state);
-    //p_state->client_list->add(p_state->client_list, client);
+    //auto adds client to the client list
+    ssp_connectionless_client("127.0.0.1", "1111", p_state);
     
-    ssp_cleanup_client(client);
+    p_state->client_list->free(p_state->client_list, list_free);
+
     ssp_cleanup(p_state);
     return 0;
 }
