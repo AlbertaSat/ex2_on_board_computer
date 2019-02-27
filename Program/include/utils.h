@@ -29,6 +29,7 @@ typedef struct CONFIG
 ------------------------------------------------------------------------------*/
 typedef struct NODE
 {
+    char *id;
     void *element;
     struct NODE *next;
     struct NODE *prev;
@@ -42,13 +43,13 @@ typedef struct List
 {
     struct NODE *head;
     struct NODE *tail;
-    int (*add)(struct List *list, void *element);
-    int (*remove)(struct List *list, int (*f)(void *element, void *args), void *args);
+    int (*add)(struct List *list, void *element, char *id);
+    void *(*remove)(struct List *list, char *id, int (*f)(void *element, void *args), void *args);
     void (*print)(struct List *list, void (*f)(void *element, void *args), void *args);
     void (*free)(struct List *list, void (*f)(void *element));
 
     //returns a void pointer that should be cast to the type
-    void *(*find)(struct List *list, int (*f)(void *element, void *args), void *args);
+    void *(*find)(struct List *list, char *id, int (*f)(void *element, void *args), void *args);
 } List;
 
 /*------------------------------------------------------------------------------

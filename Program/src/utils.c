@@ -17,6 +17,11 @@ to use for general functionality.
 #include <ctype.h>
 #include <libgen.h>
 
+
+
+#define MAX_LEN 255
+#define ID_LEN 10
+
 //see header file
 int checkAlloc(void *mem, int notOkToFail)
 {
@@ -109,11 +114,21 @@ CONFIG *configuration(int argc, char **argv)
     new node.
 ------------------------------------------------------------------------------*/
 
-static NODE *createNode(void *element)
+static NODE *createNode(void *element, char *id)
 {
     NODE *newNode = calloc(sizeof(NODE), 1);
     checkAlloc(newNode, 1);
     newNode->element = element;
+    
+    if (id == NULL)
+    {
+        newNode->id = NULL;
+        return newNode;
+    }
+        
+    newNode->id = calloc(sizeof(char),  ID_LEN);
+    checkAlloc(newNode, 1);
+    strncpy(newNode->id, id, ID_LEN);    
     return newNode;
 }
 
@@ -122,10 +137,10 @@ static NODE *createNode(void *element)
     This function adds a new element into the linked list. returns nothing.
 ------------------------------------------------------------------------------*/
 
-static int addElement(List *list, void *element)
+static int addElement(List *list, void *element, char *id)
 {
 
-    NODE *newNode = createNode(element);
+    NODE *newNode = createNode(element, id);
     NODE *tail = list->tail;
 
     newNode->next = tail;
@@ -133,6 +148,7 @@ static int addElement(List *list, void *element)
 
     tail->prev->next = newNode;
     tail->prev = newNode;
+    
     return 0;
 }
 
@@ -153,28 +169,46 @@ static void printList(List *list, void (*f)(void *element, void *args), void *ar
 
 
 /*------------------------------------------------------------------------------
-    This function removes an element from the linked list, returns 1 if success
-    and -1 if item not found.
+    This function removes an element from the linked list, returns the element stored if success
+    and NULL if item not found. it can use either an id, or callback to find the
+    element (callback can be the find function)
 ------------------------------------------------------------------------------*/
 
-static int removeElement(List *list, int (*f)(void *element, void *args), void *args)
+static void *removeElement(List *list, char *id, int (*f)(void *element, void *args), void *args)
 {
     NODE *cur = list->head->next;
+    int found_with_func = 0;
+    int found_with_id = -1;
     while (cur->next != NULL)
     {
-        int found = f(cur->element, args);
-        if (found == 1)
+
+        if (f != NULL)
+            found_with_func = f(cur->element, args);
+
+        if(cur->id != NULL && id != NULL)
+            found_with_id = strncmp(id, cur->id, MAX_LEN);
+
+        if (found_with_func || found_with_id == 0)
         {
             NODE *previous = cur->prev;
             NODE *next = cur->next;
+
             previous->next = next;
             next->prev = previous;
+
+            if (cur->id != NULL) {
+                free(cur->id);
+            }
+                
+            void *element = cur->element;
+            
             free(cur);
-            return 1;
+
+            return element;
         }
         cur = cur->next;
     }
-    return -1;
+    return NULL;
 }
 
 
@@ -187,10 +221,12 @@ static int removeElement(List *list, int (*f)(void *element, void *args), void *
 static void freeList(List *list, void (*f)(void *element))
 {
     NODE *cur = list->head->next;
-    while (cur->next != NULL)
+    while (cur->next != NULL )
     {
         NODE *n = cur;
         cur = cur->next;
+        if (n->id != NULL)
+            free(n->id);
         f(n->element);
         free(n);
     }
@@ -201,24 +237,34 @@ static void freeList(List *list, void (*f)(void *element))
 
 /*------------------------------------------------------------------------------
     This function finds an element, returns and element on success and NULL on
-    failure. The return value should be cast to the element type.
+    failure. The return value should be cast to the element type. can search with
+    either a callback, or id
 ------------------------------------------------------------------------------*/
 
-static void *findElement(List *list, int (*f)(void *element, void *args), void *args)
+static void *findElement(List *list, char *id, int (*f)(void *element, void *args), void *args)
 {
 
     NODE *cur = list->head->next;
+    int found_with_func = 0;
+    int found_with_id = -1;
+    
     while (cur->next != NULL)
     {
-        int found = f(cur->element, args);
-        if (found == 1)
-        {
+
+        if (f != NULL)
+            found_with_func = f(cur->element, args);
+
+        if(cur->id != NULL && id != NULL)
+            found_with_id = strncmp(cur->id, id, MAX_LEN);
+
+        if (found_with_func || found_with_id == 0)
             return cur->element;
-        }
+
         cur = cur->next;
     }
     return NULL;
 }
+
 
 //see header file
 
@@ -227,8 +273,8 @@ List *linked_list()
     List *newList = calloc(sizeof(List), 1);
     checkAlloc(newList, 0);
 
-    newList->head = createNode(NULL);
-    newList->tail = createNode(NULL);
+    newList->head = createNode(NULL, NULL);
+    newList->tail = createNode(NULL, NULL);
 
     NODE *tail = newList->tail;
     NODE *head = newList->head;
