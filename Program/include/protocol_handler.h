@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "packet.h"
 
+
 typedef struct response {
     int sfd;
     char *msg;
@@ -11,13 +12,29 @@ typedef struct response {
     void *addr;
     //getting rid of this soon in favour of client based packet sizes
     uint32_t packet_len;
+    
 } Response;
 
+typedef enum Indication {
+    transaction,
+    put
+} Indication;
 
 typedef struct request {
-    uint8_t request_primitive;
+    Indication type;
     uint32_t transaction_id;
+    char *dest_cfdp_id;
+    char *source_file_name;
+    char *destination_file_name;
+    uint8_t segmentation_control;
+    uint8_t fault_handler_overides;
+    uint8_t flow_lable;
+    uint8_t transmission_mode;
+    char* messages_to_user;
+    char* filestore_requests;
 } Request;
+
+
 
 
 typedef struct client {
@@ -26,7 +43,11 @@ typedef struct client {
     void *client_handle;
     void *client_thread_attributes;
     uint32_t packet_len;
+
+    //this is a queue of requests that will be processed
+    List *requests;
     uint8_t is_active;
+
 
 } Client;
 
@@ -38,22 +59,12 @@ typedef struct protocol_state {
     void *server_thread_attributes;
 
     List *client_list;
-    //temperary until client list works fully
-    Client *client;
-
+    Client *newClient;
 } Protocol_state;
 
 
-int cleanup_list(void *element);
-int list_remove(void *element, void *args);
-void list_print(void *element, void *args);
-int list_find(void *element, void *args);
-void list_free(void *element);
-
-
-
-void packet_handler_server(Response res, Protocol_state *p_state);
-void packet_handler_client(Response res, Protocol_state *p_state);
-
+void packet_handler_server(Response res, Request req, Protocol_state *p_state);
+void packet_handler_client(Response res, Request req, Protocol_state *p_state);
+void parse_packet(char* buff, Request req, Protocol_state *p_state);
 
 #endif

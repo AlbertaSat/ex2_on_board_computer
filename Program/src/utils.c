@@ -109,38 +109,88 @@ CONFIG *configuration(int argc, char **argv)
     return conf;
 }
 
+
+
 /*------------------------------------------------------------------------------
     This function creates a new node to add into the linked list, returns the
-    new node.
+    new node, or NULL if failed
 ------------------------------------------------------------------------------*/
 
-static NODE *createNode(void *element, char *id)
+static NODE *createNode(void *element, uint32_t id)
 {
     NODE *newNode = calloc(sizeof(NODE), 1);
-    checkAlloc(newNode, 1);
+    if(!checkAlloc(newNode, 0))
+        return NULL;
+
     newNode->element = element;
-    
-    if (id == NULL)
-    {
-        newNode->id = NULL;
-        return newNode;
-    }
-        
-    newNode->id = calloc(sizeof(char),  ID_LEN);
-    checkAlloc(newNode, 1);
-    strncpy(newNode->id, id, ID_LEN);    
+    newNode->id = id;
     return newNode;
 }
 
 
+
+
 /*------------------------------------------------------------------------------
-    This function adds a new element into the linked list. returns nothing.
+    This function creates a new node to add into the linked list, returns the
+    new node. 
 ------------------------------------------------------------------------------*/
 
-static int addElement(List *list, void *element, char *id)
+
+static void freeNode(NODE *node) {
+    free(node);    
+}
+
+static void *pop(List *list) {
+
+    NODE *last_data_node = list->tail->prev;
+    if (last_data_node == NULL)
+        return NULL;
+        
+    void *element = last_data_node->element;
+
+    NODE *prev = last_data_node->prev;
+    prev->next = list->tail;
+
+    freeNode(last_data_node);
+    list->count--;
+    return element;
+}
+
+
+/*------------------------------------------------------------------------------
+    This function creates a new node to add into the linked list, returns the
+    new node. 
+------------------------------------------------------------------------------*/
+
+static int insert(List *list, void *element, uint32_t id) {
+
+    NODE *head = list->head;
+    NODE *node = createNode(element, id);
+    if (node == NULL) {
+        return 0;
+    }
+
+    node->next = head->next;
+    node->prev = head;
+
+    head->next = node;
+    head->prev = NULL;
+    list->count++;
+    return 1;
+}
+
+/*------------------------------------------------------------------------------
+    This function adds a new element into the linked list. returns 1 if success
+    0 if failed.
+------------------------------------------------------------------------------*/
+
+static int addElement(List *list, void *element, uint32_t id)
 {
 
     NODE *newNode = createNode(element, id);
+    if (newNode == NULL) {
+        return 0;
+    }
     NODE *tail = list->tail;
 
     newNode->next = tail;
@@ -149,7 +199,8 @@ static int addElement(List *list, void *element, char *id)
     tail->prev->next = newNode;
     tail->prev = newNode;
     
-    return 0;
+    list->count++;
+    return 1;
 }
 
 /*------------------------------------------------------------------------------
@@ -174,36 +225,30 @@ static void printList(List *list, void (*f)(void *element, void *args), void *ar
     element (callback can be the find function)
 ------------------------------------------------------------------------------*/
 
-static void *removeElement(List *list, char *id, int (*f)(void *element, void *args), void *args)
+static void *removeElement(List *list, uint32_t id, int (*f)(void *element, void *args), void *args)
 {
     NODE *cur = list->head->next;
     int found_with_func = 0;
-    int found_with_id = -1;
+    int found_with_id = 0;
     while (cur->next != NULL)
     {
-
         if (f != NULL)
             found_with_func = f(cur->element, args);
 
-        if(cur->id != NULL && id != NULL)
-            found_with_id = strncmp(id, cur->id, MAX_LEN);
+        if (id == cur->id)
+            found_with_id = 1;
 
-        if (found_with_func || found_with_id == 0)
+        if (found_with_func || found_with_id)
         {
             NODE *previous = cur->prev;
             NODE *next = cur->next;
 
             previous->next = next;
             next->prev = previous;
-
-            if (cur->id != NULL) {
-                free(cur->id);
-            }
-                
             void *element = cur->element;
             
-            free(cur);
-
+            freeNode(cur);
+            list->count--;
             return element;
         }
         cur = cur->next;
@@ -225,10 +270,8 @@ static void freeList(List *list, void (*f)(void *element))
     {
         NODE *n = cur;
         cur = cur->next;
-        if (n->id != NULL)
-            free(n->id);
         f(n->element);
-        free(n);
+        freeNode(n);
     }
     free(list->head);
     free(list->tail);
@@ -241,12 +284,12 @@ static void freeList(List *list, void (*f)(void *element))
     either a callback, or id
 ------------------------------------------------------------------------------*/
 
-static void *findElement(List *list, char *id, int (*f)(void *element, void *args), void *args)
+static void *findElement(List *list, uint32_t id, int (*f)(void *element, void *args), void *args)
 {
 
     NODE *cur = list->head->next;
     int found_with_func = 0;
-    int found_with_id = -1;
+    int found_with_id = 0;
     
     while (cur->next != NULL)
     {
@@ -254,10 +297,10 @@ static void *findElement(List *list, char *id, int (*f)(void *element, void *arg
         if (f != NULL)
             found_with_func = f(cur->element, args);
 
-        if(cur->id != NULL && id != NULL)
-            found_with_id = strncmp(cur->id, id, MAX_LEN);
+        if(cur->id == id)
+            found_with_id = 1;
 
-        if (found_with_func || found_with_id == 0)
+        if (found_with_func || found_with_id)
             return cur->element;
 
         cur = cur->next;
@@ -266,26 +309,34 @@ static void *findElement(List *list, char *id, int (*f)(void *element, void *arg
 }
 
 
-//see header file
+//see header file return NULL if fails
 
 List *linked_list()
 {
     List *newList = calloc(sizeof(List), 1);
-    checkAlloc(newList, 0);
+    if(!checkAlloc(newList, 0))
+        return NULL;
 
-    newList->head = createNode(NULL, NULL);
-    newList->tail = createNode(NULL, NULL);
+    newList->head = createNode(NULL, 0);
+    if (newList->head == NULL) 
+        return NULL;
 
+    newList->tail = createNode(NULL, 0);
+    if (newList->tail == NULL)
+        return NULL;
+    
     NODE *tail = newList->tail;
     NODE *head = newList->head;
 
     tail->prev = head;
     head->next = tail;
 
-    newList->add = addElement;
+    newList->push = addElement;
     newList->remove = removeElement;
     newList->print = printList;
     newList->free = freeList;
+    newList->insert = insert;
+    newList->pop = pop;
     newList->find = findElement;
 
     return newList;
