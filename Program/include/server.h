@@ -55,6 +55,10 @@ void udpSelectServer(char *port, int packet_len,
     Return:     None
 ------------------------------------------------------------------------------*/
 
+
+int *prepareSignalHandler(void);
+
+
 void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, 
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
     int (*onRecv)(int sfd, char *msg, uint32_t *buff_size, struct sockaddr_in client, void *onRecvParams));

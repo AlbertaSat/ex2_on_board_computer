@@ -8,6 +8,7 @@ CFILES += port.c
 CFILES += utils.c
 CFILES += server.c  #used for poxix port
 CFILES += protocol_handler.c
+CFILES += list_callbacks.c
 
 #entrypoint
 MAIN = main

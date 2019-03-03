@@ -60,6 +60,7 @@ typedef struct protocol_state {
 
     List *client_list;
     Client *newClient;
+    
 } Protocol_state;
 
 

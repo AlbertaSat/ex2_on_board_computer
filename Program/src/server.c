@@ -33,7 +33,7 @@ This is my file for server.c. It develops a udp server for select.
 #include <netdb.h> 
 
 
-static int exit_now = 0;
+static int exit_now;
 
 
 //this code is reused from assignment 1, with small changes
@@ -113,7 +113,7 @@ static void interuptHandler(int signum)
 
 
 //see header file
-static void prepareSignalHandler()
+int *prepareSignalHandler()
 {
     struct sigaction actionData;
     sigemptyset(&actionData.sa_mask);
@@ -125,6 +125,7 @@ static void prepareSignalHandler()
         perror("sigaction sigint failed\n");
         exit(EXIT_FAILURE);
     }
+    return &exit_now;
 }
 
 
