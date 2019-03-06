@@ -3,7 +3,7 @@
 #define PROTOCOL_H
 #include "utils.h"
 #include "packet.h"
-
+#include "mib.h"
 
 typedef struct response {
     int sfd;
@@ -16,6 +16,7 @@ typedef struct response {
 } Response;
 
 typedef enum Indication {
+    none,
     transaction,
     put
 } Indication;
@@ -32,22 +33,25 @@ typedef struct request {
     uint8_t transmission_mode;
     char* messages_to_user;
     char* filestore_requests;
+    char* buff;
 } Request;
 
 
-
-
 typedef struct client {
-    char *host_name;
-    char *client_port;
+    
     void *client_handle;
     void *client_thread_attributes;
     uint32_t packet_len;
 
-    //this is a queue of requests that will be processed
-    List *requests;
-    uint8_t is_active;
+    //this is a queue of user requests that will be going out
+    Request *outGoing_req;
+    Request *incoming_req;
 
+    uint32_t cfdp_id;
+    uint32_t unitdata_id;
+    uint32_t unitdata_port;
+
+    uint8_t is_active;
 
 } Client;
 
@@ -57,15 +61,18 @@ typedef struct protocol_state {
     char *server_port;
     void *server_handle;
     void *server_thread_attributes;
-
-    List *client_list;
+    MIB *mib;
     Client *newClient;
-    
+    Request *current_server_request;
+
+
 } Protocol_state;
 
 
-void packet_handler_server(Response res, Request req, Protocol_state *p_state);
-void packet_handler_client(Response res, Request req, Protocol_state *p_state);
-void parse_packet(char* buff, Request req, Protocol_state *p_state);
+void packet_handler_server(Response res, Request *req, Protocol_state *p_state);
+void parse_packet_server(char* buff, Request *req, Protocol_state *p_state);
+void packet_handler_client(Response res, Request *req, Client *client, Protocol_state *p_state);
+void user_request_handler(Response res, Request *req, Client *client, Protocol_state *p_state);
+void parse_packet_client(char* buff, Request *req, Client *client, Protocol_state *p_state);
 
 #endif

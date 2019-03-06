@@ -9,6 +9,7 @@
 #include "utils.h"
 #include "list_callbacks.h"
 #include "server.h"
+#include "mib.h"
 
 static int *exit_now;
 
@@ -17,24 +18,25 @@ int main() {
     exit_now = prepareSignalHandler();
 
     Protocol_state *p_state = ssp_connectionless_server("1111");
-    p_state->client_list = linked_list();
-    Client *new_client;
+    MIB *mib = init_mib();
+    p_state->mib = mib;
 
-/*
-    for (;;) {
-        if (*exit_now) {
-            break;
-        }
-    }
-*/
 
-    
+    //setting host name for testing
+    char *host_name = "127.0.0.1";
+    uint32_t addr[sizeof(uint32_t)];
+    inet_pton(AF_INET, host_name, addr);
+    uint16_t port = 1111;
 
-    new_client = ssp_connectionless_client("127.0.0.1", "1111", p_state);
-        
-     
-    Request *req = calloc(1, sizeof(Request));
 
+
+    //adding new cfdp entity to management information base
+    add_new_cfdp_entity(mib, 1, *addr, port);    
+    Client *new_client = ssp_connectionless_client(1, p_state);
+    Request *req = new_client->outGoing_req;
+
+
+    //build a request
     req->transaction_id = 1;
     //enumerations
     req->type = put;
@@ -47,12 +49,10 @@ int main() {
     req->transmission_mode = 0;
     req->messages_to_user = "sup";
     req->filestore_requests = NULL;
-
-    List *requests = new_client->requests;
-    requests->insert(requests, req, 1);
-
+    req->buff = calloc(new_client->packet_len, sizeof(char));
+    
     //will block on pthread_join
-    p_state->client_list->free(p_state->client_list, client_list_free);
+    ssp_cleanup_client(new_client);
     ssp_cleanup(p_state);
     return 0;
 }
