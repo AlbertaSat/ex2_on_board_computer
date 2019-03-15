@@ -37,68 +37,45 @@ int checkAlloc(void *mem, int notOkToFail)
 }
 
 //see header file
-CONFIG *configuration(int argc, char **argv)
+Config *configuration(int argc, char **argv)
 {
     int ch;
-    CONFIG *conf = calloc(sizeof(CONFIG), 1);
+    Config *conf = calloc(sizeof(Config), 1);
     checkAlloc(conf, 1);
 
-    conf->numOfDecks = 2;
-    conf->startingMoney = 100;
     conf->timer = 15;
-    conf->port = "4420";
-    conf->minBet = 1;
 
-    int tmp;
-    while ((ch = getopt(argc, argv, "d: m: t: p: b: h")) != -1)
+    uint32_t tmp;
+    while ((ch = getopt(argc, argv, "t: i: c: h")) != -1)
     {
         switch (ch)
         {
-        case 'd':
-            tmp = strtol(optarg, NULL, 10);
-            if (0 < tmp  && tmp < 11)
-                conf->numOfDecks = tmp;
-            break;
-
-        case 'm':
-            tmp = strtol(optarg, NULL, 10);
-            if (0 < tmp)
-                conf->startingMoney = tmp;
-            break;
-
         case 't':
             tmp = strtol(optarg, NULL, 10);
-            if (10 < tmp && tmp < 45)
-                conf->timer = tmp;
+            conf->timer = tmp;
             break;
 
-        case 'p':
-            conf->port = optarg;
+        case 'i':
+            tmp = strtol(optarg, NULL, 10);
+            conf->my_cfdp_id = tmp;
             break;
 
-        case 'b':
-            //tmp = strtol(optarg, NULL, 10);
-            //if (0 < tmp && tmp < 4294967296)
-             //   conf->minBet = tmp;
+        case 'c': 
+            tmp = strtol(optarg, NULL, 10);
+            conf->client_cfdp_id = tmp;
 
             break;
 
         case 'h':
             printf("\n-----------HELP MESSAGE------------\n");
             printf("\nusage: %s [options] \n\n", basename(argv[0]));
-            printf("Options: %s%s%s%s%s\n",
-                   "-d NumberOfDecks\n",
-                   "-m StartingMoney\n",
-                    "-t Timer(between 15 and 45 seconds)\n",
-                    "-p PortNumber\n",
+            printf("Options: %s%s%s\n",
+                    "-t timeout\n",
+                    "-i my cfdp id for server\n",
+                    "-c client id\n"
                     "-h HelpMessage");
 
-            printf("default number of decks is 2, but can change \n%s%s%s%s%s",
-                    "if to something between 1 and 10. Default \n",
-                    "starting money is 100, and is good as long as it\n",
-                    "between 0 and 4294967296 (uint32 max). \n",
-                    "Default for timer is 15 seconds. Default port number\n",
-                    "is 4420\n");
+            printf("Default port number mis 1111\n");
             printf("\n---------------END----------------\n");
             break;
         default:
@@ -290,19 +267,19 @@ static void *findElement(List *list, uint32_t id, int (*f)(void *element, void *
     NODE *cur = list->head->next;
     int found_with_func = 0;
     int found_with_id = 0;
-    
     while (cur->next != NULL)
     {
-
         if (f != NULL)
             found_with_func = f(cur->element, args);
 
         if(cur->id == id)
             found_with_id = 1;
 
-        if (found_with_func || found_with_id)
+        if (found_with_func || found_with_id){
             return cur->element;
 
+        }
+            
         cur = cur->next;
     }
     return NULL;

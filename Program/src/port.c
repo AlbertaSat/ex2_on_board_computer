@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "utils.h"
+#include "mib.h"
+
 
 #ifdef POSIX_PORT
        #include <pthread.h>
@@ -265,12 +267,15 @@ void ssp_cleanup_req(Request *req) {
     free(req);
 }
 
+
+
 void ssp_cleanup(Protocol_state *p_state) {
 
     #ifdef POSIX_PORT
     pthread_t * handle = (pthread_t*) p_state->server_handle;        
     pthread_join(*handle, NULL);
 
+    free_mib(p_state->mib);
     free(p_state->server_handle);
     free(p_state->server_port);
     free(p_state->server_thread_attributes);
@@ -288,6 +293,7 @@ void ssp_cleanup_client(Client *client) {
         pthread_t * handle = (pthread_t*) client->client_handle;
         pthread_join(*handle, NULL);
     #endif
+    
     ssp_cleanup_req(client->outGoing_req);
     free(client->incoming_req);
     free(client->client_handle);

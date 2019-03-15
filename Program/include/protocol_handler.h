@@ -24,7 +24,7 @@ typedef enum Indication {
 typedef struct request {
     Indication type;
     uint32_t transaction_id;
-    char *dest_cfdp_id;
+    uint32_t dest_cfdp_id;
     char *source_file_name;
     char *destination_file_name;
     uint8_t segmentation_control;
@@ -62,6 +62,7 @@ typedef struct protocol_state {
     void *server_handle;
     void *server_thread_attributes;
     MIB *mib;
+    uint32_t my_cfdp_id;
     Client *newClient;
     Request *current_server_request;
 

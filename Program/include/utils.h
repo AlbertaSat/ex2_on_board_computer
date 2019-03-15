@@ -15,14 +15,12 @@ This file is the header file for utils.c
     Purpose: This struct if our configuration for this program, these elements
     are set with getopt
 ------------------------------------------------------------------------------*/
-typedef struct CONFIG
+typedef struct config
 {
-    uint32_t numOfDecks;
-    uint32_t startingMoney;
-    int timer;
-    char *port;
-    uint32_t minBet;
-} CONFIG;
+    unsigned int timer;
+    uint32_t client_cfdp_id;
+    uint32_t my_cfdp_id;
+} Config;
 
 /*------------------------------------------------------------------------------
     Purpose: This is a node for the link list bellow
@@ -77,5 +75,5 @@ int checkAlloc(void *mem, int notOkToFail);
                 char **argv: the arguments
     Return:     CONFIG *
 ------------------------------------------------------------------------------*/
-CONFIG *configuration(int argc, char **argv);
+Config *configuration(int argc, char **argv);
 #endif //UTILS_H

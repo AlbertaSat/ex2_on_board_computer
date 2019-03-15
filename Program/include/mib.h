@@ -40,7 +40,6 @@ typedef struct remote_entity {
     //TODO probably add new UT layer specific stuff
     uint32_t UT_address;
     uint16_t UT_port;
-
     uint32_t cfdp_id;
 
     unsigned int one_way_light_time;
