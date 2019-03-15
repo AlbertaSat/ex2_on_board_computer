@@ -5,24 +5,32 @@
 #include "string.h"
 #include "packet.h"
 
-static void build_put_packet(char* packet, Request *req, Client* client) {
+
+void build_pdu_header(char* packet, Request *req, Client* client, Protocol_state *p_state) {
+    //4 is the header length before id variables
+    memcpy(packet, client->pdu_header, PACKET_STATIC_HEADER_LEN);
+    //memcpy(packet, "some other stuff\n", 5);
+    //memcpy(&packet[PACKET_STATIC_HEADER_LEN], client->pdu_header->destination_id, client->pdu_header->length_of_entity_IDs);
+    //memcpy(&packet[PACKET_STATIC_HEADER_LEN + client->pdu_header->length_of_entity_IDs], client->pdu_header->destination_id, client->pdu_header->length_of_entity_IDs);
     
-    Pdu_header header;
-    header.length_of_entity_IDs = 1;
-    header.destination_id = (uint8_t) client->cfdp_id;  
-    header.source_id = 2;
-    memcpy(packet, &header, 100);
+
+}
 
 
+static void build_put_packet(char* packet, Request *req, Client* client, Protocol_state *p_state) {
+    
 }
 //fills the current request with packet data, responses from servers
 void parse_packet_client(char* msg, Request *current_request, Client* client, Protocol_state *p_state) {
-    ssp_printf("server received %x\n", msg);
+    ssp_printf("client received %x\n", msg);
 }
 
 //fills the current_request struct for the server, incomming requests
 void parse_packet_server(char* msg, Request *current_request, Protocol_state *p_state) {
-    ssp_printf("server received %x\n", msg);
+    Pdu_header *header = (Pdu_header *) msg;
+    
+    ssp_printf("server received %s\n", msg);
+    ssp_printf("length of Ids %d:\n", header->length_of_entity_IDs);
 }
 
 //Server responses
@@ -40,11 +48,14 @@ void packet_handler_client(Response res, Request *req, Client* client, Protocol_
 //current user request, to send to client
 void user_request_handler(Response res, Request *req, Client* client, Protocol_state *p_state) {
 
+    res.msg = req->buff;
+    build_pdu_header(res.msg, req, client, p_state);
+
     switch (req->type)
     {
         case put:
-                res.msg = req->buff;
-                build_put_packet(res.msg, client, req);
+                
+                build_put_packet(res.msg, req, client, p_state);
                 ssp_sendto(res);
             break;
     

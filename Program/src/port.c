@@ -19,7 +19,6 @@
        #include <stdarg.h>
 
 #endif
-
 #include "protocol_handler.h"
 
 void *ssp_alloc(uint32_t n_memb, size_t size) {
@@ -118,8 +117,8 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
     res.addr = posix_client;
     res.sfd = sfd;
     res.packet_len = client->packet_len;
+
     user_request_handler(res, client->outGoing_req, client, p_state);
-    
     return 0;
     #endif
 
@@ -245,8 +244,41 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     List *entity_list = p_state->mib->remote_entities;
     Remote_entity *remote = entity_list->find(entity_list, cfdp_id, NULL, NULL);
 
+    if (remote == NULL)
+        ssp_printf("couldn't find entity in Remote_entity list\n");
+
+
     client->unitdata_port = remote->UT_port;
     client->unitdata_id = remote->UT_address;
+    client->mib_info = remote;
+
+    //building the pdu header here
+    client->pdu_header = ssp_alloc(1, sizeof(Pdu_header));
+    checkAlloc(client->pdu_header, 1);
+
+
+    //these will need to be set with a config file
+    Pdu_header* header = client->pdu_header;
+    header->reserved_bit_0 = 0;
+    header->reserved_bit_1 = 0;
+    header->reserved_bit_2 = 0;
+    header->CRC_flag = client->mib_info->CRC_required;
+    header->direction = 1;
+    header->PDU_type = 0;
+    header->PDU_data_field_len = 1200;
+    header->transaction_seq_num_len = 3;
+    header->transaction_sequence_number = 0;
+    header->length_of_entity_IDs = 1; 
+
+    header->destination_id = ssp_alloc(header->length_of_entity_IDs, sizeof(u_int8_t));
+    checkAlloc(header->destination_id, 1);
+    memcpy(header->destination_id, &remote->cfdp_id, header->length_of_entity_IDs);
+
+
+    header->source_id = ssp_alloc(header->length_of_entity_IDs, sizeof(u_int8_t));
+    checkAlloc(header->source_id, 1);
+    memcpy(header->source_id, &p_state->my_cfdp_id, header->length_of_entity_IDs);
+
 
     //TODO lock this
     p_state->newClient = client;
@@ -298,6 +330,10 @@ void ssp_cleanup_client(Client *client) {
     free(client->incoming_req);
     free(client->client_handle);
     free(client->client_thread_attributes);
+    free(client->pdu_header->destination_id);
+    free(client->pdu_header->source_id);
+    free(client->pdu_header);
+
     free(client);
 
 }

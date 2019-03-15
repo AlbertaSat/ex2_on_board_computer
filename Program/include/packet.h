@@ -9,7 +9,7 @@
 // PACKET_HEADER_LEN + data max size = (65536 * 8)
 #define PACKET_MAX_LEN 524512
 #define PACKET_LEN 1024 + 224 // 1248 limiting the data portion to 56 bytes
-
+#define PACKET_STATIC_HEADER_LEN 32
 
 
 typedef struct pdu_header{

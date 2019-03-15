@@ -70,9 +70,7 @@ int main(int argc, char** argv) {
    
     //connectionless server
     char port[17];
-    
     snprintf(port, 17, "%u", server_entity->UT_port);
-    printf("%s\n", port);
 
     Protocol_state *p_state = ssp_connectionless_server(port);
     //set this node's Id, this has to be hardcoded/assigned
@@ -81,7 +79,7 @@ int main(int argc, char** argv) {
 
 
     //print entity data
-    mib->remote_entities->print(mib->remote_entities, p, NULL);
+    //mib->remote_entities->print(mib->remote_entities, p, NULL);
 
 
     //create a client
