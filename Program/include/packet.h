@@ -13,20 +13,45 @@
 
 
 typedef struct pdu_header{
-    unsigned int version: 3; 
-    unsigned int PDU_type: 1;  //0 File directive, 1 File Data, 
-    unsigned int direction: 1; //0 toward file receiver, 1 toward file sender
-    unsigned int transmission_mode: 1; //0 acknowledged, 1 unacknowledged
-    unsigned int CRC_flag: 1; //0 crc not present, 1 crc present
-    unsigned int reserved_bit_0: 1; //set to 0
+    unsigned int version: 3;
+
+    //0 File directive, 1 File Data,
+    unsigned int PDU_type: 1;  
+
+    //0 toward file receiver, 1 toward file sender
+    unsigned int direction: 1;
+    
+    //0 acknowledged, 1 unacknowledged
+    unsigned int transmission_mode: 1;
+
+    //0 crc not present, 1 crc present
+    unsigned int CRC_flag: 1; 
+
+    //set to 0
+    unsigned int reserved_bit_0: 1; 
+    
+    //data field length in octets
     unsigned int PDU_data_field_len: 16;
-    unsigned int reserved_bit_1: 1; //set to 0
+
+    //set to 0
+    unsigned int reserved_bit_1: 1;
+    
+    //length of entity ids in octets
     unsigned int length_of_entity_IDs: 3;
+
+     //set to 0
     unsigned int reserved_bit_2: 1;
-    unsigned int transaction_seq_num_len: 3; //number of octets in sequence number, 0 is one octet
-    //these are variable in size, and will get memory allocated based on the length variables above
+
+    //number of octets in sequence number, 0 is one octet
+    unsigned int transaction_seq_num_len: 3; 
+
+    //variable in size, and will get memory allocated based on the length variables above
     void *source_id;
+
+    //variable in size, and will get memory allocated based on the length variables above
     void *transaction_sequence_number;
+
+    //variable in size, and will get memory allocated based on the length variables above
     void *destination_id;
 } Pdu_header;  
 
