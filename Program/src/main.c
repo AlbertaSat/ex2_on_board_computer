@@ -78,10 +78,6 @@ int main(int argc, char** argv) {
     p_state->mib = mib;
 
 
-    //print entity data
-    //mib->remote_entities->print(mib->remote_entities, p, NULL);
-
-
     //create a client
     Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
 

@@ -247,7 +247,6 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     if (remote == NULL)
         ssp_printf("couldn't find entity in Remote_entity list\n");
 
-
     client->unitdata_port = remote->UT_port;
     client->unitdata_id = remote->UT_address;
     client->mib_info = remote;

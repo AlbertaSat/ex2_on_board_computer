@@ -78,5 +78,5 @@ void parse_packet_server(char* buff, Request *req, Protocol_state *p_state);
 void packet_handler_client(Response res, Request *req, Client *client, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client, Protocol_state *p_state);
 void parse_packet_client(char* buff, Request *req, Client *client, Protocol_state *p_state);
-void build_pdu_header(char* packet, Request *req, Client* client, Protocol_state *p_state);
+
 #endif
