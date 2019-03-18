@@ -28,7 +28,7 @@ void *ssp_alloc(uint32_t n_memb, size_t size) {
 }
 
 
-void ssp_printf(char*stuff, ...) {
+void ssp_printf( char *stuff, ...) {
     #ifdef POSIX_PORT
         va_list args;
         va_start(args, stuff);
@@ -36,6 +36,28 @@ void ssp_printf(char*stuff, ...) {
         va_end (args);
     #endif
 }
+
+void ssp_print_hex(unsigned char *stuff, uint32_t size){
+
+    
+    uint32_t row_size = 32;
+    uint32_t number_of_rows = size / row_size;
+    uint32_t current_packet_index = 0;
+    ssp_printf("packet size: %u\n", size);
+
+    for (unsigned int i = 0; i < number_of_rows; i+= 1) {
+
+        for (unsigned int j = 0; j < row_size/4; j+= 1){
+            ssp_printf("%x%x%x%x..", 
+            stuff[current_packet_index++],
+            stuff[current_packet_index++],
+            stuff[current_packet_index++],
+            stuff[current_packet_index++]);
+        }
+        
+        ssp_printf("\n");
+    }
+}   
 
 
 void ssp_error(char *msg) {
@@ -58,7 +80,7 @@ void ssp_sendto(Response res) {
 
 
 //this function is a callback when using my posix port
-static int on_recv_server(int sfd, char *msg, uint32_t *buff_size, struct sockaddr_storage addr, void *other) {
+static int on_recv_server(int sfd, unsigned char *msg, uint32_t *buff_size, struct sockaddr_storage addr, void *other) {
 
 
     Protocol_state *p_state = (Protocol_state *) other;
@@ -73,7 +95,7 @@ static int on_recv_server(int sfd, char *msg, uint32_t *buff_size, struct sockad
     res.packet_len = p_state->packet_size;
 
     //filles the request struct
-    parse_packet_server(msg, p_state->current_server_request, p_state);
+    parse_packet_server(msg, res.packet_len, p_state->current_server_request, p_state);
 
     //ssp_printf("Server received: %s\n", msg);
     packet_handler_server(res, p_state->current_server_request, p_state);
@@ -81,7 +103,7 @@ static int on_recv_server(int sfd, char *msg, uint32_t *buff_size, struct sockad
 
 }
 
-static int on_recv_client(int sfd, char *msg, uint32_t *buff_size, struct sockaddr_in addr, void *other) {
+static int on_recv_client(int sfd, unsigned char *msg, uint32_t *buff_size, struct sockaddr_in addr, void *other) {
     
     #ifdef POSIX_PORT
     struct sockaddr_in* posix_client = (struct sockaddr_in*) &addr;
@@ -99,7 +121,6 @@ static int on_recv_client(int sfd, char *msg, uint32_t *buff_size, struct sockad
     //filles the request struct
     parse_packet_client(msg, client->incoming_req, client, p_state);
 
-    //ssp_printf("Client received: %s\n", msg);
     packet_handler_client(res, client->incoming_req, client, p_state);
     return 0;
     
@@ -142,7 +163,7 @@ void *ssp_connectionless_server_task(void *params) {
 }
 
 
-Protocol_state* ssp_connectionless_server(char *port) {
+Protocol_state* ssp_connectionless_server(unsigned char *port) {
     #ifdef POSIX_PORT
     Protocol_state *state = calloc(sizeof(Protocol_state), 1);
     state->packet_size = PACKET_LEN;
@@ -153,7 +174,7 @@ Protocol_state* ssp_connectionless_server(char *port) {
     pthread_attr_t *attr = calloc(sizeof(pthread_attr_t), 1); 
     checkAlloc(attr, 1);
 
-    state->server_port = calloc(sizeof(char), 10);
+    state->server_port = calloc(sizeof(unsigned char), 10);
     checkAlloc(state->server_port, 1);
 
     strncpy (state->server_port, port, 10);
@@ -190,8 +211,8 @@ void *ssp_connectionless_client_task(void* params){
 
     Protocol_state *p_state = (Protocol_state *) params;
 
-    char host_name[INET_ADDRSTRLEN];
-    char port[10];
+    unsigned char host_name[INET_ADDRSTRLEN];
+    unsigned char port[10];
     //convert int to char *
     snprintf(port, 10, "%d", p_state->newClient->unitdata_port);
 
@@ -268,6 +289,7 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     header->transaction_seq_num_len = 3;
     header->transaction_sequence_number = 0;
     header->length_of_entity_IDs = 1; 
+    header->transmission_mode = remote->default_transmission_mode;
 
     header->destination_id = ssp_alloc(header->length_of_entity_IDs, sizeof(u_int8_t));
     checkAlloc(header->destination_id, 1);
@@ -293,7 +315,6 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
 }
 
 void ssp_cleanup_req(Request *req) {
-
     free(req->buff);
     free(req);
 }

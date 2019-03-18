@@ -5,8 +5,10 @@
 #include "string.h"
 #include "packet.h"
 
+//returns the location in the packet where the next pointer for tthe packet will start after the header
+static uint32_t build_pdu_header(Response res, Request *req, Client* client, Protocol_state *p_state) {
+    unsigned char *packet = res.msg;
 
-static void build_pdu_header(char* packet, Client* client, Protocol_state *p_state) {
     memcpy(packet, client->pdu_header, PACKET_STATIC_HEADER_LEN);
     
     //copy variable length src id
@@ -23,18 +25,39 @@ static void build_pdu_header(char* packet, Client* client, Protocol_state *p_sta
     memcpy(&packet[PACKET_STATIC_HEADER_LEN + client->pdu_header->length_of_entity_IDs + client->pdu_header->transaction_seq_num_len],
     client->pdu_header->destination_id,
     client->pdu_header->length_of_entity_IDs);    
+
+    return PACKET_STATIC_HEADER_LEN + client->pdu_header->length_of_entity_IDs + client->pdu_header->transaction_seq_num_len;
 }
 
-static void build_put_packet(char* packet, Request *req, Client* client, Protocol_state *p_state) {    
+static void build_put_packet_metadata(Response res, uint32_t start, Request *req, Client* client, Protocol_state *p_state) {    
+    
+    /*
+    Pdu_header *header = (Pdu_header *) res.msg;
+
+    //set header to file directive
+    header->PDU_type = 1;
+    
+    //set directive
+    Pdu_directive *directive = &res.msg[start];
+    directive->directive_code = META_DATA_PDU;
+    
+    //set metadata
+    Pdu_meta_data *meta_data = &res.msg[start + sizeof(directive)];
+    */
+    return; 
+
 }
+
+
+
 
 //fills the current request with packet data, responses from servers
-void parse_packet_client(char* msg, Request *current_request, Client* client, Protocol_state *p_state) {
+void parse_packet_client(unsigned char *msg, Request *current_request, Client* client, Protocol_state *p_state) {
     ssp_printf("client received %x\n", msg);
 }
 
 //fills the current_request struct for the server, incomming requests
-void parse_packet_server(char* msg, Request *current_request, Protocol_state *p_state) {
+void parse_packet_server(unsigned char *msg, uint32_t packet_len, Request *current_request, Protocol_state *p_state) {
     Pdu_header *header = (Pdu_header *) msg;
 
     uint32_t source_id = 0;
@@ -49,21 +72,26 @@ void parse_packet_server(char* msg, Request *current_request, Protocol_state *p_
     memcpy(&dest_id, &msg[PACKET_STATIC_HEADER_LEN + header->length_of_entity_IDs + header->transaction_seq_num_len],
     header->length_of_entity_IDs);
 
+    ssp_printf("server received: ");
+    ssp_print_hex(msg, packet_len);
+
     if (p_state->my_cfdp_id != dest_id){
         ssp_printf("someone is sending packets here that are not for me\n");
         return;
     }
 
+    //process file directive
+    if (header->PDU_type == 0) {
+        
+    }
+
+
     
 
-
-
-
-
-
-    ssp_printf("server received %s\n", msg);
+    
     ssp_printf("src id %u\n",source_id); 
     ssp_printf("dest id %d\n", dest_id);
+    
     ssp_printf("transaction sequence number %d\n", transaction_sequence_number);
 }
 
@@ -83,12 +111,12 @@ void packet_handler_client(Response res, Request *req, Client* client, Protocol_
 void user_request_handler(Response res, Request *req, Client* client, Protocol_state *p_state) {
 
     res.msg = req->buff;
-    build_pdu_header(res.msg, client, p_state);
+    uint32_t start = build_pdu_header(res, req, client, p_state);
 
     switch (req->type)
     {
         case put:
-                build_put_packet(res.msg, req, client, p_state);
+                build_put_packet_metadata(res, start, req, client, p_state);
                 ssp_sendto(res);
             break;
     
@@ -102,14 +130,14 @@ void user_request_handler(Response res, Request *req, Client* client, Protocol_s
 //data will be delivered
 
 void put_request(char *dest_cfdp_id, 
-            char *source_file_name,
-            char *destination_file_name,
+            unsigned char *source_file_name,
+            unsigned char *destination_file_name,
             uint8_t segmentation_control,
             uint8_t fault_handler_overides,
             uint8_t flow_lable,
             uint8_t transmission_mode,
-            char* messages_to_user,
-            char* filestore_requests
+            unsigned char* messages_to_user,
+            unsigned char* filestore_requests
             ) {
 
     Request *req = ssp_alloc(1, sizeof(Request));

@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 
 
     //setting host name for testing
-    char *host_name = "127.0.0.1";
+    unsigned char *host_name = "127.0.0.1";
     uint32_t addr[sizeof(uint32_t)];
     inet_pton(AF_INET, host_name, addr);
 
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     
    
     //connectionless server
-    char port[17];
+    unsigned char port[17];
     snprintf(port, 17, "%u", server_entity->UT_port);
 
     Protocol_state *p_state = ssp_connectionless_server(port);
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
     req->transmission_mode = 0;
     req->messages_to_user = "sup";
     req->filestore_requests = NULL;
-    req->buff = calloc(new_client->packet_len, sizeof(char));
+    req->buff = calloc(new_client->packet_len, sizeof(unsigned char));
     
     //will block on pthread_join
     ssp_cleanup_client(new_client);

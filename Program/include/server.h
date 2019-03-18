@@ -17,7 +17,7 @@ This file is the header file for server.c
     Perameters: char *port is the port number you want to run the host on
     Return: It returns a socket descriptor to a UDP ready port
 ------------------------------------------------------------------------------*/
-int prepareUdpHost(char *port);
+int prepareUdpHost(unsigned char *port);
 
 /*------------------------------------------------------------------------------
     Purpose:    This function creates a udp select server on the socket sfd.
@@ -42,8 +42,8 @@ int prepareUdpHost(char *port);
     Return:     None
 ------------------------------------------------------------------------------*/
 
-void udpSelectServer(char *port, int packet_len,
-    int (*onRecv)(int sfd, char *msg,  uint32_t *buff_size, struct sockaddr_storage client, void *other), 
+void udpSelectServer(unsigned char *port, int packet_len,
+    int (*onRecv)(int sfd, unsigned char *msg,  uint32_t *buff_size, struct sockaddr_storage client, void *other), 
     int (*onTimeOut)(void *other),
     void *other);
 
@@ -59,9 +59,9 @@ void udpSelectServer(char *port, int packet_len,
 int *prepareSignalHandler(void);
 
 
-void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, 
+void udpClient(unsigned char *hostname, unsigned char*port, int packet_len, void *onSendParams, void *onRecvParams, 
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
-    int (*onRecv)(int sfd, char *msg, uint32_t *buff_size, struct sockaddr_in client, void *onRecvParams));
+    int (*onRecv)(int sfd, unsigned char *msg, uint32_t *buff_size, struct sockaddr_in client, void *onRecvParams));
 
     
 #endif //SERVER_H

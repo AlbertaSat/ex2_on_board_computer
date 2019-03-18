@@ -161,7 +161,21 @@ typedef struct filestore_response {
             File directive PDUs all start with a  1 byte directive code,
             followed by one of the following various pdu types:
 
-            - pdu_meta_data 
+            //not implemented
+            -END-OF-FILE PDU
+            -FINISHED PDU 
+            -ACK PDU
+            -NAK PDU 
+            -PROMPT PDU 
+            -KEEP ALIVE PDU
+
+            //implemented
+            -METADATA PDU 
+        
+        Non directive PDUs (when the PDU type in the header is set to 1):
+            -FILE DATA PDU 
+
+
             
 
 
@@ -179,16 +193,16 @@ typedef struct filestore_response {
 
 typedef struct pdu_directive {
     uint8_t directive_code;
-    void *pdu_type;
 } Pdu_directive;
 
 
 typedef struct pdu_meta_data {
-    
-    unsigned int segmentation_control : 1; //0 Record boundaries respeced, 1 not respected
+    //0 Record boundaries respeced, 1 not respected
+    unsigned int segmentation_control : 1; 
     unsigned int reserved_bits: 7;
-    unsigned int file_size : 32; //length of the file in octets, set all 0 for unbounded size
-    
+
+    //length of the file in octets, set all 0 for unbounded size
+    unsigned int file_size : 32; 
     LV source_file;
     LV destination_file;
 
@@ -203,5 +217,13 @@ typedef struct pdu_meta_data {
     TLV *options;
 
 } Pdu_meta_data;
+
+
+typedef struct file_data_pdu_contents {
+    //in octets
+    uint32_t offset;
+    //variable sized
+    unsigned char *data;
+} File_data_pdu_contents;
 
 #endif 

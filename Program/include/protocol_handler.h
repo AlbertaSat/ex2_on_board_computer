@@ -7,7 +7,7 @@
 
 typedef struct response {
     int sfd;
-    char *msg;
+    unsigned char *msg;
     //this is type (struct sockaddr_in) in posix
     void *addr;
     //getting rid of this soon in favour of client based packet sizes
@@ -25,15 +25,15 @@ typedef struct request {
     Indication type;
     uint32_t transaction_id;
     uint32_t dest_cfdp_id;
-    char *source_file_name;
-    char *destination_file_name;
+    unsigned char *source_file_name;
+    unsigned char *destination_file_name;
     uint8_t segmentation_control;
     uint8_t fault_handler_overides;
     uint8_t flow_lable;
     uint8_t transmission_mode;
-    char* messages_to_user;
-    char* filestore_requests;
-    char* buff;
+    unsigned char* messages_to_user;
+    unsigned char* filestore_requests;
+    unsigned char* buff;
 } Request;
 
 
@@ -47,6 +47,7 @@ typedef struct client {
     Request *outGoing_req;
     Request *incoming_req;
 
+    //can get rid of these, these are found in mib_info anyway
     uint32_t cfdp_id;
     uint32_t unitdata_id;
     uint32_t unitdata_port;
@@ -61,7 +62,7 @@ typedef struct client {
 
 typedef struct protocol_state {
     uint32_t packet_size;
-    char *server_port;
+    unsigned char *server_port;
     void *server_handle;
     void *server_thread_attributes;
     MIB *mib;
@@ -74,9 +75,9 @@ typedef struct protocol_state {
 
 
 void packet_handler_server(Response res, Request *req, Protocol_state *p_state);
-void parse_packet_server(char* buff, Request *req, Protocol_state *p_state);
+void parse_packet_server(unsigned char* buff, uint32_t packet_len, Request *req, Protocol_state *p_state);
 void packet_handler_client(Response res, Request *req, Client *client, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client, Protocol_state *p_state);
-void parse_packet_client(char* buff, Request *req, Client *client, Protocol_state *p_state);
+void parse_packet_client(unsigned char* buff, Request *req, Client *client, Protocol_state *p_state);
 
 #endif
