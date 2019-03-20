@@ -9,7 +9,7 @@
 // PACKET_HEADER_LEN + data max size = (65536 * 8)
 #define PACKET_MAX_LEN 524512
 #define PACKET_LEN 1024 + 224 // 1248 limiting the data portion to 56 bytes
-#define PACKET_STATIC_HEADER_LEN 32
+#define PACKET_STATIC_HEADER_LEN 4 //in bytes
 
 
 typedef struct pdu_header{
@@ -190,21 +190,30 @@ typedef struct filestore_response {
 #define PROMPT_PDU 0x09
 #define KEEP_ALIVE_PDU 0x0C
 
+#define SIZE_OF_DIRECTIVE_CODE 1
+
 
 typedef struct pdu_directive {
     uint8_t directive_code;
 } Pdu_directive;
 
+/*
+The segmentation control parameter
+    - shall indicate whether the file being delivered is to be segmented as an array of octets
+        or as an array of variable-length records;
+    - shall be omitted when local and remote file names are omitted.
+*/
 
 typedef struct pdu_meta_data {
-    //0 Record boundaries respeced, 1 not respected
+    //0 Record boundaries respeced (read as array of octets), 1 not respected (variable length)
     unsigned int segmentation_control : 1; 
+    
     unsigned int reserved_bits: 7;
 
     //length of the file in octets, set all 0 for unbounded size
     unsigned int file_size : 32; 
-    LV source_file;
-    LV destination_file;
+    LV source_file_name;
+    LV destination_file_name;
 
     /*
     Options include:

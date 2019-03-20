@@ -21,6 +21,7 @@
 #endif
 #include "protocol_handler.h"
 
+
 void *ssp_alloc(uint32_t n_memb, size_t size) {
     #ifdef POSIX_PORT
         return calloc(n_memb, size);
@@ -36,27 +37,18 @@ void ssp_printf( char *stuff, ...) {
         va_end (args);
     #endif
 }
-
+//size is the number of bytes we want to print
 void ssp_print_hex(unsigned char *stuff, uint32_t size){
-
     
-    uint32_t row_size = 32;
-    uint32_t number_of_rows = size / row_size;
     uint32_t current_packet_index = 0;
-    ssp_printf("packet size: %u\n", size);
+    ssp_printf("printing number of bytes: %u\n", size);
 
-    for (unsigned int i = 0; i < number_of_rows; i+= 1) {
-
-        for (unsigned int j = 0; j < row_size/4; j+= 1){
-            ssp_printf("%x%x%x%x..", 
-            stuff[current_packet_index++],
-            stuff[current_packet_index++],
-            stuff[current_packet_index++],
-            stuff[current_packet_index++]);
+        for (unsigned int j = 0; j < size; j += 1) {
+            ssp_printf("%x.", 
+            stuff[current_packet_index]);
+            current_packet_index += 1; 
         }
-        
         ssp_printf("\n");
-    }
 }   
 
 
