@@ -21,9 +21,8 @@
 //exit handler variable for the main thread
 static int *exit_now;
 
-
+/*
 static void p(void *element, void *args) {
-
 
     Remote_entity *remote_entity = element;
     ssp_printf("[\n id: %d\n remote_ut_address: %d:%d\n]\n",
@@ -31,8 +30,8 @@ static void p(void *element, void *args) {
     remote_entity->UT_address,
     remote_entity->UT_port
     );
-
 }
+*/
 
 int main(int argc, char** argv) {
 
@@ -61,7 +60,7 @@ int main(int argc, char** argv) {
     add_new_cfdp_entity(mib, 4, *addr, 1114);   
 
 
-    //find server client
+    //find server client in mib
     Remote_entity* server_entity = mib->remote_entities->find(mib->remote_entities, conf->my_cfdp_id, NULL, NULL);
     if (server_entity == NULL) {
         printf("couldn't find entity\n");
@@ -76,30 +75,14 @@ int main(int argc, char** argv) {
     //set this node's Id, this has to be hardcoded/assigned
     p_state->my_cfdp_id = conf->my_cfdp_id;
     p_state->mib = mib;
+    p_state->verbose_level = conf->verbose_level;
 
 
     //create a client
     Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
+    put_request("test.txt", "delivered_file.txt", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
 
 
-    //give the client a new request to perform
-    Request *req = new_client->outGoing_req;
-
-    //build a request
-    req->transaction_id = 1;
-    //enumerations
-    req->type = put;
-    req->dest_cfdp_id = conf->client_cfdp_id;
-    req->source_file_name = "test.txt";
-    req->destination_file_name = "test.txt";
-    req->segmentation_control = 0;
-    req->fault_handler_overides = 0;
-    req->flow_lable = 0;
-    req->transmission_mode = 0;
-    req->messages_to_user = "sup";
-    req->filestore_requests = NULL;
-    req->buff = calloc(new_client->packet_len, sizeof(unsigned char));
-    
     //will block on pthread_join
     ssp_cleanup_client(new_client);
     ssp_cleanup(p_state);

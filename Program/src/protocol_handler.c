@@ -36,8 +36,8 @@ static uint8_t build_pdu_header(Response res, Request *req, Client* client, Prot
 static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *req, Client* client, Protocol_state *p_state) {    
     Pdu_header *header = (Pdu_header *) res.msg;
    
-    //set header to file directive
-    header->PDU_type = 1;
+    //set header to file directive 0 is directive, 1 is data
+    header->PDU_type = 0;
     
     uint8_t packet_index = start;
 
@@ -48,18 +48,18 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
     Pdu_meta_data *meta_data_packet = &res.msg[packet_index];
 
     //1 bytes
-    meta_data_packet->segmentation_control = 0;
+    meta_data_packet->segmentation_control = req->segmentation_control;
     meta_data_packet->reserved_bits = 0;
     
     //4 bytes
-    meta_data_packet->file_size = 1;
+    meta_data_packet->file_size = req->file_size;
     packet_index += 5;
 
     //variable length params
-    uint8_t src_file_name_length = 5;
-    uint8_t destination_file_length = 7;
-    char *src_file_name = "hero";
-    char *destination_file_name = "thereo";
+    uint8_t src_file_name_length = strnlen(req->source_file_name, MAX_PATH);
+    uint8_t destination_file_length = strnlen(req->destination_file_name, MAX_PATH);
+    char *src_file_name = req->source_file_name;
+    char *destination_file_name = req->destination_file_name;
     
     
     //copy source length to packet (1 bytes) 
@@ -78,15 +78,87 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
     memcpy(&res.msg[packet_index], destination_file_name, destination_file_length);
     packet_index += destination_file_length;
     uint8_t total_bytes = packet_index - start; 
-
-
-    ssp_printf("------------printing_metadata_contents-----------\n");
-    ssp_print_hex(&res.msg[start], total_bytes);
-
     return packet_index;
 }
 
 
+
+
+//Omission of source and destination filenames shall indicate that only Meta
+//data will be delivered
+int put_request(unsigned char *source_file_name,
+            unsigned char *destination_file_name,
+            uint8_t segmentation_control,
+            uint8_t fault_handler_overides,
+            uint8_t flow_lable,
+            uint8_t transmission_mode,
+            unsigned char* messages_to_user,
+            unsigned char* filestore_requests,
+            Client *client,
+            Protocol_state *p_state
+            ) {
+
+
+    uint32_t file_size = get_file_size(source_file_name);
+    
+    if (file_size == -1)
+        return -1;
+
+    //give the client a new request to perform
+    Request *req = client->outGoing_req;
+
+    //build a request
+    req->transaction_id = p_state->transaction_id++;
+    //enumeration
+    req->type = put;
+    req->dest_cfdp_id = client->cfdp_id;
+    req->file_size = file_size;
+    
+    memcpy(req->source_file_name, source_file_name ,strnlen(source_file_name, MAX_PATH));
+    memcpy(req->destination_file_name, destination_file_name, strnlen(destination_file_name, MAX_PATH));
+
+    req->segmentation_control = segmentation_control;
+    req->fault_handler_overides = fault_handler_overides;
+    req->flow_lable = flow_lable;
+    req->transmission_mode = transmission_mode;
+    req->messages_to_user = messages_to_user;
+    req->filestore_requests = filestore_requests;
+}
+
+
+static void process_file_request(Request *req) {
+
+    //check if file exists, if it doesn't create it
+    
+    req->file = create_file(req->destination_file_name);
+}
+
+
+
+
+static void fill_request(unsigned char *packet, Request *req_to_fill) {
+
+    Pdu_meta_data *meta_data = packet;
+    req_to_fill->segmentation_control = meta_data->segmentation_control;
+
+    uint8_t packet_index = 4;
+
+    uint32_t file_size = (uint32_t)packet[packet_index];
+    req_to_fill->file_size = file_size;
+    packet_index++;
+
+    uint8_t file_name_len = packet[packet_index];
+    packet_index++;
+    
+    memcpy(req_to_fill->source_file_name, &packet[packet_index], file_name_len);
+    packet_index += file_name_len + 1;
+
+    file_name_len = packet[packet_index];
+    memcpy(req_to_fill->destination_file_name, &packet[packet_index], file_name_len);
+    packet_index += file_name_len;
+
+    return;
+}
 
 
 //fills the current request with packet data, responses from servers
@@ -95,43 +167,59 @@ void parse_packet_client(unsigned char *msg, Request *current_request, Client* c
 }
 
 //fills the current_request struct for the server, incomming requests
-void parse_packet_server(unsigned char *msg, uint32_t packet_len, Request *current_request, Protocol_state *p_state) {
-    Pdu_header *header = (Pdu_header *) msg;
+void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *current_request, Protocol_state *p_state) {
+
+    uint8_t packet_index = PACKET_STATIC_HEADER_LEN;
+    Pdu_header *header = (Pdu_header *) packet;
 
     uint32_t source_id = 0;
-    memcpy(&source_id, &msg[PACKET_STATIC_HEADER_LEN], 
-    header->length_of_entity_IDs);
+    memcpy(&source_id, &packet[packet_index], header->length_of_entity_IDs);
+    packet_index += header->length_of_entity_IDs;
 
     uint32_t transaction_sequence_number = 0;
-    memcpy(&transaction_sequence_number, &msg[PACKET_STATIC_HEADER_LEN 
-    + header->length_of_entity_IDs],
-    header->transaction_seq_num_len);
+    memcpy(&transaction_sequence_number, &packet[packet_index], header->transaction_seq_num_len);
+    packet_index += header->transaction_seq_num_len;
 
     uint32_t dest_id = 0;
-    memcpy(&dest_id, &msg[PACKET_STATIC_HEADER_LEN 
-    + header->length_of_entity_IDs 
-    + header->transaction_seq_num_len],
-    header->length_of_entity_IDs);
+    memcpy(&dest_id, &packet[packet_index], header->length_of_entity_IDs);
+    packet_index += header->length_of_entity_IDs;
 
-    ssp_printf("server received: ");
-   
+
+    if (p_state->verbose_level == 3) {
+        ssp_printf("------------printing_header_received------------\n");
+        ssp_print_hex(packet, packet_index);
+    }
 
     if (p_state->my_cfdp_id != dest_id){
         ssp_printf("someone is sending packets here that are not for me\n");
         return;
     }
 
-    //process file directive
-    if (header->PDU_type == 0) {
-        
+    //process file data
+    if (header->PDU_type == 1) {
+        if (p_state->verbose_level == 3)
+            ssp_printf("receiving data\n");
+
+        return;
     }
 
-    
-    //ssp_printf("src id %u\n",source_id);
-    //ssp_printf("dest id %d\n", dest_id);
-    //ssp_printf("transaction sequence number %d\n", transaction_sequence_number);
+    current_request->dest_cfdp_id = source_id;
+    Pdu_directive *directive = &packet[packet_index];
+    packet_index++;
 
-    memset(msg, 0, packet_len);
+    switch (directive->directive_code)
+    {
+        case META_DATA_PDU:
+            fill_request(&packet[packet_index], current_request);
+            process_file_request(current_request);
+
+            break;
+    
+        default:
+            break;
+    }
+
+    memset(packet, 0, packet_len);
 }
 
 //Server responses
@@ -149,53 +237,28 @@ void packet_handler_client(Response res, Request *req, Client* client, Protocol_
 //current user request, to send to client
 void user_request_handler(Response res, Request *req, Client* client, Protocol_state *p_state) {
 
+    if (req->type == none)
+        return;
+
+
     res.msg = req->buff;
     uint32_t start = build_pdu_header(res, req, client, p_state);
-    
-    ssp_printf("\n..................printing_header..................\n");
-    ssp_print_hex(res.msg, start);
 
     switch (req->type)
     {
         case put:
-                build_put_packet_metadata(res, start, req, client, p_state);
+                start = build_put_packet_metadata(res, start, req, client, p_state);
+                
+                if (p_state->verbose_level == 3) {
+                    ssp_printf("------------sending_a_put_request------------\n");
+                    ssp_print_hex(res.msg, start);
+                }
+
                 ssp_sendto(res);
+                //req->type = none;
             break;
-    
         default:
             break;
     }
 
 }
-
-//Omission of source and destination filenames shall indicate that only Meta
-//data will be delivered
-
-void put_request(char *dest_cfdp_id, 
-            unsigned char *source_file_name,
-            unsigned char *destination_file_name,
-            uint8_t segmentation_control,
-            uint8_t fault_handler_overides,
-            uint8_t flow_lable,
-            uint8_t transmission_mode,
-            unsigned char* messages_to_user,
-            unsigned char* filestore_requests
-            ) {
-
-    Request *req = ssp_alloc(1, sizeof(Request));
-    if (checkAlloc(req, 0)) {
-        ssp_error("cound't allocate mem for request\n");
-    }
-}
-
-/*
-(destination CFDP entity ID,
-[source file name],
-[destination file name],
-[segmentation control],
-[fault handler overrides],
-[flow label],
-[transmission mode],
-[messages to user],
-[filestore requests]) 
-*/

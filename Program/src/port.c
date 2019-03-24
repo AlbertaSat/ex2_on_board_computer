@@ -7,7 +7,7 @@
 #include <string.h>
 #include "utils.h"
 #include "mib.h"
-
+#include "filesystem_funcs.h"
 
 #ifdef POSIX_PORT
        #include <pthread.h>
@@ -17,10 +17,24 @@
        #include <limits.h>
        #include <stdio.h>
        #include <stdarg.h>
+       #include <unistd.h>
 
 #endif
 #include "protocol_handler.h"
 
+int ssp_read(int fd, unsigned char* buff, size_t size) {
+    #ifdef POSIX_PORT
+        return read(fd, buff, size);
+    #endif
+
+}
+
+//SEEK_END 2  SEEK_CUR 1  SEEK_SET 0 
+int ssp_lseek(int fd, int offset, int whence) {
+    #ifdef POSIX_PORT
+        return lseek(fd, offset, whence);
+    #endif
+} 
 
 void *ssp_alloc(uint32_t n_memb, size_t size) {
     #ifdef POSIX_PORT
@@ -28,6 +42,18 @@ void *ssp_alloc(uint32_t n_memb, size_t size) {
     #endif
 }
 
+int ssp_open(char *pathname, int flags) {
+    #ifdef POSIX_PORT
+        return open(pathname, flags);
+    #endif
+}
+
+int ssp_close(int fd) {
+    #ifdef POSIX_PORT
+        return close(fd);
+    #endif
+
+}
 
 void ssp_printf( char *stuff, ...) {
     #ifdef POSIX_PORT
@@ -35,6 +61,13 @@ void ssp_printf( char *stuff, ...) {
         va_start(args, stuff);
         vfprintf(stdout, stuff, args);
         va_end (args);
+        fflush(stdout);
+    #endif
+}
+
+void ssp_error(char *error){
+    #ifdef POSIX_PORT
+        perror(error);
     #endif
 }
 //size is the number of bytes we want to print
@@ -51,15 +84,6 @@ void ssp_print_hex(unsigned char *stuff, uint32_t size){
         ssp_printf("\n");
 }   
 
-
-void ssp_error(char *msg) {
-    
-    #ifdef POSIX_PORT
-        perror(msg);
-    #endif
-
-}
-
 void ssp_sendto(Response res) {
 
     #ifdef POSIX_PORT
@@ -69,6 +93,7 @@ void ssp_sendto(Response res) {
             ssp_error("ERROR in ssp_sendto");
     #endif
 }
+
 
 
 //this function is a callback when using my posix port
@@ -138,7 +163,7 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
 }
 
 //this function is a callback when using  my posix ports
-static  int on_time_out_posix(void *other) {
+static int on_time_out_posix(void *other) {
     return 0;
 }
 
@@ -146,6 +171,7 @@ static  int on_time_out_posix(void *other) {
 void *ssp_connectionless_server_task(void *params) {
     
     Protocol_state* state = (Protocol_state*) params;
+    state->transaction_id = 0;
 
     #ifdef POSIX_PORT
         udpSelectServer(state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, state);
@@ -190,7 +216,8 @@ Protocol_state* ssp_connectionless_server(unsigned char *port) {
     if (0 != err)
         perror("ERROR pthread_create");
 
-    state->current_server_request = calloc(1, sizeof(Request));
+    state->current_server_request = init_request(state->packet_size);
+    
     state->server_handle = handler;
     state->server_thread_attributes = attr;
     return state;
@@ -224,11 +251,8 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     Client *client = calloc(sizeof(Client), 1);
     checkAlloc(client, 1);
 
-    client->outGoing_req = calloc(1, (sizeof(Request)));
-    checkAlloc(client->outGoing_req, 1);
-
-    client->incoming_req = calloc(1, (sizeof(Request)));
-    checkAlloc(client->incoming_req, 1);
+    client->outGoing_req = init_request(PACKET_LEN);
+    client->incoming_req = init_request(PACKET_LEN);
 
     pthread_t *handler = calloc(sizeof(pthread_t), 1);
     checkAlloc(handler, 1);
@@ -306,7 +330,31 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
 
 }
 
-void ssp_cleanup_req(Request *req) {
+
+Request *init_request(uint32_t buff_len) {
+
+    Request *req = calloc(1, sizeof(Request));
+
+    req->source_file_name = ssp_alloc(MAX_PATH, sizeof(char));
+    checkAlloc(req->source_file_name, 1);
+
+    req->destination_file_name = ssp_alloc(MAX_PATH, sizeof(char));
+    checkAlloc(req->destination_file_name,  1);
+
+
+    req->file = NULL;
+    req->buff_len = buff_len;
+    req->buff = ssp_alloc(buff_len, sizeof(char));
+    checkAlloc(req->buff,  1);
+    return req;
+}
+
+static void ssp_cleanup_req(Request *req) {
+    if (req->file != NULL)
+        free_file(req->file);
+
+    free(req->source_file_name);
+    free(req->destination_file_name);
     free(req->buff);
     free(req);
 }
@@ -319,11 +367,11 @@ void ssp_cleanup(Protocol_state *p_state) {
     pthread_t * handle = (pthread_t*) p_state->server_handle;        
     pthread_join(*handle, NULL);
 
+    ssp_cleanup_req(p_state->current_server_request);
     free_mib(p_state->mib);
     free(p_state->server_handle);
     free(p_state->server_port);
     free(p_state->server_thread_attributes);
-    free(p_state->current_server_request);
     free(p_state);
 
     #endif
@@ -339,7 +387,7 @@ void ssp_cleanup_client(Client *client) {
     #endif
     
     ssp_cleanup_req(client->outGoing_req);
-    free(client->incoming_req);
+    ssp_cleanup_req(client->incoming_req);
     free(client->client_handle);
     free(client->client_thread_attributes);
     free(client->pdu_header->destination_id);

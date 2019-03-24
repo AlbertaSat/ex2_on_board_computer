@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "packet.h"
 #include "mib.h"
+#include "filesystem_funcs.h"
 
 typedef struct response {
     int sfd;
@@ -25,14 +26,22 @@ typedef struct request {
     Indication type;
     uint32_t transaction_id;
     uint32_t dest_cfdp_id;
+
+    File *file;
+    uint32_t file_size;
+
     unsigned char *source_file_name;
     unsigned char *destination_file_name;
+
     uint8_t segmentation_control;
     uint8_t fault_handler_overides;
     uint8_t flow_lable;
     uint8_t transmission_mode;
+
     unsigned char* messages_to_user;
     unsigned char* filestore_requests;
+    
+    uint32_t buff_len;
     unsigned char* buff;
 } Request;
 
@@ -69,6 +78,8 @@ typedef struct protocol_state {
     uint32_t my_cfdp_id;
     Client *newClient;
     Request *current_server_request;
+    uint32_t transaction_id;
+    uint8_t verbose_level;
 
 
 } Protocol_state;
@@ -79,5 +90,35 @@ void parse_packet_server(unsigned char* buff, uint32_t packet_len, Request *req,
 void packet_handler_client(Response res, Request *req, Client *client, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client, Protocol_state *p_state);
 void parse_packet_client(unsigned char* buff, Request *req, Client *client, Protocol_state *p_state);
+
+
+/*  
+    unsigned char *source_file_name,
+    unsigned char *destination_file_name,
+    uint8_t segmentation_control,
+    uint8_t fault_handler_overides,
+    uint8_t flow_lable,
+    uint8_t transmission_mode,
+    unsigned char* messages_to_user,
+    unsigned char* filestore_requests,
+    Client *client,
+    Protocol_state *p_state
+*/
+//returns -1 on error
+int put_request(
+            unsigned char *source_file_name,
+            unsigned char *destination_file_name,
+            uint8_t segmentation_control,
+            uint8_t fault_handler_overides,
+            uint8_t flow_lable,
+            uint8_t transmission_mode,
+            unsigned char* messages_to_user,
+            unsigned char* filestore_requests,
+            Client *client,
+            Protocol_state *p_state
+            );
+
+
+
 
 #endif

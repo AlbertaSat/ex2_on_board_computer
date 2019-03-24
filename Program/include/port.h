@@ -6,6 +6,7 @@
 
 #define STACK_ALLOCATION 16384
 #define POSIX_PORT 1
+#define MAX_PATH 255
 #include "protocol_handler.h"
 
 
@@ -18,17 +19,16 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state);
 void *ssp_connectionless_client_task(void *params);
 void ssp_printf(char *stuff, ...);
 
-
+Request *init_request(uint32_t buff_len);
 void *ssp_alloc(uint32_t u_memb, size_t size);
 void ssp_sendto(Response res);
 void ssp_cleanup(Protocol_state *state);
 void ssp_cleanup_client(Client *client);
 void ssp_print_hex(unsigned char *stuff, uint32_t size);
-
-
-
-
-
+int ssp_open(char *pathname, int flags);
+int ssp_read(int fd, unsigned char* buff, size_t size);
+int ssp_lseek(int fd, int offset, int whence);
+void ssp_error(char *error);
 
 
 void ssp_free(void *pointer);

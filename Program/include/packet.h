@@ -211,7 +211,7 @@ typedef struct pdu_meta_data {
     unsigned int reserved_bits: 7;
 
     //length of the file in octets, set all 0 for unbounded size
-    unsigned int file_size : 32; 
+    uint32_t file_size;
     LV source_file_name;
     LV destination_file_name;
 

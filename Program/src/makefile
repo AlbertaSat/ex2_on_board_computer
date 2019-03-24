@@ -10,6 +10,7 @@ CFILES += server.c  #used for poxix port
 CFILES += protocol_handler.c
 CFILES += list_callbacks.c
 CFILES += mib.c
+CFILES += filesystem_funcs.c
 
 #entrypoint
 MAIN = main

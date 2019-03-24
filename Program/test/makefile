@@ -4,10 +4,11 @@ INCLUDE += -I$(PROJDIR)/include
 CC = gcc 
 
 #---------------------------File Names---------------------------
-#CFILES += udpClient.c
+CFILES += $(PROJDIR)/src/utils.c
+#VPATH = (PROJDIR)/src
 
 #entrypoint
-MAIN = udpClient
+MAIN = main
 
 #---------------------------Compiler Warnings---------------------------
 CWARNS += -W

@@ -25,6 +25,7 @@ to use for general functionality.
 //see header file
 int checkAlloc(void *mem, int notOkToFail)
 {
+
     if (mem == NULL && notOkToFail)
     {
         perror("malloc");
@@ -36,6 +37,7 @@ int checkAlloc(void *mem, int notOkToFail)
     return 1;
 }
 
+
 //see header file
 Config *configuration(int argc, char **argv)
 {
@@ -44,9 +46,10 @@ Config *configuration(int argc, char **argv)
     checkAlloc(conf, 1);
 
     conf->timer = 15;
+    conf->verbose_level = 0;
 
     uint32_t tmp;
-    while ((ch = getopt(argc, argv, "t: i: c: h")) != -1)
+    while ((ch = getopt(argc, argv, "t: i: c: v: h")) != -1)
     {
         switch (ch)
         {
@@ -59,6 +62,11 @@ Config *configuration(int argc, char **argv)
             tmp = strtol(optarg, NULL, 10);
             conf->my_cfdp_id = tmp;
             break;
+        
+        case 'v':
+            tmp = strtol(optarg, NULL, 10);
+            conf->verbose_level = (uint8_t) tmp;
+            break;
 
         case 'c': 
             tmp = strtol(optarg, NULL, 10);
@@ -69,10 +77,11 @@ Config *configuration(int argc, char **argv)
         case 'h':
             printf("\n-----------HELP MESSAGE------------\n");
             printf("\nusage: %s [options] \n\n", basename(argv[0]));
-            printf("Options: %s%s%s\n",
+            printf("Options: %s%s%s%s\n",
                     "-t timeout\n",
                     "-i my cfdp id for server\n",
-                    "-c client id\n"
+                    "-c client id\n",
+                    "-v verbose level (1-3)"
                     "-h HelpMessage");
 
             printf("Default port number mis 1111\n");

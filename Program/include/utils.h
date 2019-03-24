@@ -20,6 +20,7 @@ typedef struct config
     unsigned int timer;
     uint32_t client_cfdp_id;
     uint32_t my_cfdp_id;
+    uint8_t verbose_level;
 } Config;
 
 /*------------------------------------------------------------------------------
