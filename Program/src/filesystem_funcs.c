@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <stddef.h>
 
+#include <unistd.h>
 
 uint32_t get_file_size(unsigned char *source_file_name) {
 
@@ -47,6 +48,39 @@ File *create_file(unsigned char *source_file_name) {
     return file;
 
 }
+
+
+int does_file_exist(unsigned char *source_file_name) {
+
+    int fd = ssp_open(source_file_name, O_RDWR);
+    if (fd == -1){
+        return 0;
+    }
+    if (ssp_close(fd) == -1){
+        return -1;
+    }
+
+    return 1;
+}
+
+
+int get_offset(File *file, void *buff, uint32_t buf_size, uint32_t offset) {
+
+
+    if (offset >= file->total_size)
+        return -1;
+
+    ssp_lseek(file->fd, SEEK_SET, (int) offset);
+
+    int bytes = ssp_read(file->fd, buff, buf_size);
+    
+    if (bytes == -1)
+        return -1;
+        
+    return bytes;
+
+}
+
 
 void free_file(void *file) {
     ssp_free(file);

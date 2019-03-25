@@ -19,7 +19,11 @@ typedef struct response {
 typedef enum Indication {
     none,
     transaction,
-    put
+    put,
+
+    //sending data
+    sending_data
+
 } Indication;
 
 typedef struct request {

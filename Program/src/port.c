@@ -44,7 +44,8 @@ void *ssp_alloc(uint32_t n_memb, size_t size) {
 
 int ssp_open(char *pathname, int flags) {
     #ifdef POSIX_PORT
-        return open(pathname, flags);
+        //open with read and write permissions
+        return open(pathname, flags, 0666);
     #endif
 }
 
