@@ -15,6 +15,7 @@ uint32_t get_file_size(unsigned char *source_file_name);
 File *create_file(unsigned char *source_file_name);
 void free_file(void *file);
 int does_file_exist(unsigned char *source_file_name);
-get_offset(File *file, void *buff, uint32_t buf_size, uint32_t offset);
+int get_offset(File *file, void *buff, uint32_t buf_size, int offset);
+int write_offset(File *file, void *buff, uint32_t size, uint32_t offset);
 
 #endif 

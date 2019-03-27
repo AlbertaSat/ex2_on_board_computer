@@ -88,58 +88,76 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
 //requires a req->file to be created
 //returns 1 on end of file
 static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Client* client, Protocol_state *p_state) {
-    
+    Pdu_header *header = (Pdu_header *) res.msg;
+    //set header to file directive 0 is directive, 1 is data
+    header->PDU_type = 1;
+
     uint32_t packet_index = start;
     File_data_pdu_contents *packet_offset = &res.msg[packet_index];
 
+    
     //4 bytes
-    packet_offset->offset = 1;
+    packet_offset->offset = 0;
     packet_index += 4;
 
     uint32_t data_size = client->packet_len - packet_index;
     
     //fill the rest of the packet with data
-    int bytes = get_offset(req->file, &res.msg[packet_index], data_size, 0);
+    int bytes = get_offset(req->file, &res.msg[packet_index], data_size, packet_offset->offset);
 
     if (bytes <  data_size)
         return 1;
+
     return 0;
 }
 
-//TODO write file data
-static void process_file_request(Request *req) {
+//TODO This needs more work, file handling when files already exist ect
+static int process_file_request(Request *req) {
 
-    //check if file exists, if it doesn't create it
-    //printf("%s\n", req->destination_file_name);
-    //printf("%d\n", get_file_size(req->destination_file_name));
-
-    if (does_file_exist(req->destination_file_name))
-        return;
-
-    if (req->file == NULL)
+    if (does_file_exist(req->destination_file_name)){
+        ssp_error("file already exists, overwriting it\n");
         req->file = create_file(req->destination_file_name);
+        return 1;
+    }
+    if (req->file == NULL) {
+        ssp_printf("%s\n", req->destination_file_name);
+        req->file = create_file(req->destination_file_name);
+    }
+    return 1;
 }
 
 
-static void fill_request(unsigned char *packet, Request *req_to_fill) {
+static void write_packet_data_to_file(char *data_packet, uint32_t packet_len,  File *file) {
+    File_data_pdu_contents *packet = data_packet;
+    uint32_t offset = 0;
+    memcpy(&offset, data_packet, 4);
 
-    Pdu_meta_data *meta_data = packet;
+    //ssp_printf("packet offset received: %d\n", packet->offset);
+    int bytes = write_offset(file, &data_packet[4], packet_len - 4, offset);
+}
+
+
+static void fill_request(unsigned char *meta_data_packet, Request *req_to_fill) {
+
+    Pdu_meta_data *meta_data = meta_data_packet;
     req_to_fill->segmentation_control = meta_data->segmentation_control;
 
     uint8_t packet_index = 4;
 
-    uint32_t file_size = (uint32_t)packet[packet_index];
+    uint32_t file_size = (uint32_t)meta_data_packet[packet_index];
     req_to_fill->file_size = file_size;
     packet_index++;
 
-    uint8_t file_name_len = packet[packet_index];
+    uint8_t file_name_len = meta_data_packet[packet_index];
     packet_index++;
-    
-    memcpy(req_to_fill->source_file_name, &packet[packet_index], file_name_len);
-    packet_index += file_name_len + 1;
 
-    file_name_len = packet[packet_index];
-    memcpy(req_to_fill->destination_file_name, &packet[packet_index], file_name_len);
+
+    memcpy(req_to_fill->source_file_name, &meta_data_packet[packet_index], file_name_len);
+
+    packet_index += file_name_len + 1;
+    file_name_len = meta_data_packet[packet_index];
+    memcpy(req_to_fill->destination_file_name, &meta_data_packet[packet_index], file_name_len);
+
     packet_index += file_name_len;
 
     return;
@@ -213,9 +231,12 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
 
     //process file data
     if (header->PDU_type == 1) {
-        if (p_state->verbose_level == 3)
-            ssp_printf("receiving data\n");
-
+        if (current_request->file == NULL) {
+            ssp_printf("why is file null?\n");
+            return;
+        }
+        
+        write_packet_data_to_file(&packet[packet_index], packet_len, current_request->file);
         return;
     }
 
@@ -228,6 +249,7 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
         case META_DATA_PDU:
             fill_request(&packet[packet_index], current_request);
             process_file_request(current_request);
+
 
             break;
     
@@ -262,28 +284,29 @@ void user_request_handler(Response res, Request *req, Client* client, Protocol_s
 
     switch (req->type)
     {
-        case put:
-                start = build_put_packet_metadata(res, start, req, client, p_state);
-                
-                if (p_state->verbose_level == 3) {
-                    ssp_printf("------------sending_a_put_request------------\n");
-                    ssp_print_hex(res.msg, start);
-                }
-
-                ssp_sendto(res);
-                req->type = sending_data;
-
-            break;
         case sending_data: 
-            
-                if (build_data_packet(res, start, req, client, p_state) && p_state->verbose_level == 3)
-                    ssp_printf("reached end of file\n");
+            if (build_data_packet(res, start, req, client, p_state))
+                ssp_printf("reached end of file\n");
 
-                if (p_state->verbose_level == 3) {
-                    ssp_printf("------------sending_a_data_packets-----------\n");
-                    ssp_print_hex(res.msg, start);
-                }
-                ssp_sendto(res);
+            if (p_state->verbose_level == 3) {
+                ssp_printf("------------sending_a_data_packets-----------\n");
+                ssp_print_hex(res.msg, start);
+            }
+            ssp_sendto(res);
+            break;
+
+        case put:
+            start = build_put_packet_metadata(res, start, req, client, p_state);
+            
+            if (p_state->verbose_level == 3) {
+                ssp_printf("------------sending_a_put_request------------\n");
+                ssp_print_hex(res.msg, start);
+            }
+
+            ssp_sendto(res);
+            req->type = sending_data;
+            break;
+
 
         default:
             break;

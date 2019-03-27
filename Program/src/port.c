@@ -2,7 +2,6 @@
 #include "packet.h"
 #include "server.h"
 #include "port.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include "utils.h"
@@ -21,6 +20,13 @@
 
 #endif
 #include "protocol_handler.h"
+
+int ssp_write(int fd, const void *buf, size_t count) {
+    #ifdef POSIX_PORT
+        return write(fd, buf, count);
+    #endif
+}
+
 
 int ssp_read(int fd, unsigned char* buff, size_t size) {
     #ifdef POSIX_PORT

@@ -29,7 +29,7 @@ int ssp_open(char *pathname, int flags);
 int ssp_read(int fd, unsigned char* buff, size_t size);
 int ssp_lseek(int fd, int offset, int whence);
 void ssp_error(char *error);
-
+int ssp_write(int fd, const void *buf, size_t count);
 
 void ssp_free(void *pointer);
 #endif
