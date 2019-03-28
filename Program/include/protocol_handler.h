@@ -21,7 +21,7 @@ typedef enum Indication {
     none,
     transaction,
     put,
-
+    eof,
     //sending data
     sending_data
 

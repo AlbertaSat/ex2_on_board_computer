@@ -117,6 +117,42 @@ static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Cli
     return 0;
 }
 
+static void build_eof_packet(Response res, uint32_t start, Request *req, Client* client, Protocol_state *p_state) {
+
+    Pdu_header *header = (Pdu_header *) res.msg;
+    //set header to file directive 0 is directive, 1 is data
+    header->PDU_type = 0;
+    
+    uint8_t packet_index = (uint8_t) start;
+    Pdu_directive *directive = &res.msg[packet_index];
+    directive->directive_code = EOF_PDU;
+    packet_index++;
+
+    Pdu_eof *packet = &res.msg[packet_index];
+
+    //this will be need to set from the req struct probably.
+    //4 bits, 
+    packet->condition_code = COND_NO_ERROR;
+    //4 bits reserved bits
+    packet->spare = 0;
+    packet_index++;
+
+    //4 bytes
+    packet->file_size = req->file_size;
+    packet_index += 4;
+
+    //TODO checksum procedures
+    packet->checksum = 0;
+    packet_index += 4;
+
+
+    //TODO addTLV fault_location
+    
+    header->PDU_data_field_len = packet_index - start;
+
+}
+
+
 //TODO This needs more work, file handling when files already exist ect
 static int process_file_request(Request *req) {
 
@@ -134,6 +170,9 @@ static int process_file_request(Request *req) {
 
 
 static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  File *file) {
+    if(file == NULL)
+        ssp_error("file struct is null, can't write to file");
+
     File_data_pdu_contents *packet = data_packet;
     uint32_t offset = packet->offset;
 
@@ -239,11 +278,6 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
 
     //process file data
     if (header->PDU_type == 1) {
-        if (current_request->file == NULL) {
-            ssp_printf("why is file null?\n");
-            return;
-        }
-        
         write_packet_data_to_file(&packet[packet_index], packet_data_len, current_request->file);
         return;
     }
@@ -257,10 +291,12 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
         case META_DATA_PDU:
             fill_request(&packet[packet_index], current_request);
             process_file_request(current_request);
-
-
             break;
     
+        case EOF_PDU:
+            ssp_printf("received EOF pdu\n");
+            
+            break;
         default:
             break;
     }
@@ -292,10 +328,16 @@ void user_request_handler(Response res, Request *req, Client* client, Protocol_s
 
     switch (req->type)
     {
+        case eof: 
+            build_eof_packet(res, start, req, client, p_state);
+            ssp_sendto(res);
+            req->type = none;
+            break;
+
         case sending_data: 
             if (build_data_packet(res, start, req, client, p_state))
-                ssp_printf("reached end of file\n");
-
+                req->type = eof;
+            
             if (p_state->verbose_level == 3) {
                 ssp_printf("------------sending_a_data_packets-----------\n");
                 ssp_print_hex(res.msg, start);

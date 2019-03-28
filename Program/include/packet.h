@@ -192,6 +192,29 @@ typedef struct filestore_response {
 
 #define SIZE_OF_DIRECTIVE_CODE 1
 
+//condition codes:
+
+#define COND_NO_ERROR 0x00
+/*
+‘0000’ No error
+‘0001’ Positive ACK limit reached
+‘0010’ Keep alive limit reached
+‘0011’ Invalid transmission mode
+‘0100’ Filestore rejection
+‘0101’ File checksum failure
+‘0110’ File size error
+‘0111’ NAK limit reached
+‘1000’ Inactivity detected
+‘1001’ Invalid file structure
+‘1010’ Check limit reached
+‘1011’ – ‘1101’
+CCSDS 727.0-B-4
+Condition
+(reserved)
+‘1110’ Suspend.request received
+‘1111’ Cancel.request received
+*/
+
 
 typedef struct pdu_directive {
     uint8_t directive_code;
