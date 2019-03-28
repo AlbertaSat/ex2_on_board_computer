@@ -281,17 +281,14 @@ void udpClient(unsigned char *hostname, unsigned char*port, int packet_len, void
         if (exit_now)
              break;
         
-
         if(!resizeBuff(&buff, buff_size, &prev_buff_size)){
             printf("packet too large, cannot resize buffer\n");
         }
-
 
         sleep(1);
         /* print the server's reply */
         if (onSend(sfd, serveraddr, onSendParams)) 
             printf("send failed\n");
-
 
 
         count = recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, (struct sockaddr*)&serveraddr, &serverlen);

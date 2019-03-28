@@ -235,4 +235,33 @@ typedef struct file_data_pdu_contents {
     unsigned char *data;
 } File_data_pdu_contents;
 
+
+typedef struct pdu_eof {
+    unsigned int condition_code : 4;
+    unsigned int spare : 4;
+    uint32_t checksum;
+    /* In octets. This value shall be the total number of file data octets
+    transmitted by the sender, regardless of the condition code
+    (i.e., it shall be supplied even if the condition code is other than
+    ‘No error’). */
+    uint32_t file_size;
+
+    /*
+    Omitted if condition code is ‘No error’. Otherwise, entity ID in the
+    TLV is the ID of the entity at which transaction cancellation was
+    initiated.*/
+    TLV fault_location;
+    
+} Pdu_eof;
+
+
+
+
+
+
+
+
+
+
+
 #endif 

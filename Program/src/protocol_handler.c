@@ -81,7 +81,11 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
     //copy destination name to packet (length bytes)
     memcpy(&res.msg[packet_index], destination_file_name, destination_file_length);
     packet_index += destination_file_length;
+
     uint8_t total_bytes = packet_index - start; 
+
+    //mark the size of the packet
+    header->PDU_data_field_len = total_bytes;
     return packet_index;
 }
 
@@ -92,18 +96,20 @@ static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Cli
     //set header to file directive 0 is directive, 1 is data
     header->PDU_type = 1;
 
-    uint32_t packet_index = start;
+    uint16_t packet_index = start;
     File_data_pdu_contents *packet_offset = &res.msg[packet_index];
-
     
-    //4 bytes
+    //4 bytes is the size of the offset paramater
     packet_offset->offset = 0;
     packet_index += 4;
 
-    uint32_t data_size = client->packet_len - packet_index;
+    uint16_t data_size = client->packet_len - packet_index;
     
     //fill the rest of the packet with data
     int bytes = get_offset(req->file, &res.msg[packet_index], data_size, packet_offset->offset);
+
+    //add bytes read, and the packet offset to the data_field length
+    header->PDU_data_field_len = bytes + 4;
 
     if (bytes <  data_size)
         return 1;
@@ -127,13 +133,12 @@ static int process_file_request(Request *req) {
 }
 
 
-static void write_packet_data_to_file(char *data_packet, uint32_t packet_len,  File *file) {
+static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  File *file) {
     File_data_pdu_contents *packet = data_packet;
-    uint32_t offset = 0;
-    memcpy(&offset, data_packet, 4);
+    uint32_t offset = packet->offset;
 
     //ssp_printf("packet offset received: %d\n", packet->offset);
-    int bytes = write_offset(file, &data_packet[4], packet_len - 4, offset);
+    int bytes = write_offset(file, &data_packet[4], data_len - 4, offset);
 }
 
 
@@ -218,6 +223,9 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
     memcpy(&dest_id, &packet[packet_index], header->length_of_entity_IDs);
     packet_index += header->length_of_entity_IDs;
 
+    uint16_t packet_data_len = header->PDU_data_field_len;
+
+    ssp_printf("packet data length %d\n", packet_data_len);
 
     if (p_state->verbose_level == 3) {
         ssp_printf("------------printing_header_received------------\n");
@@ -236,7 +244,7 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
             return;
         }
         
-        write_packet_data_to_file(&packet[packet_index], packet_len, current_request->file);
+        write_packet_data_to_file(&packet[packet_index], packet_data_len, current_request->file);
         return;
     }
 

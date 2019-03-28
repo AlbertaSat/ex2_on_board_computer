@@ -8,6 +8,7 @@
 
 typedef struct response {
     int sfd;
+    //this is a pointer to buff in a request
     unsigned char *msg;
     //this is type (struct sockaddr_in) in posix
     void *addr;
