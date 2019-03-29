@@ -1,7 +1,6 @@
 
 
 #include "utils.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +9,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
+#include "filesystem_funcs.h"
 
 struct myStruct {
     int id;
@@ -53,6 +53,10 @@ static void list_free(void *element) {
 
 int main () {
 
+    char *packet = "hello world";
+    uint32_t checksum = calc_check_sum(packet, 10);
+    printf("%d\n", checksum);
+    /*
     char **ptr,*ptr1,*ptr2,*ptr3;
 
     ptr = malloc(sizeof(char*) * 2);
@@ -68,7 +72,7 @@ int main () {
     printf("%c%c\n", *ptr[0], *ptr[1]);
 
 
-    /*
+    
     List *list = linked_list();
     //static void *findElement(List *list, int (*f)(void *element, void *args), void *args)
 

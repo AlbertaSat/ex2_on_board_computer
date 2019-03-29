@@ -21,7 +21,7 @@ static uint8_t build_pdu_header(Response res, Request *req, Client* client, Prot
     
     //copy variable length transaction number id
     memcpy(&packet[PACKET_STATIC_HEADER_LEN + client->pdu_header->length_of_entity_IDs],
-    &client->pdu_header->transaction_sequence_number, 
+    &req->transaction_sequence_number, 
     client->pdu_header->transaction_seq_num_len);
 
     //copy variable length destination id
@@ -92,6 +92,12 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
 //requires a req->file to be created
 //returns 1 on end of file
 static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Client* client, Protocol_state *p_state) {
+
+    if (req->file->next_offset_to_send > req->file->total_size){
+        ssp_error("cant send an offset past the file's length\n");
+        return -1;
+    }
+
     Pdu_header *header = (Pdu_header *) res.msg;
     //set header to file directive 0 is directive, 1 is data
     header->PDU_type = 1;
@@ -99,14 +105,15 @@ static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Cli
     uint16_t packet_index = start;
     File_data_pdu_contents *packet_offset = &res.msg[packet_index];
     
-    //4 bytes is the size of the offset paramater
-    packet_offset->offset = 0;
+    //4 bytes is the size of the offset paramater TODO set offset
+    packet_offset->offset = req->file->next_offset_to_send;
     packet_index += 4;
 
     uint16_t data_size = client->packet_len - packet_index;
     
     //fill the rest of the packet with data
     int bytes = get_offset(req->file, &res.msg[packet_index], data_size, packet_offset->offset);
+    req->file->next_offset_to_send += bytes;
 
     //add bytes read, and the packet offset to the data_field length
     header->PDU_data_field_len = bytes + 4;
@@ -147,14 +154,13 @@ static void build_eof_packet(Response res, uint32_t start, Request *req, Client*
 
 
     //TODO addTLV fault_location
-    
     header->PDU_data_field_len = packet_index - start;
 
 }
 
 
 //TODO This needs more work, file handling when files already exist ect
-static int process_file_request(Request *req) {
+static int process_file_request_metadata(Request *req) {
 
     if (does_file_exist(req->destination_file_name)){
         ssp_error("file already exists, overwriting it\n");
@@ -181,7 +187,7 @@ static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  Fil
 }
 
 
-static void fill_request(unsigned char *meta_data_packet, Request *req_to_fill) {
+static void fill_request_pdu_metadata(unsigned char *meta_data_packet, Request *req_to_fill) {
 
     Pdu_meta_data *meta_data = meta_data_packet;
     req_to_fill->segmentation_control = meta_data->segmentation_control;
@@ -254,6 +260,7 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
     memcpy(&source_id, &packet[packet_index], header->length_of_entity_IDs);
     packet_index += header->length_of_entity_IDs;
 
+    //TODO the transaction number should get the request from data structure hosting requests
     uint32_t transaction_sequence_number = 0;
     memcpy(&transaction_sequence_number, &packet[packet_index], header->transaction_seq_num_len);
     packet_index += header->transaction_seq_num_len;
@@ -264,18 +271,17 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
 
     uint16_t packet_data_len = header->PDU_data_field_len;
 
-    ssp_printf("packet data length %d\n", packet_data_len);
 
     if (p_state->verbose_level == 3) {
         ssp_printf("------------printing_header_received------------\n");
         ssp_print_hex(packet, packet_index);
+        ssp_printf("packet data length %d, sequence number %d\n", packet_data_len, transaction_sequence_number);
     }
 
     if (p_state->my_cfdp_id != dest_id){
         ssp_printf("someone is sending packets here that are not for me\n");
         return;
     }
-
     //process file data
     if (header->PDU_type == 1) {
         write_packet_data_to_file(&packet[packet_index], packet_data_len, current_request->file);
@@ -289,11 +295,12 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
     switch (directive->directive_code)
     {
         case META_DATA_PDU:
-            fill_request(&packet[packet_index], current_request);
-            process_file_request(current_request);
+            fill_request_pdu_metadata(&packet[packet_index], current_request);
+            process_file_request_metadata(current_request);
             break;
     
         case EOF_PDU:
+
             ssp_printf("received EOF pdu\n");
             
             break;
@@ -392,8 +399,8 @@ int put_request(unsigned char *source_file_name,
     //give the client a new request to perform
     Request *req = client->outGoing_req;
     req->file = create_file(source_file_name);
-    //build a request
-    req->transaction_id = p_state->transaction_id++;
+    //build a request 
+    req->transaction_sequence_number = p_state->transaction_id++;
     //enumeration
     req->type = put;
     req->dest_cfdp_id = client->cfdp_id;

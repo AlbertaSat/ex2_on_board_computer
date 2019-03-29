@@ -1,8 +1,8 @@
 #include <stdint.h>
-#include <port.h>
+#include "port.h"
+#include "filesystem_funcs.h"
 #include <fcntl.h>
 #include <stddef.h>
-
 #include <unistd.h>
 
 uint32_t get_file_size(unsigned char *source_file_name) {
@@ -26,11 +26,6 @@ uint32_t get_file_size(unsigned char *source_file_name) {
     return bytes;
 }
 
-
-
-
-
-
 File *create_file(unsigned char *source_file_name) {
 
     int fd = ssp_open(source_file_name, O_RDWR | O_CREAT);
@@ -52,6 +47,7 @@ File *create_file(unsigned char *source_file_name) {
 
     File *file = ssp_alloc(1, sizeof(File));
     file->fd = fd;
+    file->next_offset_to_send = 0;
     file->total_size = total_size;
 
     return file;
@@ -110,4 +106,30 @@ int write_offset(File *file, void *buff, uint32_t size, uint32_t offset) {
 
 void free_file(void *file) {
     ssp_free(file);
+}
+
+
+
+uint32_t calc_check_sum(char *data, uint32_t length) {
+    uint8_t remaining_bytes = length % 4;
+    uint32_t check_sum = 0;
+
+    for (unsigned int i = 0; i < length; i+= 4){
+        check_sum += *((uint32_t *) &data[i]);
+    }
+    
+    if (remaining_bytes){
+        uint8_t last_chunk[4];
+        memset(last_chunk, 0, 4);
+
+        uint32_t end = length - remaining_bytes;
+
+        for (uint8_t i = 0; i < remaining_bytes; i++) {
+            last_chunk[i] = data[end + i];;
+        } 
+          
+        check_sum += *((uint32_t*) &last_chunk);        
+    }
+
+    return check_sum;
 }

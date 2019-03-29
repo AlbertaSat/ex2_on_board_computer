@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
     unsigned char port[17];
     snprintf(port, 17, "%u", server_entity->UT_port);
 
-    Protocol_state *p_state = ssp_connectionless_server(port);
+    Protocol_state *p_state = ssp_connectionless_server(port);  
     //set this node's Id, this has to be hardcoded/assigned
     p_state->my_cfdp_id = conf->my_cfdp_id;
     p_state->mib = mib;

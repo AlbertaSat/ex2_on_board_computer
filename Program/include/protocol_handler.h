@@ -29,7 +29,7 @@ typedef enum Indication {
 
 typedef struct request {
     Indication type;
-    uint32_t transaction_id;
+    uint64_t transaction_sequence_number;
     uint32_t dest_cfdp_id;
 
     File *file;
@@ -83,7 +83,10 @@ typedef struct protocol_state {
     uint32_t my_cfdp_id;
     Client *newClient;
     Request *current_server_request;
+   
+    //lock this
     uint32_t transaction_id;
+    
     uint8_t verbose_level;
 
 

@@ -309,9 +309,7 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     header->CRC_flag = client->mib_info->CRC_required;
     header->direction = 1;
     header->PDU_type = 0;
-    header->PDU_data_field_len = 1200;
     header->transaction_seq_num_len = 3;
-    header->transaction_sequence_number = 0;
     header->length_of_entity_IDs = 1; 
     header->transmission_mode = remote->default_transmission_mode;
 

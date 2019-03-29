@@ -5,6 +5,7 @@
 
 typedef struct file {
     int fd;
+    uint32_t next_offset_to_send;
     uint32_t total_size;
 
 } File;
@@ -17,5 +18,6 @@ void free_file(void *file);
 int does_file_exist(unsigned char *source_file_name);
 int get_offset(File *file, void *buff, uint32_t buf_size, int offset);
 int write_offset(File *file, void *buff, uint32_t size, uint32_t offset);
+uint32_t calc_check_sum(char *data, uint32_t length);
 
 #endif 
