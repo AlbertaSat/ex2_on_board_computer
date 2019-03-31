@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <unistd.h>
 
-uint32_t get_file_size(unsigned char *source_file_name) {
+uint32_t get_file_size(char *source_file_name) {
 
     int fd = ssp_open(source_file_name, 0);
     if (fd == -1){
@@ -26,7 +26,7 @@ uint32_t get_file_size(unsigned char *source_file_name) {
     return bytes;
 }
 
-File *create_file(unsigned char *source_file_name) {
+File *create_file(char *source_file_name) {
 
     int fd = ssp_open(source_file_name, O_RDWR | O_CREAT);
     if (fd == -1){
@@ -46,16 +46,18 @@ File *create_file(unsigned char *source_file_name) {
     }
 
     File *file = ssp_alloc(1, sizeof(File));
+    
     file->fd = fd;
     file->next_offset_to_send = 0;
     file->total_size = total_size;
-
+    file->partial_checksum = 0;
+    
     return file;
 
 }
 
 
-int does_file_exist(unsigned char *source_file_name) {
+int does_file_exist(char *source_file_name) {
 
     int fd = ssp_open(source_file_name, O_RDWR);
     if (fd == -1){
@@ -68,7 +70,7 @@ int does_file_exist(unsigned char *source_file_name) {
     return 1;
 }
 
-
+//modifys the seek location, returns bytes read
 int get_offset(File *file, void *buff, uint32_t buf_size, int offset) {
 
     if (offset >= file->total_size)
@@ -132,4 +134,21 @@ uint32_t calc_check_sum(char *data, uint32_t length) {
     }
 
     return check_sum;
+}
+
+
+//stack buffer is the size of the packet length
+uint32_t check_sum_file(File *file, uint16_t stack_buffer) {
+
+    char buff[stack_buffer];
+    uint32_t checksum = 0;
+    uint32_t bytes_read = 0;
+    for (int i = 0; i < file->total_size; i++) {
+        
+        bytes_read = get_offset(file, buff, stack_buffer, (int) stack_buffer);
+        if (bytes_read > 0)
+            checksum += calc_check_sum(buff, bytes_read);
+    }
+
+    return checksum;
 }

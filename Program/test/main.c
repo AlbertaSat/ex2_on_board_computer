@@ -56,6 +56,11 @@ int main () {
     char *packet = "hello world";
     uint32_t checksum = calc_check_sum(packet, 10);
     printf("%d\n", checksum);
+
+    File *file = create_file("test2.txt");
+    
+    checksum = check_sum_file(file, file->total_size, 20000);
+    printf("%d\n", checksum);
     /*
     char **ptr,*ptr1,*ptr2,*ptr3;
 

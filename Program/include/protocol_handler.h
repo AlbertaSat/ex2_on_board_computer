@@ -114,14 +114,14 @@ void parse_packet_client(unsigned char* buff, Request *req, Client *client, Prot
 */
 //returns -1 on error
 int put_request(
-            unsigned char *source_file_name,
-            unsigned char *destination_file_name,
+            char *source_file_name,
+            char *destination_file_name,
             uint8_t segmentation_control,
             uint8_t fault_handler_overides,
             uint8_t flow_lable,
             uint8_t transmission_mode,
-            unsigned char* messages_to_user,
-            unsigned char* filestore_requests,
+            char* messages_to_user,
+            char* filestore_requests,
             Client *client,
             Protocol_state *p_state
             );

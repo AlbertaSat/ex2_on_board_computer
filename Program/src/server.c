@@ -285,7 +285,6 @@ void udpClient(unsigned char *hostname, unsigned char*port, int packet_len, void
             printf("packet too large, cannot resize buffer\n");
         }
 
-        sleep(1);
         /* print the server's reply */
         if (onSend(sfd, serveraddr, onSendParams)) 
             printf("send failed\n");

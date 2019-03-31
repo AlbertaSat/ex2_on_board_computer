@@ -113,10 +113,15 @@ static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Cli
     
     //fill the rest of the packet with data
     int bytes = get_offset(req->file, &res.msg[packet_index], data_size, packet_offset->offset);
+
+    //calculate checksum for data packet, this is used to calculate in transit checksums
+    req->file->partial_checksum += calc_check_sum(&res.msg[packet_index], data_size);
+
     req->file->next_offset_to_send += bytes;
 
     //add bytes read, and the packet offset to the data_field length
     header->PDU_data_field_len = bytes + 4;
+
 
     if (bytes <  data_size)
         return 1;
@@ -145,19 +150,29 @@ static void build_eof_packet(Response res, uint32_t start, Request *req, Client*
     packet_index++;
 
     //4 bytes
-    packet->file_size = req->file_size;
+    packet->file_size = req->file->total_size;
     packet_index += 4;
 
     //TODO checksum procedures
-    packet->checksum = 0;
+    packet->checksum = req->file->partial_checksum;
     packet_index += 4;
-
 
     //TODO addTLV fault_location
     header->PDU_data_field_len = packet_index - start;
 
 }
 
+
+static void process_pdu_eof(char *packet, Request *req) {
+
+    Pdu_eof *eof_packet = (Pdu_eof *) packet;
+    if (eof_packet->checksum == req->file->partial_checksum) {
+        ssp_printf("File received\n", req->file->partial_checksum);
+        if (ssp_close(req->file->fd) == -1)
+            ssp_error("could not close file\n");
+
+    }
+}
 
 //TODO This needs more work, file handling when files already exist ect
 static int process_file_request_metadata(Request *req) {
@@ -179,11 +194,14 @@ static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  Fil
     if(file == NULL)
         ssp_error("file struct is null, can't write to file");
 
+
     File_data_pdu_contents *packet = data_packet;
     uint32_t offset = packet->offset;
 
     //ssp_printf("packet offset received: %d\n", packet->offset);
+    
     int bytes = write_offset(file, &data_packet[4], data_len - 4, offset);
+    file->partial_checksum += calc_check_sum(&data_packet[4], data_len - 4);
 }
 
 
@@ -271,7 +289,6 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
 
     uint16_t packet_data_len = header->PDU_data_field_len;
 
-
     if (p_state->verbose_level == 3) {
         ssp_printf("------------printing_header_received------------\n");
         ssp_print_hex(packet, packet_index);
@@ -300,8 +317,8 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
             break;
     
         case EOF_PDU:
-
-            ssp_printf("received EOF pdu\n");
+            process_pdu_eof(&packet[packet_index], current_request);
+            
             
             break;
         default:
@@ -379,14 +396,14 @@ void user_request_handler(Response res, Request *req, Client* client, Protocol_s
 
 //Omission of source and destination filenames shall indicate that only Meta
 //data will be delivered
-int put_request(unsigned char *source_file_name,
-            unsigned char *destination_file_name,
+int put_request(char *source_file_name,
+            char *destination_file_name,
             uint8_t segmentation_control,
             uint8_t fault_handler_overides,
             uint8_t flow_lable,
             uint8_t transmission_mode,
-            unsigned char* messages_to_user,
-            unsigned char* filestore_requests,
+            char* messages_to_user,
+            char* filestore_requests,
             Client *client,
             Protocol_state *p_state
             ) {
