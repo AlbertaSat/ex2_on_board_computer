@@ -49,8 +49,11 @@ typedef struct List
     void (*free)(struct List *list, void (*f)(void *element));
     void *(*pop) (struct List *list);
     int (*insert) (struct List *list, void *element, uint32_t id);
+    int (*insertAt)(struct List *list, void *element, uint32_t id, int (*f)(void *element, void *args), void *args);
     //returns a void pointer that should be cast to the type
     void *(*find)(struct List *list, uint32_t id, int (*f)(void *element, void *args), void *args);
+    struct NODE *(*findNode)(struct List *list, uint32_t id, int (*f)(void *element, void *args), void *args);
+
 } List;
 
 /*------------------------------------------------------------------------------
@@ -77,4 +80,7 @@ int checkAlloc(void *mem, int notOkToFail);
     Return:     CONFIG *
 ------------------------------------------------------------------------------*/
 Config *configuration(int argc, char **argv);
+
+NODE *createNode(void *element, uint32_t id);
+
 #endif //UTILS_H

@@ -16,6 +16,7 @@ to use for general functionality.
 #include <stdlib.h>
 #include <ctype.h>
 #include <libgen.h>
+#include "port.h"
 
 
 
@@ -102,7 +103,7 @@ Config *configuration(int argc, char **argv)
     new node, or NULL if failed
 ------------------------------------------------------------------------------*/
 
-static NODE *createNode(void *element, uint32_t id)
+NODE *createNode(void *element, uint32_t id)
 {
     NODE *newNode = calloc(sizeof(NODE), 1);
     if(!checkAlloc(newNode, 0))
@@ -123,7 +124,7 @@ static NODE *createNode(void *element, uint32_t id)
 
 
 static void freeNode(NODE *node) {
-    free(node);    
+    ssp_free(node);    
 }
 
 static void *pop(List *list) {
@@ -144,8 +145,8 @@ static void *pop(List *list) {
 
 
 /*------------------------------------------------------------------------------
-    This function creates a new node to add into the linked list, returns the
-    new node. 
+    This function creates a new node to add into the beginning of the
+    linked list, returns the new node. 
 ------------------------------------------------------------------------------*/
 
 static int insert(List *list, void *element, uint32_t id) {
@@ -170,7 +171,7 @@ static int insert(List *list, void *element, uint32_t id) {
     0 if failed.
 ------------------------------------------------------------------------------*/
 
-static int addElement(List *list, void *element, uint32_t id)
+static int push(List *list, void *element, uint32_t id)
 {
 
     NODE *newNode = createNode(element, id);
@@ -294,7 +295,56 @@ static void *findElement(List *list, uint32_t id, int (*f)(void *element, void *
     return NULL;
 }
 
+static int insertAt(List *list, void *element, uint32_t id, int (*f)(void *element, void *args), void *args) {
+  
+    NODE *cur = list->head->next;
+    int found_with_func = 0;
+    int found_with_id = 0;
+    while (cur->next != NULL)
+    {
+        if (f != NULL)
+            found_with_func = f(cur->element, args);
 
+        if(cur->id == id)
+            found_with_id = 1;
+
+        if (found_with_func || found_with_id) {
+            NODE *new = createNode(element, id);
+            new->next = cur;
+            new->prev = cur->prev;
+            new->prev->next = new;
+            cur->prev = new;
+            list->count++;
+        }
+            
+        cur = cur->next;
+    }
+}
+
+ 
+static NODE * findNode(List *list, uint32_t id, int (*f)(void *element, void *args), void *args) {
+
+    NODE *cur = list->head->next;
+    int found_with_func = 0;
+    int found_with_id = 0;
+    while (cur->next != NULL)
+    {
+        if (f != NULL)
+            found_with_func = f(cur->element, args);
+
+        if(cur->id == id)
+            found_with_id = 1;
+
+        if (found_with_func || found_with_id){
+            return cur;
+
+        }
+            
+        cur = cur->next;
+    }
+    return NULL;
+
+}
 //see header file return NULL if fails
 
 List *linked_list()
@@ -317,14 +367,15 @@ List *linked_list()
     tail->prev = head;
     head->next = tail;
 
-    newList->push = addElement;
+    newList->push = push;
     newList->remove = removeElement;
     newList->print = printList;
     newList->free = freeList;
     newList->insert = insert;
     newList->pop = pop;
     newList->find = findElement;
-
+    newList->insertAt = insertAt;
+    newList->findNode = findNode;
     return newList;
 }
 

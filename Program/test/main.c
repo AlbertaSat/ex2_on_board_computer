@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 #include "filesystem_funcs.h"
+#include "port.h"
 
 struct myStruct {
     int id;
@@ -32,8 +33,8 @@ static int list_remove(void *element, void *args) {
 
 static void list_print(void *element, void *args) {
 
-    struct myStruct *st = (struct myStruct *)element;
-    printf("list print: %d\n", st->id);
+    Offset *offset = (Offset *) element;
+    printf("missing offsets:start:%u end:%u\n", offset->start, offset->end);
 
 
 }
@@ -52,7 +53,39 @@ static void list_free(void *element) {
 
 
 int main () {
+    
+    
+    
+    File *file = create_file("test.txt");
+    ssp_printf("file size: %u\n", file->total_size);
+    
+    uint32_t data_size = PACKET_LEN - 4;
+    uint32_t data_start = 0;
+    uint32_t data_end = data_size;
 
+    /*test sequence of files
+    for (int i=0; i < file->total_size; i+= data_size) {
+        data_start = i;
+        data_end = data_size + i;
+        //ssp_printf("i:%d\n", data_end);
+        receive_offset(file, 0, data_start, data_end); 
+    }
+
+    receive_offset(file, 0, 48516, 48833);
+    */
+
+
+
+
+
+    //doesnt do this edge case because, would never request it?
+
+    file->missing_offsets->print(file->missing_offsets, list_print, NULL);
+
+    free_file(file);
+    
+    
+    /*
     char *packet = "hello world";
     uint32_t checksum = calc_check_sum(packet, 10);
     printf("%d\n", checksum);

@@ -4,6 +4,10 @@
 #include <fcntl.h>
 #include <stddef.h>
 #include <unistd.h>
+#include "utils.h"
+#include "string.h"
+
+
 
 uint32_t get_file_size(char *source_file_name) {
 
@@ -26,9 +30,14 @@ uint32_t get_file_size(char *source_file_name) {
     return bytes;
 }
 
-File *create_file(char *source_file_name) {
+File *create_file(char *source_file_name, int clear_file_contents) {
 
-    int fd = ssp_open(source_file_name, O_RDWR | O_CREAT);
+    int fd = 0;
+    if (clear_file_contents){
+        fd = ssp_open(source_file_name, O_RDWR | O_CREAT | O_TRUNC);
+    }else {
+        fd = ssp_open(source_file_name, O_RDWR | O_CREAT);
+    }   
     if (fd == -1){
         ssp_error("couldn't create file\n");
         fd = ssp_open(source_file_name, O_RDWR);
@@ -45,13 +54,17 @@ File *create_file(char *source_file_name) {
         return NULL;
     }
 
+    //ssp_printf("file size: %u\n", total_size);
+
     File *file = ssp_alloc(1, sizeof(File));
     
     file->fd = fd;
+    file->eof_checksum = 0;
     file->next_offset_to_send = 0;
     file->total_size = total_size;
     file->partial_checksum = 0;
-    
+    file->missing_offsets = linked_list();
+
     return file;
 
 }
@@ -101,13 +114,18 @@ int write_offset(File *file, void *buff, uint32_t size, uint32_t offset) {
         ssp_error("Could not write\n");
     }
     if (bytes < size && bytes >= 0){
-        ssp_error("did not write all the bytes, this could be because the disk is full\n");
+        ssp_error("did not write all the bytes, this could be because the disk is full, or the file that was sent is empty!\n");
     }
     return bytes;
 }
 
 void free_file(void *file) {
-    ssp_free(file);
+
+    File *f = (File *) file;
+    
+    f->missing_offsets->free(f->missing_offsets, ssp_free);
+
+    ssp_free(f);
 }
 
 
@@ -115,8 +133,8 @@ void free_file(void *file) {
 uint32_t calc_check_sum(char *data, uint32_t length) {
     uint8_t remaining_bytes = length % 4;
     uint32_t check_sum = 0;
-
-    for (unsigned int i = 0; i < length; i+= 4){
+    uint32_t end = length - 4;
+    for (unsigned int i = 0; i < end; i+= 4){
         check_sum += *((uint32_t *) &data[i]);
     }
     
@@ -124,7 +142,7 @@ uint32_t calc_check_sum(char *data, uint32_t length) {
         uint8_t last_chunk[4];
         memset(last_chunk, 0, 4);
 
-        uint32_t end = length - remaining_bytes;
+        end = length - remaining_bytes;
 
         for (uint8_t i = 0; i < remaining_bytes; i++) {
             last_chunk[i] = data[end + i];;
@@ -151,4 +169,87 @@ uint32_t check_sum_file(File *file, uint16_t stack_buffer) {
     }
 
     return checksum;
+}
+
+static int *find_nak(void *element, void* args) {
+
+    Offset *offset_in_list = (Offset *) element;
+    Offset *offset_to_insert = (Offset *) args;
+    
+    if (offset_to_insert->start >= offset_in_list->start && 
+        offset_to_insert->end <= offset_in_list->end) { 
+        return 1;
+    }
+
+    return 0;
+}
+
+//ack is 1, nak is 0
+void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t offset_end) {
+    
+    List * nak_list = file->missing_offsets;
+
+    Offset offset_to_insert;
+    offset_to_insert.start = offset_start;
+    offset_to_insert.end = offset_end;
+    
+    NODE * node = nak_list->findNode(nak_list, 0, find_nak, &offset_to_insert);
+    if (node == NULL){
+        ssp_printf("no begining node for receive_offset, can't add new offset\n");
+        return;
+    }
+
+    Offset *offset_in_list = (Offset *) node->element;
+    ssp_printf("received offset start:%u end:%u, found node: start:%u end:%u\n", offset_to_insert.start, offset_to_insert.end, offset_in_list->start, offset_in_list->end);
+
+    //insert new node
+    if (offset_to_insert.start >= offset_in_list->start && offset_to_insert.end <= offset_in_list->end) {
+
+        //remove node if both start and end are equal
+        if (offset_to_insert.start == offset_in_list->start && offset_to_insert.end == offset_in_list->end) {
+            ssp_printf("removing node\n");  
+            node->next->prev = node->prev;
+            node->prev->next = node->next;
+            ssp_free(node->element);
+            ssp_free(node);
+            nak_list->count--;
+            return;
+        }
+
+        //if new offset is in the start, simply change the list's node's start
+        else if (offset_to_insert.start == offset_in_list->start && offset_to_insert.start < offset_in_list->end) {
+            offset_in_list->start = offset_to_insert.end;
+            return;
+        }
+
+
+        ssp_printf("adding new node\n");
+
+        Offset *new_offset = ssp_alloc(1, sizeof(Offset));
+        new_offset->start = offset_start;
+        new_offset->end = offset_end;
+
+        uint32_t tmp = new_offset->start;
+        new_offset->start = offset_in_list->start;
+        offset_in_list->start = new_offset->end;
+
+        new_offset->end = tmp;
+
+        NODE *cur = node;
+        NODE *new = createNode(new_offset, new_offset->start);
+
+        new->next = cur;
+        new->prev = cur->prev;
+        new->prev->next = new;
+        cur->prev = new;
+        nak_list->count++;
+
+    }
+
+}
+
+void get_missing_offset(File *file) {
+
+
+
 }

@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
     
 
-    put_request("test.txt", "delivered_file.txt", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
+    put_request("test.txt", "delivered_file.txt", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
 
 
     //will block on pthread_join

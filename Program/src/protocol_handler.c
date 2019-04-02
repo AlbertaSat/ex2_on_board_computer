@@ -42,7 +42,6 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
    
     //set header to file directive 0 is directive, 1 is data
     header->PDU_type = 0;
-    
     uint8_t packet_index = start;
 
     //set directive 1 byte
@@ -86,6 +85,10 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
 
     //mark the size of the packet
     header->PDU_data_field_len = total_bytes;
+
+
+    ssp_print_hex(meta_data_packet, total_bytes);
+
     return packet_index;
 }
 
@@ -113,9 +116,12 @@ static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Cli
     
     //fill the rest of the packet with data
     int bytes = get_offset(req->file, &res.msg[packet_index], data_size, packet_offset->offset);
-
+    if (bytes <= 0){
+        ssp_error("could not get offset, this could because the file is empty!\n");
+        return -1;
+    }
     //calculate checksum for data packet, this is used to calculate in transit checksums
-    req->file->partial_checksum += calc_check_sum(&res.msg[packet_index], data_size);
+    req->file->partial_checksum += calc_check_sum(&res.msg[packet_index], bytes);
 
     req->file->next_offset_to_send += bytes;
 
@@ -162,12 +168,22 @@ static void build_eof_packet(Response res, uint32_t start, Request *req, Client*
 
 }
 
+static void print(void *args) {
+    Offset * o = (Offset *) args;
+    ssp_printf("start: %u, end: %u\n", o->start, o->end);
+}
 
 static void process_pdu_eof(char *packet, Request *req) {
 
     Pdu_eof *eof_packet = (Pdu_eof *) packet;
     if (eof_packet->checksum == req->file->partial_checksum) {
-        ssp_printf("File received\n", req->file->partial_checksum);
+
+        /*ssp_printf("received checksum: %u\n", req->file->partial_checksum);
+        ssp_printf("actual checksum: %u\n", eof_packet->checksum);
+        ssp_printf("missing offsets after file received count: %u\n", req->file->missing_offsets->count);
+        req->file->missing_offsets->print(req->file->missing_offsets, print, NULL);*/
+        req->file->eof_checksum = eof_packet->checksum;
+
         if (ssp_close(req->file->fd) == -1)
             ssp_error("could not close file\n");
 
@@ -179,13 +195,22 @@ static int process_file_request_metadata(Request *req) {
 
     if (does_file_exist(req->destination_file_name)){
         ssp_error("file already exists, overwriting it\n");
-        req->file = create_file(req->destination_file_name);
-        return 1;
+        req->file = create_file(req->destination_file_name, 1);
     }
     if (req->file == NULL) {
-        ssp_printf("%s\n", req->destination_file_name);
-        req->file = create_file(req->destination_file_name);
+        ssp_printf("creating file: %s\n", req->destination_file_name);
+        req->file = create_file(req->destination_file_name, 1);
     }
+
+    //add offset for naks
+    Offset *offset = ssp_alloc(1, sizeof(Offset));
+    offset->end = req->file_size;
+    offset->start = 0;
+    ssp_printf("%u\n", req->file_size);
+    req->file->missing_offsets->insert(req->file->missing_offsets, offset, req->file_size);
+
+    req->file->missing_offsets->print(req->file->missing_offsets, print, NULL);
+
     return 1;
 }
 
@@ -196,12 +221,18 @@ static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  Fil
 
 
     File_data_pdu_contents *packet = data_packet;
-    uint32_t offset = packet->offset;
+    uint32_t offset_start = packet->offset;
+    uint32_t offset_end = offset_start + data_len - 4;
 
     //ssp_printf("packet offset received: %d\n", packet->offset);
     
-    int bytes = write_offset(file, &data_packet[4], data_len - 4, offset);
-    file->partial_checksum += calc_check_sum(&data_packet[4], data_len - 4);
+    int bytes = write_offset(file, &data_packet[4], data_len - 4, offset_start);
+    if (bytes <= 0)
+        return;
+
+    file->partial_checksum += calc_check_sum(&data_packet[4], bytes);
+    
+    receive_offset(file, 0, offset_start, offset_end);
 }
 
 
@@ -211,22 +242,23 @@ static void fill_request_pdu_metadata(unsigned char *meta_data_packet, Request *
     req_to_fill->segmentation_control = meta_data->segmentation_control;
 
     uint8_t packet_index = 4;
-
     uint32_t file_size = (uint32_t)meta_data_packet[packet_index];
+
     req_to_fill->file_size = file_size;
+    ssp_printf("received filesize: %u\n", file_size);
     packet_index++;
 
     uint8_t file_name_len = meta_data_packet[packet_index];
     packet_index++;
 
-
     memcpy(req_to_fill->source_file_name, &meta_data_packet[packet_index], file_name_len);
-
     packet_index += file_name_len + 1;
+
     file_name_len = meta_data_packet[packet_index];
     memcpy(req_to_fill->destination_file_name, &meta_data_packet[packet_index], file_name_len);
 
     packet_index += file_name_len;
+    ssp_print_hex(meta_data_packet, packet_index);
 
     return;
 }
@@ -415,11 +447,14 @@ int put_request(char *source_file_name,
 
     //give the client a new request to perform
     Request *req = client->outGoing_req;
-    req->file = create_file(source_file_name);
+    req->file = create_file(source_file_name, 0);
+
     //build a request 
     req->transaction_sequence_number = p_state->transaction_id++;
+
     //enumeration
     req->type = put;
+    
     req->dest_cfdp_id = client->cfdp_id;
     req->file_size = file_size;
     
