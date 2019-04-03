@@ -27,6 +27,7 @@ typedef enum Indication {
 
 } Indication;
 
+//incoming requests spin up requests
 typedef struct request {
     Indication type;
     uint64_t transaction_sequence_number;
@@ -48,9 +49,12 @@ typedef struct request {
     
     uint32_t buff_len;
     unsigned char* buff;
+
+    //handler for sending responses back
+    Response res;
 } Request;
 
-
+//outgoing requests spin up client threads
 typedef struct client {
     
     void *client_handle;
@@ -98,7 +102,7 @@ void parse_packet_server(unsigned char* buff, uint32_t packet_len, Request *req,
 void packet_handler_client(Response res, Request *req, Client *client, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client, Protocol_state *p_state);
 void parse_packet_client(unsigned char* buff, Request *req, Client *client, Protocol_state *p_state);
-
+void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state);
 
 /*  
     unsigned char *source_file_name,

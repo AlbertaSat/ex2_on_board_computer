@@ -294,8 +294,20 @@ void packet_handler_client(Response res, Request *req, Client* client, Protocol_
                                     aka: handles responses from remote
 
 ------------------------------------------------------------------------------*/
+
+static void request_missing_offsets(Response res, Request *current_request){
+}
+
+
 void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state) {
 
+    //build_pdu_header(res, current_request, p_state->newClient, p_state);
+    
+    //res.msg = current_request->buff;
+    //memset(res.msg, 0, p_state->newClient->packet_len);
+
+    //request_missing_offset();
+    current_request->file->missing_offsets->print(p_state->current_server_request->file->missing_offsets, print, NULL);
 
 
 }

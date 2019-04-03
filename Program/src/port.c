@@ -92,8 +92,9 @@ void ssp_print_hex(unsigned char *stuff, uint32_t size){
 }   
 
 void ssp_sendto(Response res) {
-
+    
     #ifdef POSIX_PORT
+    
         struct sockaddr* addr = (struct sockaddr*) res.addr;
         int n = sendto(res.sfd, res.msg, res.packet_len, 0, addr, sizeof(*addr));
         if (n < 0) 
@@ -111,14 +112,18 @@ static int on_recv_server(int sfd, unsigned char *msg, uint32_t *buff_size, stru
 
     #ifdef POSIX_PORT    
     struct sockaddr_in* posix_client = (struct sockaddr_in*) &addr;
+    memcpy(p_state->current_server_request->res.addr, posix_client, sizeof(struct sockaddr_in));
+
     #endif
+    p_state->current_server_request->res.sfd = sfd;
+    p_state->current_server_request->res.packet_len = p_state->packet_size;
 
     Response res;
     res.addr = posix_client;
     res.sfd = sfd;
     res.packet_len = p_state->packet_size;
 
-    //filles the request struct
+    //filles the request struct, in the future get request based on id
     parse_packet_server(msg, res.packet_len, p_state->current_server_request, p_state);
 
     //ssp_printf("Server received: %s\n", msg);
@@ -142,7 +147,7 @@ static int on_recv_client(int sfd, unsigned char *msg, uint32_t *buff_size, stru
 
     Client *client = p_state->newClient;
 
-    //filles the request struct
+    //fills the request struct
     parse_packet_client(msg, client->incoming_req, client, p_state);
 
     packet_handler_client(res, client->incoming_req, client, p_state);
@@ -172,15 +177,13 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
 //this function is a callback when using  my posix ports
 static int on_time_out_posix(void *other) {
 
-
     Protocol_state *p_state = (Protocol_state*) other;
+    if(p_state->current_server_request->transaction_sequence_number = 0)
+        return 0;
 
-    #ifdef POSIX_PORT
+    Response res = p_state->current_server_request->res;
+    on_server_time_out(res, p_state->current_server_request, p_state); 
     
-    //p_state->current_server_request->file->missing_offsets->print(p_state->current_server_request->file->missing_offsets, printf, NULL)
-
-
-    #endif
     return 0;
 }
 
@@ -360,6 +363,9 @@ Request *init_request(uint32_t buff_len) {
     req->file = NULL;
     req->buff_len = buff_len;
     req->buff = ssp_alloc(buff_len, sizeof(char));
+    
+    req->res.addr = ssp_alloc(1, sizeof(struct sockaddr_in));
+
     checkAlloc(req->buff,  1);
     return req;
 }
@@ -368,6 +374,7 @@ static void ssp_cleanup_req(Request *req) {
     if (req->file != NULL)
         free_file(req->file);
 
+    free(req->res.addr);
     free(req->source_file_name);
     free(req->destination_file_name);
     free(req->buff);
