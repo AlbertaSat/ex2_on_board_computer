@@ -253,7 +253,7 @@ typedef struct pdu_meta_data {
 
 typedef struct file_data_pdu_contents {
     //in octets
-    uint32_t offset;
+    unsigned int offset: 32;
     //variable sized
     unsigned char *data;
 } File_data_pdu_contents;

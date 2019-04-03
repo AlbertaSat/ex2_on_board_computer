@@ -171,6 +171,16 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
 
 //this function is a callback when using  my posix ports
 static int on_time_out_posix(void *other) {
+
+
+    Protocol_state *p_state = (Protocol_state*) other;
+
+    #ifdef POSIX_PORT
+    
+    //p_state->current_server_request->file->missing_offsets->print(p_state->current_server_request->file->missing_offsets, printf, NULL)
+
+
+    #endif
     return 0;
 }
 

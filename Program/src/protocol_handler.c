@@ -165,7 +165,6 @@ static void build_eof_packet(Response res, uint32_t start, Request *req, Client*
 
     //TODO addTLV fault_location
     header->PDU_data_field_len = htons(packet_index - start);
-    ssp_print_hex(&res.msg[start], packet_index);
 
 }
 
@@ -186,7 +185,7 @@ static void process_pdu_eof(char *packet, Request *req) {
         ssp_printf("received filesize eof: %u\n", file_size);
         
         //ssp_printf("missing offsets after file received eof: count: %u\n", req->file->missing_offsets->count);
-        //req->file->missing_offsets->print(req->file->missing_offsets, print, NULL);
+        req->file->missing_offsets->print(req->file->missing_offsets, print, NULL);
         req->file->eof_checksum = eof_packet->checksum;
 
         if (ssp_close(req->file->fd) == -1)
@@ -234,7 +233,6 @@ static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  Fil
         return;
 
     file->partial_checksum += calc_check_sum(&data_packet[4], bytes);
-    
     receive_offset(file, 0, offset_start, offset_end);
 }
 
@@ -296,6 +294,11 @@ void packet_handler_client(Response res, Request *req, Client* client, Protocol_
                                     aka: handles responses from remote
 
 ------------------------------------------------------------------------------*/
+void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state) {
+
+
+
+}
 
 //Server responses
 void packet_handler_server(Response res, Request *current_request, Protocol_state *p_state) {

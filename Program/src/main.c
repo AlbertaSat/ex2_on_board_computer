@@ -81,9 +81,9 @@ int main(int argc, char** argv) {
     //create a client
     Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
     
-
-    put_request("test.txt", "delivered_file.txt", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
-
+    //send via acknoleged mode
+    put_request("test.txt", "delivered_file.txt", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
+    //put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
 
     //will block on pthread_join
     ssp_cleanup_client(new_client);
