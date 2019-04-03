@@ -319,6 +319,7 @@ static int insertAt(List *list, void *element, uint32_t id, int (*f)(void *eleme
             
         cur = cur->next;
     }
+    return -1;
 }
 
  

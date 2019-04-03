@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 
 
     //setting host name for testing
-    unsigned char *host_name = "127.0.0.1";
+    char *host_name = "127.0.0.1";
     uint32_t addr[sizeof(uint32_t)];
     inet_pton(AF_INET, host_name, addr);
 
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     
    
     //connectionless server
-    unsigned char port[17];
+    char port[17];
     snprintf(port, 17, "%u", server_entity->UT_port);
 
     Protocol_state *p_state = ssp_connectionless_server(port);  
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
     
     //send via acknoleged mode
-    put_request("test.txt", "delivered_file.txt", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
+    put_request("test.txt", "delivered_file.txt", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
     //put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
 
     //will block on pthread_join

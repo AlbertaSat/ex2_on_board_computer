@@ -9,7 +9,7 @@
 typedef struct response {
     int sfd;
     //this is a pointer to buff in a request
-    unsigned char *msg;
+    char *msg;
     //this is type (struct sockaddr_in) in posix
     void *addr;
     //getting rid of this soon in favour of client based packet sizes
@@ -36,25 +36,25 @@ typedef struct request {
     File *file;
     uint32_t file_size;
 
-    unsigned char *source_file_name;
-    unsigned char *destination_file_name;
+    char *source_file_name;
+    char *destination_file_name;
 
     uint8_t segmentation_control;
     uint8_t fault_handler_overides;
     uint8_t flow_lable;
     uint8_t transmission_mode;
 
-    unsigned char* messages_to_user;
-    unsigned char* filestore_requests;
+    char* messages_to_user;
+    char* filestore_requests;
     
     uint32_t buff_len;
 
     //buffer for making packets
-    unsigned char* buff;
+    char* buff;
 
     //header for building response packets
     Pdu_header *pdu_header;
-    
+
     //handler for sending responses back
     Response res;
 } Request;
@@ -85,7 +85,7 @@ typedef struct client {
 
 typedef struct protocol_state {
     uint32_t packet_size;
-    unsigned char *server_port;
+    char *server_port;
     void *server_handle;
     void *server_thread_attributes;
     MIB *mib;
@@ -94,7 +94,7 @@ typedef struct protocol_state {
     Request *current_server_request;
    
     //lock this
-    uint32_t transaction_id;
+    uint32_t transaction_sequence_number;
     
     uint8_t verbose_level;
 
@@ -103,10 +103,10 @@ typedef struct protocol_state {
 
 
 void packet_handler_server(Response res, Request *req, Protocol_state *p_state);
-void parse_packet_server(unsigned char* buff, uint32_t packet_len, Request *req, Protocol_state *p_state);
+void parse_packet_server(char* buff, uint32_t packet_len, Request *req, Protocol_state *p_state);
 void packet_handler_client(Response res, Request *req, Client *client, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client, Protocol_state *p_state);
-void parse_packet_client(unsigned char* buff, Request *req, Client *client, Protocol_state *p_state);
+void parse_packet_client(char* buff, Request *req, Client *client, Protocol_state *p_state);
 void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state);
 
 /*  

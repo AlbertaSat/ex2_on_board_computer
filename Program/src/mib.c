@@ -3,7 +3,7 @@
 #include "utils.h"
 #include "port.h"
 #include <stddef.h>
-
+#include "string.h"
 
 MIB *init_mib() {
     MIB *mib = ssp_alloc(1, sizeof(MIB));
@@ -44,7 +44,7 @@ int add_new_cfdp_entity(MIB *mib, uint32_t cfdp_id, uint32_t UT_address, uint16_
 }
 
 
-Pdu_header *get_header_from_mid(MIB *mib, uint32_t cfdp_id){
+Pdu_header *get_header_from_mib(MIB *mib, uint32_t cfdp_id){
 
     Remote_entity *remote = mib->remote_entities->find(mib->remote_entities, cfdp_id, NULL, NULL);
     if (remote == NULL) {

@@ -11,7 +11,7 @@
 
 
 void ssp_error( char *msg);
-Protocol_state *ssp_connectionless_server(unsigned char *port);
+Protocol_state *ssp_connectionless_server(char *port);
 void *ssp_connectionless_server_task(void *protocol_state);
 
 
@@ -24,9 +24,9 @@ void *ssp_alloc(uint32_t u_memb, size_t size);
 void ssp_sendto(Response res);
 void ssp_cleanup(Protocol_state *state);
 void ssp_cleanup_client(Client *client);
-void ssp_print_hex(unsigned char *stuff, uint32_t size);
+void ssp_print_hex(char *stuff, uint32_t size);
 int ssp_open(char *pathname, int flags);
-int ssp_read(int fd, unsigned char* buff, size_t size);
+int ssp_read(int fd, char* buff, size_t size);
 int ssp_lseek(int fd, int offset, int whence);
 void ssp_error(char *error);
 int ssp_write(int fd, const void *buf, size_t count);

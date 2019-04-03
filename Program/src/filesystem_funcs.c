@@ -171,7 +171,7 @@ uint32_t check_sum_file(File *file, uint16_t stack_buffer) {
     return checksum;
 }
 
-static int *find_nak(void *element, void* args) {
+static int find_nak(void *element, void* args) {
 
     Offset *offset_in_list = (Offset *) element;
     Offset *offset_to_insert = (Offset *) args;
@@ -243,11 +243,5 @@ void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t off
         nak_list->count++;
 
     }
-
-}
-
-void get_missing_offset(File *file) {
-
-
 
 }

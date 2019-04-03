@@ -31,7 +31,9 @@ CWARNS += -Wuninitialized
 CWARNS += -Wunknown-pragmas
 CWARNS += -Wunused-function
 CWARNS += -Wunused-label
-CWARNS += -Wunused-parameter
+#CWARNS += -Wunused-parameter
+CWARNS += -Wno-unused-parameter
+
 CWARNS += -Wunused-value
 CWARNS += -Wunused-variable
 CWARNS += -Wmissing-prototypes

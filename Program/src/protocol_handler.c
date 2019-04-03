@@ -1,5 +1,5 @@
 
-
+#include "mib.h"
 #include "port.h"
 #include "protocol_handler.h"
 #include "string.h"
@@ -47,10 +47,10 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
     uint8_t packet_index = start;
 
     //set directive 1 byte
-    Pdu_directive *directive = &res.msg[packet_index];
+    Pdu_directive *directive = (Pdu_directive *) &res.msg[packet_index];
     directive->directive_code = META_DATA_PDU;
     packet_index += SIZE_OF_DIRECTIVE_CODE;
-    Pdu_meta_data *meta_data_packet = &res.msg[packet_index];
+    Pdu_meta_data *meta_data_packet = (Pdu_meta_data *) &res.msg[packet_index];
 
     //1 bytes
     meta_data_packet->segmentation_control = req->segmentation_control;
@@ -109,7 +109,7 @@ static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Cli
     header->PDU_type = 1;
 
     uint16_t packet_index = start;
-    File_data_pdu_contents *packet_offset = &res.msg[packet_index];
+    File_data_pdu_contents *packet_offset = (File_data_pdu_contents *) &res.msg[packet_index];
     
     //4 bytes is the size of the offset paramater TODO set offset
     packet_offset->offset = req->file->next_offset_to_send;
@@ -144,11 +144,11 @@ static void build_eof_packet(Response res, uint32_t start, Request *req, Client*
     header->PDU_type = 0;
     
     uint8_t packet_index = (uint8_t) start;
-    Pdu_directive *directive = &res.msg[packet_index];
+    Pdu_directive *directive = (Pdu_directive *) &res.msg[packet_index];
     directive->directive_code = EOF_PDU;
     packet_index++;
 
-    Pdu_eof *packet = &res.msg[packet_index];
+    Pdu_eof *packet = (Pdu_eof *) &res.msg[packet_index];
 
     //this will be need to set from the req struct probably.
     //4 bits, 
@@ -170,7 +170,7 @@ static void build_eof_packet(Response res, uint32_t start, Request *req, Client*
 
 }
 
-static void print(void *args) {
+void print(void *element, void *args) {
     Offset * o = (Offset *) args;
     ssp_printf("start: %u, end: %u\n", o->start, o->end);
 }
@@ -193,8 +193,6 @@ static void process_pdu_eof(char *packet, Request *req) {
         if (ssp_close(req->file->fd) == -1)
             ssp_error("could not close file\n");
 
-        ssp_print_hex(packet, 19);
-
     }
 }
 
@@ -214,17 +212,59 @@ static int process_file_request_metadata(Request *req) {
     Offset *offset = ssp_alloc(1, sizeof(Offset));
     offset->end = req->file_size;
     offset->start = 0;
+    
+    //transmission mode 1 is unacknowledged, therefor no offsets
+    if (req->transmission_mode == 1)
+        return 1;
+
     req->file->missing_offsets->insert(req->file->missing_offsets, offset, req->file_size);
+
     return 1;
 }
 
+static int process_pdu_header(char*packet, Request *req, Protocol_state *p_state) {
+
+    uint8_t packet_index = PACKET_STATIC_HEADER_LEN;
+    Pdu_header *header = (Pdu_header *) packet;
+
+    uint32_t source_id = 0;
+    memcpy(&source_id, &packet[packet_index], header->length_of_entity_IDs);
+    packet_index += header->length_of_entity_IDs;
+
+    //TODO the transaction number should get the request from data structure hosting requests
+    uint32_t transaction_sequence_number = 0;
+    memcpy(&transaction_sequence_number, &packet[packet_index], header->transaction_seq_num_len);
+    packet_index += header->transaction_seq_num_len;
+
+    uint32_t dest_id = 0;
+    memcpy(&dest_id, &packet[packet_index], header->length_of_entity_IDs);
+    packet_index += header->length_of_entity_IDs;
+
+    uint16_t packet_data_len = ntohs(header->PDU_data_field_len);
+
+    if (p_state->verbose_level == 3) {
+        ssp_printf("------------printing_header_received------------\n");
+        ssp_print_hex(packet, packet_index);
+        ssp_printf("packet data length %d, sequence number %d\n", packet_data_len, transaction_sequence_number);
+    }
+
+    if (p_state->my_cfdp_id != dest_id){
+        ssp_printf("someone is sending packets here that are not for me\n");
+        return -1;
+    }
+
+    req->transmission_mode = header->transmission_mode;
+    req->dest_cfdp_id = source_id;
+    req->transaction_sequence_number = transaction_sequence_number;
+
+}
 
 static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  File *file) {
     if(file == NULL)
         ssp_error("file struct is null, can't write to file");
 
 
-    File_data_pdu_contents *packet = data_packet;
+    File_data_pdu_contents *packet = (File_data_pdu_contents *)data_packet;
     uint32_t offset_start = packet->offset;
     uint32_t offset_end = offset_start + data_len - 4;
 
@@ -235,13 +275,17 @@ static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  Fil
         return;
 
     file->partial_checksum += calc_check_sum(&data_packet[4], bytes);
+    
+    if (file->missing_offsets->count == 0)
+        return;
+
     receive_offset(file, 0, offset_start, offset_end);
 }
 
 
-static void fill_request_pdu_metadata(unsigned char *meta_data_packet, Request *req_to_fill) {
+static void fill_request_pdu_metadata(char *meta_data_packet, Request *req_to_fill) {
 
-    Pdu_meta_data *meta_data = meta_data_packet;
+    Pdu_meta_data *meta_data = (Pdu_meta_data *) meta_data_packet;
     req_to_fill->segmentation_control = meta_data->segmentation_control;
 
     uint8_t packet_index = 1;
@@ -278,8 +322,15 @@ static void fill_request_pdu_metadata(unsigned char *meta_data_packet, Request *
 
 
 //fills the current request with packet data, responses from servers
-void parse_packet_client(unsigned char *msg, Request *current_request, Client* client, Protocol_state *p_state) {
-    ssp_printf("client received %x\n", msg);
+void parse_packet_client(char *packet, Request *req, Client* client, Protocol_state *p_state) {
+    ssp_printf("client received %x\n", packet);
+
+    process_pdu_header(packet, req, p_state);
+    //ssp_printf("client sequence number %u\n", req->transaction_sequence_number);
+    //ssp_printf("client transmission mode %u\n", req->transmission_mode);
+    //ssp_printf("client request type %u\n", req->type);
+
+    //ssp_print_hex(packet, 10);
 }
 
 
@@ -297,20 +348,30 @@ void packet_handler_client(Response res, Request *req, Client* client, Protocol_
 
 ------------------------------------------------------------------------------*/
 
-static void request_missing_offsets(Response res, Request *current_request){
+static void request_missing_offsets(Response res, Request *req){
+ 
 }
 
 
-void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state) {
+void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
 
-    //build_pdu_header(res, current_request, p_state->newClient, p_state);
-    
-    //res.msg = current_request->buff;
-    //memset(res.msg, 0, p_state->newClient->packet_len);
+    res.msg = req->buff;
+    if (req->file->missing_offsets->count > 0) {
+        req->file->missing_offsets->print(p_state->current_server_request->file->missing_offsets, print, NULL);
+        request_missing_offsets(res, req);
+        return;
+    }
 
     //request_missing_offset();
-    current_request->file->missing_offsets->print(p_state->current_server_request->file->missing_offsets, print, NULL);
+    
+    uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, req->pdu_header);
+    //ssp_printf("server sequence number %u\n", req->transaction_sequence_number);
+    //ssp_printf("server transmission mode %u\n", req->transmission_mode);
+    //ssp_printf("server request type %u\n", req->type);
+    ssp_printf("p_state->current_server_request->transaction_sequence number %u\n", p_state->current_server_request->transaction_sequence_number);
 
+    ssp_sendto(res);
+    
 
 }
 
@@ -322,7 +383,7 @@ void packet_handler_server(Response res, Request *current_request, Protocol_stat
 
 
 //fills the current_request struct for the server, incomming requests
-void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *current_request, Protocol_state *p_state) {
+void parse_packet_server(char *packet, uint32_t packet_len, Request *req, Protocol_state *p_state) {
 
     uint8_t packet_index = PACKET_STATIC_HEADER_LEN;
     Pdu_header *header = (Pdu_header *) packet;
@@ -352,25 +413,41 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
         ssp_printf("someone is sending packets here that are not for me\n");
         return;
     }
-    //process file data
-    if (header->PDU_type == 1) {
-        write_packet_data_to_file(&packet[packet_index], packet_data_len, current_request->file);
+
+    req->transmission_mode = header->transmission_mode;
+    req->dest_cfdp_id = source_id;
+    req->transaction_sequence_number = transaction_sequence_number;
+
+    if (process_pdu_header(packet, req, p_state) == -1){
         return;
     }
 
-    current_request->dest_cfdp_id = source_id;
-    Pdu_directive *directive = &packet[packet_index];
+    ssp_printf("received p_state->current_server_request->transaction_sequence number %u\n", p_state->current_server_request->transaction_sequence_number);
+
+    //process file data
+    if (header->PDU_type == 1) {
+        write_packet_data_to_file(&packet[packet_index], packet_data_len, req->file);
+        return;
+    }
+
+    
+    //set header for responding later
+    if (req->pdu_header == NULL){
+        req->pdu_header = get_header_from_mib(p_state->mib, source_id);
+    }
+
+    Pdu_directive *directive = (Pdu_directive *) &packet[packet_index];
     packet_index++;
 
     switch (directive->directive_code)
     {
         case META_DATA_PDU:
-            fill_request_pdu_metadata(&packet[packet_index], current_request);
-            process_file_request_metadata(current_request);
+            fill_request_pdu_metadata(&packet[packet_index], req);
+            process_file_request_metadata(req);
             break;
     
         case EOF_PDU:
-            process_pdu_eof(&packet[packet_index], current_request);
+            process_pdu_eof(&packet[packet_index], req);
             
             
             break;
@@ -471,8 +548,9 @@ int put_request(char *source_file_name,
     Request *req = client->outGoing_req;
     req->file = create_file(source_file_name, 0);
 
+
     //build a request 
-    req->transaction_sequence_number = p_state->transaction_id++;
+    req->transaction_sequence_number = p_state->transaction_sequence_number++;
 
     //enumeration
     req->type = put;
@@ -489,6 +567,7 @@ int put_request(char *source_file_name,
     req->transmission_mode = transmission_mode;
     req->messages_to_user = messages_to_user;
     req->filestore_requests = filestore_requests;
+    return 0;
 }
 
 

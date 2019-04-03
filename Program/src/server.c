@@ -38,7 +38,7 @@ static int exit_now;
 
 //this code is reused from assignment 1, with small changes
 //see header file
-int prepareUdpHost(unsigned char *port)
+int prepareUdpHost(char *port)
 {
     struct addrinfo hints, *res;
     memset(&hints, 0, sizeof(hints));
@@ -128,7 +128,7 @@ int *prepareSignalHandler()
     return &exit_now;
 }
 
-static int resizeBuff(unsigned char **buffer, uint32_t *newBufferSize, uint32_t *prev_buff_size) {
+static int resizeBuff(char **buffer, uint32_t *newBufferSize, uint32_t *prev_buff_size) {
 
      if (*newBufferSize != *prev_buff_size) {
             *buffer = realloc(*buffer, *newBufferSize);
@@ -143,8 +143,8 @@ static int resizeBuff(unsigned char **buffer, uint32_t *newBufferSize, uint32_t 
 }
 
 //see header file
-void udpSelectServer(unsigned char* port, int packet_len,
-    int (*onRecv)(int sfd, unsigned char *msg,  uint32_t *buff_size, struct sockaddr_storage client, void *other), 
+void udpSelectServer(char* port, int packet_len,
+    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, struct sockaddr_storage client, void *other), 
     int (*onTimeOut)(void *other),
     void *other)
 {
@@ -164,7 +164,7 @@ void udpSelectServer(unsigned char* port, int packet_len,
 
     uint32_t prev_buff_size = *buff_size;
 
-    unsigned char *buff = calloc(sizeof(unsigned char), *buff_size);
+    char *buff = calloc(sizeof(char), *buff_size);
     checkAlloc(buff, 1);
 
     struct sockaddr_storage *client;
@@ -235,9 +235,9 @@ void udpSelectServer(unsigned char* port, int packet_len,
 
 
 //https://www.cs.cmu.edu/afs/cs/academic/class/15213-f99/www/class26/udpclient.c
-void udpClient(unsigned char *hostname, unsigned char*port, int packet_len, void *onSendParams, void *onRecvParams, 
+void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, 
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
-    int (*onRecv)(int sfd, unsigned char *msg,  uint32_t *buff_size, struct sockaddr_in client, void *onRecvParams) 
+    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, struct sockaddr_in client, void *onRecvParams) 
 ) {
 
     int sfd, count, port_val;
@@ -252,7 +252,7 @@ void udpClient(unsigned char *hostname, unsigned char*port, int packet_len, void
 
     uint32_t prev_buff_size = *buff_size;
 
-    unsigned char *buff = calloc(sizeof(unsigned char), prev_buff_size);
+    char *buff = calloc(sizeof(char), prev_buff_size);
     checkAlloc(buff, 1);
 
     prepareSignalHandler();
@@ -269,10 +269,10 @@ void udpClient(unsigned char *hostname, unsigned char*port, int packet_len, void
         exit(0);
     }
 
-    bzero((unsigned char *) &serveraddr, sizeof(serveraddr));
+    bzero((char *) &serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
 
-    bcopy((unsigned char *)server->h_addr_list[0], (unsigned char *)&serveraddr.sin_addr.s_addr, server->h_length);
+    bcopy((char *)server->h_addr_list[0], (char *)&serveraddr.sin_addr.s_addr, server->h_length);
     serveraddr.sin_port = htons(port_val);
     serverlen = sizeof(serveraddr);
         
