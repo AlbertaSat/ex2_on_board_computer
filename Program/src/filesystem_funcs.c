@@ -200,14 +200,14 @@ void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t off
     }
 
     Offset *offset_in_list = (Offset *) node->element;
-    ssp_printf("received offset start:%u end:%u, found node: start:%u end:%u\n", offset_to_insert.start, offset_to_insert.end, offset_in_list->start, offset_in_list->end);
+    //ssp_printf("received offset start:%u end:%u, found node: start:%u end:%u\n", offset_to_insert.start, offset_to_insert.end, offset_in_list->start, offset_in_list->end);
 
     //insert new node
     if (offset_to_insert.start >= offset_in_list->start && offset_to_insert.end <= offset_in_list->end) {
 
         //remove node if both start and end are equal
         if (offset_to_insert.start == offset_in_list->start && offset_to_insert.end == offset_in_list->end) {
-            ssp_printf("removing node\n");  
+            //ssp_printf("removing node\n");  
             node->next->prev = node->prev;
             node->prev->next = node->next;
             ssp_free(node->element);
@@ -222,9 +222,7 @@ void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t off
             return;
         }
 
-
-        ssp_printf("adding new node\n");
-
+        //ssp_printf("adding new node\n");
         Offset *new_offset = ssp_alloc(1, sizeof(Offset));
         new_offset->start = offset_start;
         new_offset->end = offset_end;

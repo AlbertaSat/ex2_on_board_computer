@@ -53,17 +53,19 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
     //1 bytes
     meta_data_packet->segmentation_control = req->segmentation_control;
     meta_data_packet->reserved_bits = 0;
-    
-    //4 bytes
-    meta_data_packet->file_size = req->file_size;
-    packet_index += 5;
+    packet_index++;
 
+    //4 bytes
+    uint32_t network_bytes = htonl(req->file_size);
+    network_bytes = network_bytes;
+    memcpy(&res.msg[packet_index], &network_bytes, sizeof(uint32_t));
+    packet_index += 4;
+    
     //variable length params
     uint8_t src_file_name_length = strnlen(req->source_file_name, MAX_PATH);
     uint8_t destination_file_length = strnlen(req->destination_file_name, MAX_PATH);
     char *src_file_name = req->source_file_name;
     char *destination_file_name = req->destination_file_name;
-    
     
     //copy source length to packet (1 bytes) 
     memcpy(&res.msg[packet_index], &src_file_name_length, src_file_name_length);
@@ -71,7 +73,6 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
     //copy source name to packet (length bytes) 
     memcpy(&res.msg[packet_index], src_file_name, src_file_name_length);
     packet_index += src_file_name_length;
-
 
     //copy length to packet (1 byte)
     memcpy(&res.msg[packet_index], &destination_file_length, 1);
@@ -87,7 +88,7 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
     header->PDU_data_field_len = total_bytes;
 
 
-    ssp_print_hex(meta_data_packet, total_bytes);
+    ssp_print_hex(&res.msg[start], total_bytes);
 
     return packet_index;
 }
@@ -241,20 +242,21 @@ static void fill_request_pdu_metadata(unsigned char *meta_data_packet, Request *
     Pdu_meta_data *meta_data = meta_data_packet;
     req_to_fill->segmentation_control = meta_data->segmentation_control;
 
-    uint8_t packet_index = 4;
-    uint32_t file_size = (uint32_t)meta_data_packet[packet_index];
+    uint8_t packet_index = 1;
+    uint32_t *network_bytes = (uint32_t*) &meta_data_packet[packet_index];
+    uint32_t file_size = ntohl(*network_bytes);
 
     req_to_fill->file_size = file_size;
-    ssp_printf("received filesize: %u\n", file_size);
-    packet_index++;
+    packet_index += 4;
 
     uint8_t file_name_len = meta_data_packet[packet_index];
     packet_index++;
 
     memcpy(req_to_fill->source_file_name, &meta_data_packet[packet_index], file_name_len);
-    packet_index += file_name_len + 1;
+    packet_index += file_name_len;
 
     file_name_len = meta_data_packet[packet_index];
+    packet_index++;
     memcpy(req_to_fill->destination_file_name, &meta_data_packet[packet_index], file_name_len);
 
     packet_index += file_name_len;
