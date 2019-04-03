@@ -85,7 +85,7 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
     uint8_t total_bytes = packet_index - start; 
 
     //mark the size of the packet
-    header->PDU_data_field_len = total_bytes;
+    header->PDU_data_field_len = htons(total_bytes);
 
 
     //ssp_print_hex(&res.msg[start], total_bytes);
@@ -127,7 +127,7 @@ static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Cli
     req->file->next_offset_to_send += bytes;
 
     //add bytes read, and the packet offset to the data_field length
-    header->PDU_data_field_len = bytes + 4;
+    header->PDU_data_field_len = htons(bytes + 4);
 
     if (bytes <  data_size)
         return 1;
@@ -164,7 +164,7 @@ static void build_eof_packet(Response res, uint32_t start, Request *req, Client*
     packet_index += 4;
 
     //TODO addTLV fault_location
-    header->PDU_data_field_len = packet_index - start;
+    header->PDU_data_field_len = htons(packet_index - start);
     ssp_print_hex(&res.msg[start], packet_index);
 
 }
@@ -323,7 +323,7 @@ void parse_packet_server(unsigned char *packet, uint32_t packet_len, Request *cu
     memcpy(&dest_id, &packet[packet_index], header->length_of_entity_IDs);
     packet_index += header->length_of_entity_IDs;
 
-    uint16_t packet_data_len = header->PDU_data_field_len;
+    uint16_t packet_data_len = ntohs(header->PDU_data_field_len);
 
     if (p_state->verbose_level == 3) {
         ssp_printf("------------printing_header_received------------\n");
