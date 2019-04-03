@@ -303,37 +303,11 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     if (remote == NULL)
         ssp_printf("couldn't find entity in Remote_entity list\n");
 
+    //TODO clean this up, we don't need multiple instances of UT_ports etc
     client->unitdata_port = remote->UT_port;
     client->unitdata_id = remote->UT_address;
     client->mib_info = remote;
-
-    //building the pdu header here
-    client->pdu_header = ssp_alloc(1, sizeof(Pdu_header));
-    checkAlloc(client->pdu_header, 1);
-
-
-    //these will need to be set with a config file, or dynamically based on the 
-    //packet being sent
-    
-    Pdu_header* header = client->pdu_header;
-    header->reserved_bit_0 = 0;
-    header->reserved_bit_1 = 0;
-    header->reserved_bit_2 = 0;
-    header->CRC_flag = client->mib_info->CRC_required;
-    header->direction = 1;
-    header->PDU_type = 0;
-    header->transaction_seq_num_len = 3;
-    header->length_of_entity_IDs = 1; 
-    header->transmission_mode = remote->default_transmission_mode;
-
-    header->destination_id = ssp_alloc(header->length_of_entity_IDs, sizeof(u_int8_t));
-    checkAlloc(header->destination_id, 1);
-    memcpy(header->destination_id, &remote->cfdp_id, header->length_of_entity_IDs);
-
-    header->source_id = ssp_alloc(header->length_of_entity_IDs, sizeof(u_int8_t));
-    checkAlloc(header->source_id, 1);
-    memcpy(header->source_id, &p_state->my_cfdp_id, header->length_of_entity_IDs);
-
+    client->pdu_header = get_header_from_mid(p_state->mib, cfdp_id);
 
     //TODO lock this
     p_state->newClient = client;
@@ -415,7 +389,7 @@ void ssp_cleanup_client(Client *client) {
     free(client->pdu_header->destination_id);
     free(client->pdu_header->source_id);
     free(client->pdu_header);
-
+    
     free(client);
 
 }

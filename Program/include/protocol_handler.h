@@ -48,8 +48,13 @@ typedef struct request {
     unsigned char* filestore_requests;
     
     uint32_t buff_len;
+
+    //buffer for making packets
     unsigned char* buff;
 
+    //header for building response packets
+    Pdu_header *pdu_header;
+    
     //handler for sending responses back
     Response res;
 } Request;

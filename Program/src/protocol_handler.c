@@ -10,29 +10,31 @@
 
 
 //returns the location in the packet where the next pointer for tthe packet will start after the header
-static uint8_t build_pdu_header(Response res, Request *req, Client* client, Protocol_state *p_state) {
-    unsigned char *packet = res.msg;
-    memcpy(packet, client->pdu_header, PACKET_STATIC_HEADER_LEN);
+static uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_number, Pdu_header *pdu_header) {
+    memcpy(packet, pdu_header, PACKET_STATIC_HEADER_LEN);
+    uint32_t packet_index = PACKET_STATIC_HEADER_LEN;
 
     //copy variable length src id
-    memcpy(&packet[PACKET_STATIC_HEADER_LEN], 
-    client->pdu_header->source_id, 
-    client->pdu_header->length_of_entity_IDs);
-    
+    memcpy(&packet[packet_index], 
+    pdu_header->source_id, 
+    pdu_header->length_of_entity_IDs);
+    packet_index += pdu_header->length_of_entity_IDs;
+
     //copy variable length transaction number id
-    memcpy(&packet[PACKET_STATIC_HEADER_LEN + client->pdu_header->length_of_entity_IDs],
-    &req->transaction_sequence_number, 
-    client->pdu_header->transaction_seq_num_len);
+    memcpy(&packet[packet_index],
+    &transaction_sequence_number, 
+    pdu_header->transaction_seq_num_len);
+    packet_index += pdu_header->transaction_seq_num_len;
 
     //copy variable length destination id
-    memcpy(&packet[PACKET_STATIC_HEADER_LEN + client->pdu_header->length_of_entity_IDs + client->pdu_header->transaction_seq_num_len],
-    client->pdu_header->destination_id,
-    client->pdu_header->length_of_entity_IDs);
+    memcpy(&packet[packet_index],
+    pdu_header->destination_id,
+    pdu_header->length_of_entity_IDs);
     
     uint8_t total_bytes = PACKET_STATIC_HEADER_LEN 
-    + client->pdu_header->length_of_entity_IDs 
-    + client->pdu_header->transaction_seq_num_len 
-    + client->pdu_header->length_of_entity_IDs;
+    + pdu_header->length_of_entity_IDs 
+    + pdu_header->transaction_seq_num_len 
+    + pdu_header->length_of_entity_IDs;
 
     return total_bytes;
 }
@@ -399,7 +401,8 @@ void user_request_handler(Response res, Request *req, Client* client, Protocol_s
     res.msg = req->buff;
     memset(res.msg, 0, client->packet_len);
 
-    uint32_t start = build_pdu_header(res, req, client, p_state);
+
+    uint32_t start = build_pdu_header(res.msg, req->transaction_sequence_number, client->pdu_header);
 
     switch (req->type)
     {
