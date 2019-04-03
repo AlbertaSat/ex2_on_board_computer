@@ -88,7 +88,7 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
     header->PDU_data_field_len = total_bytes;
 
 
-    ssp_print_hex(&res.msg[start], total_bytes);
+    //ssp_print_hex(&res.msg[start], total_bytes);
 
     return packet_index;
 }
@@ -129,7 +129,6 @@ static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Cli
     //add bytes read, and the packet offset to the data_field length
     header->PDU_data_field_len = bytes + 4;
 
-
     if (bytes <  data_size)
         return 1;
 
@@ -157,7 +156,7 @@ static void build_eof_packet(Response res, uint32_t start, Request *req, Client*
     packet_index++;
 
     //4 bytes
-    packet->file_size = req->file->total_size;
+    packet->file_size = ntohl(req->file->total_size);
     packet_index += 4;
 
     //TODO checksum procedures
@@ -166,6 +165,7 @@ static void build_eof_packet(Response res, uint32_t start, Request *req, Client*
 
     //TODO addTLV fault_location
     header->PDU_data_field_len = packet_index - start;
+    ssp_print_hex(&res.msg[start], packet_index);
 
 }
 
@@ -179,14 +179,20 @@ static void process_pdu_eof(char *packet, Request *req) {
     Pdu_eof *eof_packet = (Pdu_eof *) packet;
     if (eof_packet->checksum == req->file->partial_checksum) {
 
-        /*ssp_printf("received checksum: %u\n", req->file->partial_checksum);
-        ssp_printf("actual checksum: %u\n", eof_packet->checksum);
-        ssp_printf("missing offsets after file received count: %u\n", req->file->missing_offsets->count);
-        req->file->missing_offsets->print(req->file->missing_offsets, print, NULL);*/
+        //ssp_printf("received checksum: %u\n", req->file->partial_checksum);
+        //ssp_printf("actual checksum: %u\n", eof_packet->checksum);
+        uint32_t file_size = ntohl(eof_packet->file_size);
+
+        ssp_printf("received filesize eof: %u\n", file_size);
+        
+        //ssp_printf("missing offsets after file received eof: count: %u\n", req->file->missing_offsets->count);
+        //req->file->missing_offsets->print(req->file->missing_offsets, print, NULL);
         req->file->eof_checksum = eof_packet->checksum;
 
         if (ssp_close(req->file->fd) == -1)
             ssp_error("could not close file\n");
+
+        ssp_print_hex(packet, 19);
 
     }
 }
@@ -207,11 +213,7 @@ static int process_file_request_metadata(Request *req) {
     Offset *offset = ssp_alloc(1, sizeof(Offset));
     offset->end = req->file_size;
     offset->start = 0;
-    ssp_printf("%u\n", req->file_size);
     req->file->missing_offsets->insert(req->file->missing_offsets, offset, req->file_size);
-
-    req->file->missing_offsets->print(req->file->missing_offsets, print, NULL);
-
     return 1;
 }
 
@@ -260,7 +262,7 @@ static void fill_request_pdu_metadata(unsigned char *meta_data_packet, Request *
     memcpy(req_to_fill->destination_file_name, &meta_data_packet[packet_index], file_name_len);
 
     packet_index += file_name_len;
-    ssp_print_hex(meta_data_packet, packet_index);
+    //ssp_print_hex(meta_data_packet, packet_index);
 
     return;
 }
