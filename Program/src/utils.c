@@ -48,6 +48,8 @@ Config *configuration(int argc, char **argv)
 
     conf->timer = 15;
     conf->verbose_level = 0;
+    conf->client_cfdp_id = 0;
+    conf->my_cfdp_id = 0;
 
     uint32_t tmp;
     while ((ch = getopt(argc, argv, "t: i: c: v: h")) != -1)
@@ -72,7 +74,6 @@ Config *configuration(int argc, char **argv)
         case 'c': 
             tmp = strtol(optarg, NULL, 10);
             conf->client_cfdp_id = tmp;
-
             break;
 
         case 'h':

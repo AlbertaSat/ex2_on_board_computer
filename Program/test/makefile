@@ -5,7 +5,12 @@ CC = gcc
 
 #---------------------------File Names---------------------------
 CFILES += $(PROJDIR)/src/utils.c
-#VPATH = (PROJDIR)/src
+CFILES +=  $(PROJDIR)/src/filesystem_funcs.c
+CFILES += $(PROJDIR)/src/port.c
+CFILES += $(PROJDIR)/src/server.c
+CFILES += $(PROJDIR)/src/protocol_handler.c
+CFILES += $(PROJDIR)/src/list_callbacks.c
+CFILES += $(PROJDIR)/src/mib.c
 
 #entrypoint
 MAIN = main

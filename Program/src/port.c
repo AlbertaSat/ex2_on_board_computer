@@ -144,13 +144,10 @@ static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, struct soc
     res.addr = posix_client;
     res.sfd = sfd;
     res.packet_len = *buff_size;
-
     Client *client = p_state->newClient;
-
+    res.msg = client->outGoing_req->buff;
     //fills the request struct
-    parse_packet_client(packet, client->incoming_req, client, p_state);
-
-    packet_handler_client(res, client->incoming_req, client, p_state);
+    parse_packet_client(packet, res, client->outGoing_req, client, p_state);
     return 0;
     
 }
@@ -271,7 +268,6 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     checkAlloc(client, 1);
 
     client->outGoing_req = init_request(PACKET_LEN);
-    client->incoming_req = init_request(PACKET_LEN);
 
     pthread_t *handler = calloc(sizeof(pthread_t), 1);
     checkAlloc(handler, 1);
@@ -394,7 +390,6 @@ void ssp_cleanup_client(Client *client) {
     #endif
     
     ssp_cleanup_req(client->outGoing_req);
-    ssp_cleanup_req(client->incoming_req);
     free(client->client_handle);
     free(client->client_thread_attributes);
     ssp_cleanup_pdu_header(client->pdu_header);

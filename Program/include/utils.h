@@ -81,6 +81,10 @@ int checkAlloc(void *mem, int notOkToFail);
 ------------------------------------------------------------------------------*/
 Config *configuration(int argc, char **argv);
 
+//https://stackoverflow.com/questions/3022552/is-there-any-standard-htonl-like-function-for-64-bits-integers-in-c
+#define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
+#define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
+
 NODE *createNode(void *element, uint32_t id);
 
 #endif //UTILS_H

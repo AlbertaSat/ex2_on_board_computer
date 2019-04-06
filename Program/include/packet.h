@@ -1,9 +1,9 @@
-#include <stdint.h>
 
 
 #ifndef PACKET_H
 #define PACKET_H
-
+#include <stdint.h>
+#include "filesystem_funcs.h"
 #define PACKET_HEADER_LEN 224
 
 // PACKET_HEADER_LEN + data max size = (65536 * 8)
@@ -278,12 +278,19 @@ typedef struct pdu_eof {
 } Pdu_eof;
 
 
+/*
+    start_scope is the begining of the nak requests
+    end_scope is the end
+    segments are
+*/
+typedef struct pdu_nak {
+    unsigned int start_scope : 32;
+    uint32_t end_scope;
 
-
-
-
-
-
+    //number of Nak_segments
+    uint64_t segment_requests;
+    Offset *segments;
+} Pdu_nak;
 
 
 

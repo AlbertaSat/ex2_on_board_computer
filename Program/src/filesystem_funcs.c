@@ -86,14 +86,18 @@ int does_file_exist(char *source_file_name) {
 //modifys the seek location, returns bytes read
 int get_offset(File *file, void *buff, uint32_t buf_size, int offset) {
 
-    if (offset >= file->total_size)
+    if (offset >= file->total_size){
+        ssp_error("offset greater than file size\n");
         return -1;
+    }
 
-    ssp_lseek(file->fd, SEEK_SET, offset);
+    if (ssp_lseek(file->fd, offset, SEEK_SET) == -1){
+        ssp_error("could'nt set offset\n");
+    }
 
     int bytes = ssp_read(file->fd, buff, buf_size);
     if (bytes == -1){
-        ssp_error("Could not read\n");
+        ssp_error("Could not read anything from file\n");
     }
 
     return bytes;
@@ -107,7 +111,7 @@ int write_offset(File *file, void *buff, uint32_t size, uint32_t offset) {
         return -1;
     }
 
-    ssp_lseek(file->fd, SEEK_SET, (int) offset);
+    ssp_lseek(file->fd, (int) offset, SEEK_SET);
     int bytes = ssp_write(file->fd, buff, (size_t) size);
 
     if (bytes == -1){

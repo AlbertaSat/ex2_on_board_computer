@@ -2,6 +2,7 @@
 #ifndef FILESYSTEM_FUNCS_H
 #define FILESYSTEM_FUNCS_H
 #include <stdint.h>
+#include "utils.h"
 
 typedef struct offset {
     uint32_t start;
