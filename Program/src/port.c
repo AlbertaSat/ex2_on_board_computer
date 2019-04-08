@@ -124,10 +124,10 @@ static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, struct soc
     res.packet_len = p_state->packet_size;
 
     //filles the request struct, in the future get request based on id
-    parse_packet_server(packet, res.packet_len, p_state->current_server_request, p_state);
+    parse_packet_server(packet, res.packet_len, res, p_state->current_server_request, p_state);
 
     //ssp_printf("Server received: %s\n", msg);
-    packet_handler_server(res, p_state->current_server_request, p_state);
+    //packet_handler_server(res, p_state->current_server_request, p_state);
     return 0;
 
 }
@@ -185,13 +185,52 @@ static int on_time_out_posix(void *other) {
 }
 
 
+//this function is just for posix fun
+static int on_stdin(void *other) {
+
+    Protocol_state *p_state = (Protocol_state *) other;
+    Request *req = p_state->newClient->outGoing_req;
+
+    char input[MAX_PATH];
+    fgets(input, MAX_PATH, stdin);
+    input[strlen(input)-1]='\0';
+    
+    if (req->type == none){
+        if (strnlen(req->source_file_name, MAX_PATH) == 0){
+            if (get_file_size(input) == -1){
+                ssp_printf("file: %s, we had trouble opening this file, please enter a new file\n", input);
+                return 0;
+            }
+            memcpy(p_state->newClient->outGoing_req->source_file_name, input, MAX_PATH);
+            ssp_printf("Enter a destination file name:\n");
+        }
+        else if (strnlen(req->destination_file_name, MAX_PATH) == 0){
+            memcpy(p_state->newClient->outGoing_req->destination_file_name, input, MAX_PATH);
+            ssp_printf("sending file: %s As file named: %s To cfid enditity %d\n", p_state->newClient->outGoing_req->source_file_name, p_state->newClient->outGoing_req->destination_file_name, p_state->newClient->cfdp_id);
+            ssp_printf("cancel connection mode (yes):\n");
+        } 
+        else if (strncmp(input, "yes", 3) == 0){
+            ssp_printf("sending file connectionless\n");
+            put_request(p_state->newClient->outGoing_req->source_file_name, p_state->newClient->outGoing_req->destination_file_name, 0, 0, 0, 1, NULL, NULL, p_state->newClient, p_state);
+        } 
+        else {
+            ssp_printf("sending file connected\n");
+            put_request(p_state->newClient->outGoing_req->source_file_name, p_state->newClient->outGoing_req->destination_file_name, 0, 0, 0, 0, NULL, NULL, p_state->newClient, p_state); 
+        }
+   }
+   
+    return 0;
+
+}
+
+
 void *ssp_connectionless_server_task(void *params) {
     
     Protocol_state* p_state = (Protocol_state*) params;
     p_state->transaction_sequence_number = 1;
 
     #ifdef POSIX_PORT
-        udpSelectServer(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, p_state);
+        udpSelectServer(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, p_state);
     #endif
 
     return NULL;
@@ -303,8 +342,9 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     client->unitdata_port = remote->UT_port;
     client->unitdata_id = remote->UT_address;
     client->mib_info = remote;
-    client->pdu_header = get_header_from_mib(p_state->mib, cfdp_id);
+    client->pdu_header = get_header_from_mib(p_state->mib, cfdp_id, p_state->my_cfdp_id);
 
+    
     //TODO lock this
     p_state->newClient = client;
 
@@ -318,6 +358,16 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
 
 }
 
+void reset_request(Request *req){
+    memset(req->source_file_name, 0, MAX_PATH);
+    memset(req->destination_file_name, 0, MAX_PATH);
+    memset(req->buff, 0, req->buff_len);
+    memset(req->res.addr, 0, sizeof(struct sockaddr_in));
+    free_file(req->file);
+    
+    req->type = none;
+    
+}
 
 Request *init_request(uint32_t buff_len) {
 
@@ -335,7 +385,7 @@ Request *init_request(uint32_t buff_len) {
     req->buff = ssp_alloc(buff_len, sizeof(char));
     
     req->res.addr = ssp_alloc(1, sizeof(struct sockaddr_in));
-
+    req->type = none;
     checkAlloc(req->buff,  1);
     return req;
 }

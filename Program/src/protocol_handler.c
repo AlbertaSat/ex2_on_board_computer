@@ -5,9 +5,10 @@
 #include "string.h"
 #include "packet.h"
 
-
-
-
+//for progress bar
+#include "unistd.h"
+#include "stdio.h"
+#include "stddef.h"
 
 //returns the location in the packet where the next pointer for tthe packet will start after the header
 static uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_number, uint32_t transmission_mode, Pdu_header *pdu_header) {
@@ -41,6 +42,26 @@ static uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_numb
 
     return total_bytes;
 }
+
+static uint8_t build_finished_packet(char *packet, uint32_t start, Request *req) {
+
+    uint32_t packet_index = start;
+    uint32_t data_len = 0;
+
+    Pdu_directive *directive = (Pdu_directive *) &packet[packet_index];
+    directive->directive_code = FINISHED_PDU;
+    packet_index++;
+
+    Pdu_finished *pdu_finished = (Pdu_finished *) &packet[packet_index];
+    pdu_finished->condition_code = COND_NO_ERROR;
+    pdu_finished->delivery_code = 0;
+    pdu_finished->file_status = FILE_RETAINED_SUCCESSFULLY;
+
+    data_len = 8;
+    packet_index += 8;
+    return data_len;
+}
+
 
 static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *req, Client* client, Protocol_state *p_state) {    
     Pdu_header *header = (Pdu_header *) res.msg;
@@ -91,9 +112,6 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
 
     //mark the size of the packet
     header->PDU_data_field_len = htons(total_bytes);
-
-
-    //ssp_print_hex(&res.msg[start], total_bytes);
 
     return packet_index;
 }
@@ -204,19 +222,15 @@ static void build_eof_packet(Response res, uint32_t start, Request *req, Client*
 
 }
 
-
 void print(void *element, void *args) {
     Offset * o = (Offset *) element;
     ssp_printf("start: %u, end: %u\n", o->start, o->end);
 }
 
-
-
 struct offset_holder {
     Offset *offsets;
     int i;
 };
-
 
 static void fill_nak_array(void *element, void *args){
     struct offset_holder *holder = (struct offset_holder *)args;
@@ -226,7 +240,7 @@ static void fill_nak_array(void *element, void *args){
     holder->offsets[holder->i].start = htonl(offset->start);
     holder->offsets[holder->i].end = htonl(offset->end);
 
-    ssp_printf("offset: start:%u, end:%u\n", offset->start, offset->end);
+    //ssp_printf("sending offset: start:%u, end:%u\n", offset->start, offset->end);
     holder->i++;
 }
 
@@ -258,13 +272,10 @@ static void process_pdu_eof(char *packet, Request *req) {
     Pdu_eof *eof_packet = (Pdu_eof *) packet;
     if (eof_packet->checksum == req->file->partial_checksum) {
 
-        //ssp_printf("received checksum: %u\n", req->file->partial_checksum);
-        //ssp_printf("actual checksum: %u\n", eof_packet->checksum);
         uint32_t file_size = ntohl(eof_packet->file_size);
 
         ssp_printf("received eof packet, filesize: %u\n", file_size);
         
-        //ssp_printf("missing offsets after file received eof: count: %u\n", req->file->missing_offsets->count);
         req->file->missing_offsets->print(req->file->missing_offsets, print, NULL);
 
         req->file->eof_checksum = eof_packet->checksum;
@@ -333,7 +344,7 @@ static int process_pdu_header(char*packet, Request *req, Protocol_state *p_state
     }
 
     if (p_state->my_cfdp_id != dest_id){
-        ssp_printf("someone is sending packets here that are not for me\n");
+        ssp_printf("someone is sending packets here that are not for my id %u, dest_id: %u\n", p_state->my_cfdp_id, dest_id);
         return -1;
     }
 
@@ -346,15 +357,14 @@ static int process_pdu_header(char*packet, Request *req, Protocol_state *p_state
 }
 
 static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  File *file) {
-    if(file == NULL)
+    if(file == NULL) {
         ssp_error("file struct is null, can't write to file");
+        ssp_printf("dropped metadata packet :( we have no fix for this yet\n " );
 
-
+    }
     File_data_pdu_contents *packet = (File_data_pdu_contents *)data_packet;
     uint32_t offset_start = packet->offset;
     uint32_t offset_end = offset_start + data_len - 4;
-
-    //ssp_printf("packet offset received: %d\n", packet->offset);
     
     int bytes = write_offset(file, &data_packet[4], data_len - 4, offset_start);
     if (bytes <= 0) {
@@ -394,7 +404,6 @@ static void fill_request_pdu_metadata(char *meta_data_packet, Request *req_to_fi
     memcpy(req_to_fill->destination_file_name, &meta_data_packet[packet_index], file_name_len);
 
     packet_index += file_name_len;
-    //ssp_print_hex(meta_data_packet, packet_index);
 
     return;
 }
@@ -408,16 +417,42 @@ static void fill_request_pdu_metadata(char *meta_data_packet, Request *req_to_fi
 ------------------------------------------------------------------------------*/
 
 
+//taken from https://gist.github.com/amullins83/24b5ef48657c08c4005a8fab837b7499
+
+void print_progress(size_t count, size_t max)
+{
+	const char prefix[] = "Progress: [";
+	const char suffix[] = "]";
+	const size_t prefix_length = sizeof(prefix) - 1;
+	const size_t suffix_length = sizeof(suffix) - 1;
+	char *buffer = ssp_alloc(max + prefix_length + suffix_length + 1, 1); // +1 for \0
+	size_t i = 0;
+
+	strcpy(buffer, prefix);
+	for (; i < max; ++i)
+	{
+		buffer[prefix_length + i] = i < count ? '#' : ' ';
+	}
+
+	strcpy(&buffer[prefix_length + i], suffix);
+	printf("\b%c[2K\r%s\n", 27, buffer);
+	fflush(stdout);
+	ssp_free(buffer);
+}
+
 
 //fills the current request with packet data, responses from servers
 void parse_packet_client(char *packet, Response res, Request *req, Client* client, Protocol_state *p_state) {
  
     
     uint32_t packet_index = process_pdu_header(packet, req, p_state);
+    if (packet_index == -1)
+        return;
+
     Pdu_header *header = (Pdu_header *) packet;    
     uint16_t packet_data_len = ntohs(header->PDU_data_field_len);
+
     if (packet[packet_index] == NAK_PDU){
-        ssp_printf("client received nak\n");
         packet_index += 1; 
         Pdu_nak *nak = (Pdu_nak *) &packet[packet_index];
         uint32_t ostart = ntohl(nak->start_scope);
@@ -432,21 +467,23 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
         }
 
         uint32_t outgoing_packet_index = build_pdu_header(req->buff, req->transaction_sequence_number, 0, client->pdu_header);
-        
-        
+    
         //for (int i = 0; i < segments; i++){
             build_nak_response(req->buff, outgoing_packet_index, ostart, req, client, p_state) ;
+            print_progress(ostart/1000, req->file_size/1000);
             ssp_sendto(res);
+
+            //send another EOF
+            req->type = eof;
         //}
-        
 
-        
-        //ssp_printf("req sequence nubmer: %u\n", req->transaction_sequence_number);
-        //uint32_t outgoing_packet_index = build_pdu_header(req->buff, client->outGoing_req->transaction_sequence_number, 0, client->outGoing_req->pdu_header);        
-        //ssp_sendto(client->outGoing_req->res);
-         //ssp_printf("client received start: %u, end: %u\n", ostart, oend);
-        //ssp_print_hex(packet, 40);
+    } else if (packet[packet_index] == FINISHED_PDU) {
 
+        if (req->type != finished) {
+            print_progress(req->file_size/1000, req->file_size/1000);
+            ssp_printf("file successfully sent\n");
+        }
+        req->type = finished;
     }
 }
 
@@ -459,27 +496,28 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
 ------------------------------------------------------------------------------*/
 
 void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
-    //ssp_printf("time out missing packet count:%d\n", req->file->missing_offsets->count);
 
     res.msg = req->buff;
+    //req->pdu_header is broken
+    uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
+
     if (req->file->missing_offsets->count > 0) {
-        memset(res.msg, 0, res.packet_len);
-        uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
         build_nak_packet(res.msg, start, req);
         ssp_sendto(res);
         return;
+    }
+    
+    if (req->file->eof_checksum == req->file->partial_checksum && req->file->missing_offsets->count == 0) {
+        Pdu_header *header = (Pdu_header *) res.msg;
+        uint32_t dest_id = 0;
+        memcpy(&dest_id, &header->destination_id, header->length_of_entity_IDs);
+        build_finished_packet(res.msg, start, req);
+        ssp_sendto(res);
     }    
 }
 
-//Server responses
-void packet_handler_server(Response res, Request *current_request, Protocol_state *p_state) {
-    //res.msg = "Server Received\n";
-    //ssp_sendto(res);
-}
-
-
 //fills the current_request struct for the server, incomming requests
-void parse_packet_server(char *packet, uint32_t packet_len, Request *req, Protocol_state *p_state) {
+void parse_packet_server(char *packet, uint32_t packet_len, Response res, Request *req, Protocol_state *p_state) {
 
 
     uint8_t packet_index = PACKET_STATIC_HEADER_LEN;
@@ -518,14 +556,13 @@ void parse_packet_server(char *packet, uint32_t packet_len, Request *req, Protoc
 
     //process file data
     if (header->PDU_type == 1) {
-
         write_packet_data_to_file(&packet[packet_index], packet_data_len, req->file);
         return;
     }
     
     //set header for responding later
     if (req->pdu_header == NULL){
-        req->pdu_header = get_header_from_mib(p_state->mib, source_id);
+        req->pdu_header = get_header_from_mib(p_state->mib, source_id, p_state->my_cfdp_id);
     }
 
     Pdu_directive *directive = (Pdu_directive *) &packet[packet_index];
@@ -540,8 +577,6 @@ void parse_packet_server(char *packet, uint32_t packet_len, Request *req, Protoc
     
         case EOF_PDU:
             process_pdu_eof(&packet[packet_index], req);
-            
-            
             break;
         default:
             break;
@@ -639,7 +674,6 @@ int put_request(char *source_file_name,
     Request *req = client->outGoing_req;
     req->file = create_file(source_file_name, 0);
 
-
     //build a request 
     req->transaction_sequence_number = p_state->transaction_sequence_number++;
 
@@ -658,6 +692,7 @@ int put_request(char *source_file_name,
     req->transmission_mode = transmission_mode;
     req->messages_to_user = messages_to_user;
     req->filestore_requests = filestore_requests;
+
     return 0;
 }
 

@@ -146,6 +146,7 @@ static int resizeBuff(char **buffer, uint32_t *newBufferSize, uint32_t *prev_buf
 void udpSelectServer(char* port, int packet_len,
     int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, struct sockaddr_storage client, void *other), 
     int (*onTimeOut)(void *other),
+    int (*onStdIn)(void *other),
     void *other)
 {
     int sfd = prepareUdpHost(port);
@@ -200,6 +201,11 @@ void udpSelectServer(char* port, int packet_len,
                 printf("timeout failed\n");
             continue;
         }
+        
+        if (FD_ISSET(STDIN_FILENO, &readFds)) {
+            onStdIn(other);
+            continue;
+        }
 
         //http://www.microhowto.info/howto/listen_for_and_receive_udp_datagrams_in_c.html
         // good article!
@@ -208,6 +214,7 @@ void udpSelectServer(char* port, int packet_len,
             
             socklen_t client_len = sizeof(*client);
             int count = recvfrom(sfd, buff, packet_len, 0, (struct sockaddr*)client, &client_len);
+            
 
             if (count == -1)
             {

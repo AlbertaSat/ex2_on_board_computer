@@ -32,4 +32,7 @@ void ssp_error(char *error);
 int ssp_write(int fd, const void *buf, size_t count);
 int ssp_close(int fd);
 void ssp_free(void *pointer);
+
+void reset_request(Request *req);
+
 #endif

@@ -21,18 +21,6 @@
 //exit handler variable for the main thread
 static int *exit_now;
 
-/*
-static void p(void *element, void *args) {
-
-    Remote_entity *remote_entity = element;
-    ssp_printf("[\n id: %d\n remote_ut_address: %d:%d\n]\n",
-    remote_entity->cfdp_id,
-    remote_entity->UT_address,
-    remote_entity->UT_port
-    );
-}
-*/
-
 int main(int argc, char** argv) {
 
     //exit handler for the main thread;
@@ -41,7 +29,7 @@ int main(int argc, char** argv) {
     //get-opt configuration
     Config *conf = configuration(argc, argv);
 
-    if (conf->my_cfdp_id == 0 || conf->client_cfdp_id == 0){
+    if (conf->my_cfdp_id == 0){
         ssp_printf("can't start server, please select an ID (-i #) and client ID (-c #) \n");
         return 1;
     }
@@ -60,15 +48,12 @@ int main(int argc, char** argv) {
     add_new_cfdp_entity(mib, 3, *addr, 1113);   
     add_new_cfdp_entity(mib, 4, *addr, 1114);   
 
-    
-
     //find server client in mib
     Remote_entity* server_entity = mib->remote_entities->find(mib->remote_entities, conf->my_cfdp_id, NULL, NULL);
     if (server_entity == NULL) {
         printf("couldn't find entity\n");
     }
     
-   
     //connectionless server
     char port[17];
     snprintf(port, 17, "%u", server_entity->UT_port);
@@ -79,17 +64,21 @@ int main(int argc, char** argv) {
     p_state->mib = mib;
     p_state->verbose_level = conf->verbose_level;
 
-    
-
     //create a client
-    Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
-    
-    //send via acknoleged mode //0 acknowledged, 1 unacknowledged
-    //put_request("test.txt", "delivered_file.txt", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
-    put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
 
-    //will block on pthread_join
-    ssp_cleanup_client(new_client);
+    if (conf->client_cfdp_id != 0){
+
+        ssp_printf("input a src file:\n");
+        Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
+    
+        //send via acknoleged mode //0 acknowledged, 1 unacknowledged
+        //put_request("test.txt", "delivered_file.txt", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
+        //put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
+
+        //will block on pthread_join
+        ssp_cleanup_client(new_client);
+    }
+
     ssp_cleanup(p_state);
     free(conf); 
 

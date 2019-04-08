@@ -18,6 +18,7 @@ typedef struct response {
 } Response;
 
 typedef enum Indication {
+    finished, 
     none,
     transaction,
     put,
@@ -102,8 +103,7 @@ typedef struct protocol_state {
 } Protocol_state;
 
 
-void packet_handler_server(Response res, Request *req, Protocol_state *p_state);
-void parse_packet_server(char* buff, uint32_t packet_len, Request *req, Protocol_state *p_state);
+void parse_packet_server(char* buff, uint32_t packet_len, Response res, Request *req, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client, Protocol_state *p_state);
 void parse_packet_client(char* buff, Response res, Request *req, Client *client, Protocol_state *p_state);
 void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state);

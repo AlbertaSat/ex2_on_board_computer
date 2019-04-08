@@ -44,9 +44,9 @@ int add_new_cfdp_entity(MIB *mib, uint32_t cfdp_id, uint32_t UT_address, uint16_
 }
 
 
-Pdu_header *get_header_from_mib(MIB *mib, uint32_t cfdp_id){
+Pdu_header *get_header_from_mib(MIB *mib, uint32_t dest_id, uint32_t source_id){
 
-    Remote_entity *remote = mib->remote_entities->find(mib->remote_entities, cfdp_id, NULL, NULL);
+    Remote_entity *remote = mib->remote_entities->find(mib->remote_entities, dest_id, NULL, NULL);
     if (remote == NULL) {
         return NULL;
     }
@@ -70,7 +70,7 @@ Pdu_header *get_header_from_mib(MIB *mib, uint32_t cfdp_id){
 
     pdu_header->source_id = ssp_alloc(pdu_header->length_of_entity_IDs, sizeof(u_int8_t));
     checkAlloc(pdu_header->source_id, 1);
-    memcpy(pdu_header->source_id, &cfdp_id, pdu_header->length_of_entity_IDs);
+    memcpy(pdu_header->source_id, &source_id, pdu_header->length_of_entity_IDs);
     return pdu_header;
 }
 
