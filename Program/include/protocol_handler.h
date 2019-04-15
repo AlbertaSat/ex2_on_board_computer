@@ -40,14 +40,20 @@ typedef struct request {
     char *source_file_name;
     char *destination_file_name;
 
+    uint32_t packet_data_len;
+
     uint8_t segmentation_control;
     uint8_t fault_handler_overides;
     uint8_t flow_lable;
     uint8_t transmission_mode;
 
+
+
+
     char* messages_to_user;
     char* filestore_requests;
     
+    //sets the buffer length, for making packets
     uint32_t buff_len;
 
     //buffer for making packets
@@ -66,10 +72,8 @@ typedef struct client {
     void *client_handle;
     void *client_thread_attributes;
     uint32_t packet_len;
-
-    //this is a queue of user requests that will be going out
-    Request *outGoing_req;
-    Request *incoming_req;
+    
+    Request *req;
 
     //can get rid of these, these are found in mib_info anyway
     uint32_t cfdp_id;
@@ -92,6 +96,8 @@ typedef struct protocol_state {
     MIB *mib;
     uint32_t my_cfdp_id;
     Client *newClient;
+    List* request_list; 
+
     Request *current_server_request;
    
     //lock this

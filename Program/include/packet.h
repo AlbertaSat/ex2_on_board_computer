@@ -181,6 +181,10 @@ typedef struct filestore_response {
 
 ------------------------------------------------------------------------------*/
 
+
+#define DIRECTIVE 0
+#define DATA 1
+
 //directive_codes 00 - 03, and 0D-FF are reserved
 #define EOF_PDU 0x04
 #define FINISHED_PDU 0x05

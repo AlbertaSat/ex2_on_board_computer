@@ -11,6 +11,7 @@ CFILES += protocol_handler.c
 CFILES += list_callbacks.c
 CFILES += mib.c
 CFILES += filesystem_funcs.c
+CFILES += ringbuf.c
 
 #entrypoint
 MAIN = main

@@ -123,11 +123,7 @@ static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, struct soc
     res.sfd = sfd;
     res.packet_len = p_state->packet_size;
 
-    //filles the request struct, in the future get request based on id
     parse_packet_server(packet, res.packet_len, res, p_state->current_server_request, p_state);
-
-    //ssp_printf("Server received: %s\n", msg);
-    //packet_handler_server(res, p_state->current_server_request, p_state);
     return 0;
 
 }
@@ -145,9 +141,9 @@ static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, struct soc
     res.sfd = sfd;
     res.packet_len = *buff_size;
     Client *client = p_state->newClient;
-    res.msg = client->outGoing_req->buff;
-    //fills the request struct
-    parse_packet_client(packet, res, client->outGoing_req, client, p_state);
+    res.msg = client->req->buff;
+    
+    parse_packet_client(packet, res, client->req, client, p_state);
     return 0;
     
 }
@@ -165,7 +161,7 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
     res.sfd = sfd;
     res.packet_len = client->packet_len;
 
-    user_request_handler(res, client->outGoing_req, client, p_state);
+    user_request_handler(res, client->req, client, p_state);
     return 0;
     #endif
 
@@ -190,7 +186,7 @@ static int on_stdin(void *other) {
 
     /*
     Protocol_state *p_state = (Protocol_state *) other;
-    Request *req = p_state->newClient->outGoing_req;
+    Request *req = p_state->newClient->req;
 
     char input[MAX_PATH];
     fgets(input, MAX_PATH, stdin);
@@ -202,21 +198,21 @@ static int on_stdin(void *other) {
                 ssp_printf("file: %s, we had trouble opening this file, please enter a new file\n", input);
                 return 0;
             }
-            memcpy(p_state->newClient->outGoing_req->source_file_name, input, MAX_PATH);
+            memcpy(p_state->newClient->req->source_file_name, input, MAX_PATH);
             ssp_printf("Enter a destination file name:\n");
         }
         else if (strnlen(req->destination_file_name, MAX_PATH) == 0){
-            memcpy(p_state->newClient->outGoing_req->destination_file_name, input, MAX_PATH);
-            ssp_printf("sending file: %s As file named: %s To cfid enditity %d\n", p_state->newClient->outGoing_req->source_file_name, p_state->newClient->outGoing_req->destination_file_name, p_state->newClient->cfdp_id);
+            memcpy(p_state->newClient->req->destination_file_name, input, MAX_PATH);
+            ssp_printf("sending file: %s As file named: %s To cfid enditity %d\n", p_state->newClient->req->source_file_name, p_state->newClient->req->destination_file_name, p_state->newClient->cfdp_id);
             ssp_printf("cancel connection mode (yes):\n");
         } 
         else if (strncmp(input, "yes", 3) == 0){
             ssp_printf("sending file connectionless\n");
-            put_request(p_state->newClient->outGoing_req->source_file_name, p_state->newClient->outGoing_req->destination_file_name, 0, 0, 0, 1, NULL, NULL, p_state->newClient, p_state);
+            put_request(p_state->newClient->req->source_file_name, p_state->newClient->req->destination_file_name, 0, 0, 0, 1, NULL, NULL, p_state->newClient, p_state);
         } 
         else {
             ssp_printf("sending file connected\n");
-            put_request(p_state->newClient->outGoing_req->source_file_name, p_state->newClient->outGoing_req->destination_file_name, 0, 0, 0, 0, NULL, NULL, p_state->newClient, p_state); 
+            put_request(p_state->newClient->req->source_file_name, p_state->newClient->req->destination_file_name, 0, 0, 0, 0, NULL, NULL, p_state->newClient, p_state); 
         }
    }
    */
@@ -254,6 +250,9 @@ Protocol_state* ssp_connectionless_server(char *port) {
 
     strncpy ((char*)state->server_port, port, 10);
 
+
+    state->request_list = linked_list();
+
     int err = pthread_attr_init(attr);
     if (0 != err) 
         perror("pthread_init failed");
@@ -276,6 +275,8 @@ Protocol_state* ssp_connectionless_server(char *port) {
     state->current_server_request = init_request(state->packet_size);
     state->server_handle = handler;
     state->server_thread_attributes = attr;
+
+
     return state;
 
     #endif
@@ -307,7 +308,7 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     Client *client = calloc(sizeof(Client), 1);
     checkAlloc(client, 1);
 
-    client->outGoing_req = init_request(PACKET_LEN);
+    client->req = init_request(PACKET_LEN);
 
     pthread_t *handler = calloc(sizeof(pthread_t), 1);
     checkAlloc(handler, 1);
@@ -420,6 +421,7 @@ void ssp_cleanup(Protocol_state *p_state) {
     pthread_t * handle = (pthread_t*) p_state->server_handle;        
     pthread_join(*handle, NULL);
 
+    p_state->request_list->free( p_state->request_list, ssp_cleanup_req);
     ssp_cleanup_req(p_state->current_server_request);
     free_mib(p_state->mib);
     free(p_state->server_handle);
@@ -440,7 +442,7 @@ void ssp_cleanup_client(Client *client) {
         pthread_join(*handle, NULL);
     #endif
     
-    ssp_cleanup_req(client->outGoing_req);
+    ssp_cleanup_req(client->req);
     free(client->client_handle);
     free(client->client_thread_attributes);
     ssp_cleanup_pdu_header(client->pdu_header);
