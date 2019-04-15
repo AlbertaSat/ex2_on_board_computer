@@ -58,7 +58,8 @@ int main(int argc, char** argv) {
     char port[17];
     snprintf(port, 17, "%u", server_entity->UT_port);
 
-    Protocol_state *p_state = ssp_connectionless_server(port);  
+    Protocol_state *p_state = ssp_connectionless_server(port);
+
     //set this node's Id, this has to be hardcoded/assigned
     p_state->my_cfdp_id = conf->my_cfdp_id;
     p_state->mib = mib;
@@ -68,12 +69,12 @@ int main(int argc, char** argv) {
 
     if (conf->client_cfdp_id != 0){
 
-        ssp_printf("input a src file:\n");
+        //ssp_printf("input a src file:\n");
         Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
     
         //send via acknoleged mode //0 acknowledged, 1 unacknowledged
         //put_request("test.txt", "delivered_file.txt", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
-        //put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
+        put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
 
         //will block on pthread_join
         ssp_cleanup_client(new_client);

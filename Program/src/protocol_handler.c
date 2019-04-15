@@ -232,6 +232,7 @@ struct offset_holder {
     int i;
 };
 
+//this is a callback for building nak_array server side
 static void fill_nak_array(void *element, void *args){
     struct offset_holder *holder = (struct offset_holder *)args;
     
@@ -239,8 +240,6 @@ static void fill_nak_array(void *element, void *args){
 
     holder->offsets[holder->i].start = htonl(offset->start);
     holder->offsets[holder->i].end = htonl(offset->end);
-
-    //ssp_printf("sending offset: start:%u, end:%u\n", offset->start, offset->end);
     holder->i++;
 }
 
@@ -455,9 +454,10 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
     if (packet[packet_index] == NAK_PDU){
         packet_index += 1; 
         Pdu_nak *nak = (Pdu_nak *) &packet[packet_index];
-        uint32_t ostart = ntohl(nak->start_scope);
-        uint32_t oend = ntohl(nak->end_scope);
+        uint32_t offset_first = ntohl(nak->start_scope);
+        uint32_t offset_last = ntohl(nak->end_scope);
         uint64_t segments = ntohll(nak->segment_requests);
+        packet_index += 16;
 
         if (req->buff == NULL){
             ssp_printf("req->buff is null\n");
@@ -467,20 +467,35 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
         }
 
         uint32_t outgoing_packet_index = build_pdu_header(req->buff, req->transaction_sequence_number, 0, client->pdu_header);
-    
-        //for (int i = 0; i < segments; i++){
-            build_nak_response(req->buff, outgoing_packet_index, ostart, req, client, p_state) ;
-            print_progress(ostart/1000, req->file_size/1000);
-            ssp_sendto(res);
 
+        uint32_t offset_start = 0;
+        uint32_t offset_end = 0;
+
+
+        printf("number of segments to resend: %u\n", segments);
+        for (int i = 0; i < segments; i++){
+            //outgoing_packet_index
+            memcpy(&offset_start, &packet[packet_index], 4);
+            offset_start = ntohl(offset_start);
+            packet_index += 4;
+            memcpy(&offset_end, &packet[packet_index], 4);
+            offset_end = ntohl(offset_end);
+            packet_index += 4;
+
+            printf("offset sending first %u last %u\n", offset_start, offset_end);
+            printf("first %u and end %u\n", offset_first, offset_last);
+
+            build_nak_response(req->buff, outgoing_packet_index, offset_start, req, client, p_state);
+
+            ssp_sendto(res);
             //send another EOF
             req->type = eof;
-        //}
+        }
 
     } else if (packet[packet_index] == FINISHED_PDU) {
 
         if (req->type != finished) {
-            print_progress(req->file_size/1000, req->file_size/1000);
+            //print_progress(req->file_size/1000, req->file_size/1000);
             ssp_printf("file successfully sent\n");
         }
         req->type = finished;
@@ -498,7 +513,6 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
 void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
 
     res.msg = req->buff;
-    //req->pdu_header is broken
     uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
 
     if (req->file->missing_offsets->count > 0) {
@@ -518,6 +532,9 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
 
 //fills the current_request struct for the server, incomming requests
 void parse_packet_server(char *packet, uint32_t packet_len, Response res, Request *req, Protocol_state *p_state) {
+
+    uint32_t packet_index_start = process_pdu_header(packet, req, p_state);
+
 
 
     uint8_t packet_index = PACKET_STATIC_HEADER_LEN;

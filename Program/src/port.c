@@ -188,6 +188,7 @@ static int on_time_out_posix(void *other) {
 //this function is just for posix fun
 static int on_stdin(void *other) {
 
+    /*
     Protocol_state *p_state = (Protocol_state *) other;
     Request *req = p_state->newClient->outGoing_req;
 
@@ -218,7 +219,7 @@ static int on_stdin(void *other) {
             put_request(p_state->newClient->outGoing_req->source_file_name, p_state->newClient->outGoing_req->destination_file_name, 0, 0, 0, 0, NULL, NULL, p_state->newClient, p_state); 
         }
    }
-   
+   */
     return 0;
 
 }
