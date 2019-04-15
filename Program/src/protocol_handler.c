@@ -550,12 +550,6 @@ void parse_packet_server(char *packet, uint32_t packet_len, Response res, Reques
 
      Pdu_header *header = (Pdu_header *) packet;
 
-    if (p_state->verbose_level == 3) {
-        ssp_printf("------------printing_header_received------------\n");
-        ssp_print_hex(packet, packet_index);
-        ssp_printf("packet data length %d, sequence number %d\n", req->packet_data_len, req->transaction_sequence_number);
-    }
-
     //process file data
     if (header->PDU_type == 1) {
         write_packet_data_to_file(&packet[packet_index], req->packet_data_len, req->file);
