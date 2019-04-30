@@ -13,6 +13,10 @@ CFILES += mib.c
 CFILES += filesystem_funcs.c
 CFILES += ringbuf.c
 
+#----------------------------test files-------------------------
+CFILES += $(PROJDIR)/test/test.c
+INCLUDE += -I$(PROJDIR)/test
+
 #entrypoint
 MAIN = main
 

@@ -11,6 +11,9 @@
 #include <netdb.h> 
 #include "filesystem_funcs.h"
 #include "port.h"
+#include "test.h"
+#include "mib.h"
+#include "packet_tests.h"
 
 struct myStruct {
     int id;
@@ -54,8 +57,75 @@ static void list_free(void *element) {
 
 int main () {
     
+
     
+    MIB *mib = init_mib();
+
+    //setting host name for testing
+    char *host_name = "127.0.0.1";
+    uint32_t addr[sizeof(uint32_t)];
+    inet_pton(AF_INET, host_name, addr);
     
+    //adding new cfdp entities to management information base
+    add_new_cfdp_entity(mib, 1315, *addr, 1111);
+    add_new_cfdp_entity(mib, 2222, *addr, 1112);   
+
+    //find server client in mib
+    Remote_entity* server_entity = mib->remote_entities->find(mib->remote_entities, 1, NULL, NULL);
+    if (server_entity == NULL) {
+        printf("couldn't find entity\n");
+    }
+
+
+    Pdu_header *header = get_header_from_mib(mib, 2222, 1315);
+
+    packet_tests(header);
+
+    free_mib(mib);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*test sequence of files
     File *file = create_file("test.txt");
     ssp_printf("file size: %u\n", file->total_size);
     
@@ -63,7 +133,6 @@ int main () {
     uint32_t data_start = 0;
     uint32_t data_end = data_size;
 
-    /*test sequence of files
     for (int i=0; i < file->total_size; i+= data_size) {
         data_start = i;
         data_end = data_size + i;
@@ -72,11 +141,7 @@ int main () {
     }
 
     receive_offset(file, 0, 48516, 48833);
-    */
-
-
-
-
+    /*
 
     //doesnt do this edge case because, would never request it?
 
@@ -84,8 +149,6 @@ int main () {
 
     free_file(file);
     
-    
-    /*
     char *packet = "hello world";
     uint32_t checksum = calc_check_sum(packet, 10);
     printf("%d\n", checksum);

@@ -1,6 +1,8 @@
 
 PROJDIR = $(CURDIR)/..
 INCLUDE += -I$(PROJDIR)/include
+INCLUDE += -I$(PROJDIR)/test
+
 CC = gcc 
 
 #---------------------------File Names---------------------------
@@ -11,6 +13,8 @@ CFILES += $(PROJDIR)/src/server.c
 CFILES += $(PROJDIR)/src/protocol_handler.c
 CFILES += $(PROJDIR)/src/list_callbacks.c
 CFILES += $(PROJDIR)/src/mib.c
+CFILES += $(PROJDIR)/test/packet_tests.c
+CFILES += $(PROJDIR)/test/test.c
 
 #entrypoint
 MAIN = main
@@ -38,7 +42,7 @@ CWARNS += -Wmissing-prototypes
 
 #---------------------------Libs---------------------------
 LINKFLAGS = 
-LIBS = 
+LIBS = -pthread
 
 #---------------------------Compiler flags---------------------------
 

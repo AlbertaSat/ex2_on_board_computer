@@ -1,6 +1,7 @@
 
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
+
 #include "utils.h"
 #include "packet.h"
 #include "mib.h"
@@ -113,6 +114,9 @@ void parse_packet_server(char* buff, uint32_t packet_len, Response res, Request 
 void user_request_handler(Response res, Request *req, Client *client, Protocol_state *p_state);
 void parse_packet_client(char* buff, Response res, Request *req, Client *client, Protocol_state *p_state);
 void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state);
+
+uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_number, uint32_t transmission_mode, Pdu_header *pdu_header);
+uint8_t build_ack_eof_pdu (char *packet, uint32_t start, Request *req);
 
 /*  
     unsigned char *source_file_name,
