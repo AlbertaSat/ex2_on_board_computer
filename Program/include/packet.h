@@ -194,6 +194,7 @@ typedef struct filestore_response {
 #define PROMPT_PDU 0x09
 #define KEEP_ALIVE_PDU 0x0C
 #define SIZE_OF_DIRECTIVE_CODE 1
+#define NAK_METADATA 0x0d
 
 //condition codes:
 
@@ -280,6 +281,10 @@ typedef struct pdu_eof {
     
 } Pdu_eof;
 
+    //currently, empty, only need the directive code
+typedef struct pdu_nak_metadata{
+
+} Pdu_nak_metadata
 
     /*
     start_scope is the begining of the nak requests

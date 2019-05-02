@@ -44,16 +44,19 @@ static uint8_t build_finished_pdu(char *packet, uint32_t start, Request *req) {
     uint32_t packet_index = start;
     uint32_t data_len = 0;
 
-    packet[packet_index] = FINISHED_PDU;
+    Pdu_directive *directive = (Pdu_directive *) &packet[packet_index];
+    directive->directive_code = FINISHED_PDU;
     packet_index++;
+    data_len++;
 
+    //one byte
     Pdu_finished *pdu_finished = (Pdu_finished *) &packet[packet_index];
     pdu_finished->condition_code = COND_NO_ERROR;
     pdu_finished->delivery_code = 0;
     pdu_finished->file_status = FILE_RETAINED_SUCCESSFULLY;
-
-    data_len = 8;
-    packet_index += 8;
+    data_len += 1;
+    packet_index += 1;
+    
     return data_len;
 }
 
@@ -258,13 +261,11 @@ void build_nak_packet(char *packet, uint32_t start, Request *req) {
     ssp_free(holder.offsets);
 }
 
-//returns number of bytes added, (the data field length) returns length
-uint8_t build_ack_eof_pdu (char *packet, uint32_t start, Request *req) {
-
+uint8_t build_ack(char*packet, uint32_t start, uint8_t type, Request *req) {
     packet[start] = ACK_PDU;
     uint32_t packet_index = start + 1;
     Pdu_ack *pdu_ack = (Pdu_ack *) &packet[packet_index];
-    pdu_ack->directive_code = EOF_PDU;
+    pdu_ack->directive_code = type;
     pdu_ack->directive_subtype_code = ACK_FINISHED_END;
     pdu_ack->condition_code = COND_NO_ERROR;
     packet_index += 2;
@@ -340,12 +341,6 @@ static int process_pdu_header(char*packet, Request *req, Protocol_state *p_state
     memcpy(&dest_id, &packet[packet_index], header->length_of_entity_IDs);
     packet_index += header->length_of_entity_IDs;
 
-    if (p_state->verbose_level == 3) {
-        ssp_printf("------------printing_header_received------------\n");
-        ssp_print_hex(packet, packet_index);
-        ssp_printf("packet data length %d, sequence number %d\n", transaction_sequence_number);
-    }
-
     if (p_state->my_cfdp_id != dest_id){
         ssp_printf("someone is sending packets here that are not for my id %u, dest_id: %u\n", p_state->my_cfdp_id, dest_id);
         return -1;
@@ -415,20 +410,22 @@ static void fill_request_pdu_metadata(char *meta_data_packet, Request *req_to_fi
     return;
 }
 
-uint8_t ack_response(char *packet, uint32_t packet_index, Request *req, Response res, Client *client){
+uint8_t ack_response(char *packet, uint32_t packet_index, Request *req){
 
     Pdu_ack *pdu_ack = (Pdu_ack *) &packet[packet_index];
     ssp_printf("received ack!\n");
     if (pdu_ack->directive_code == EOF_PDU) {
-        ssp_printf("received eof ack!\n");
 
+
+        ssp_printf("received eof ack!\n");
     }
     else if (pdu_ack->directive_code == FINISHED_PDU) {
+        req->type = finished;
         ssp_printf("received finished ack\n");
 
     }
-
 }
+
 
 /*------------------------------------------------------------------------------
 
@@ -495,8 +492,7 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
     switch(directive) {
         case FINISHED_PDU:
            if (req->type != finished) {
-                //print_progress(req->file_size/1000, req->file_size/1000);
-                ssp_printf("file successfully received\n");
+                ssp_printf("file successfully sent\n");
             }
             req->type = finished;
             break;
@@ -505,9 +501,10 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
             req->type = eof;
             break;
         case ACK_PDU:
-            ack_response(packet, packet_index, req, res, client);
-
+            ack_response(packet, packet_index, req);
             break;
+        
+
         default:
             break;
     }
@@ -524,6 +521,10 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
 void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
 
     res.msg = req->buff;
+
+    if (req->type == finished)
+        return;
+
     if (req->buff == NULL) {
         ssp_printf("req buffer is null, couldn't process timeout request\n");
     }
@@ -537,6 +538,7 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
         return;
     }
 
+    //send missing NAKS
     if (req->file->missing_offsets->count > 0) {
         build_nak_packet(res.msg, start, req);
         ssp_sendto(res);
@@ -545,17 +547,17 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
 
     //received EOF
     if (req->file->eof_checksum) {
-        data_len = build_ack_eof_pdu(res.msg, start, req);
+        data_len = build_ack(res.msg, start, EOF_PDU, req);
         ssp_sendto(res);
-        return;
     }
 
-    //received Finished 
+    //send Finished 
     if (req->file->eof_checksum == req->file->partial_checksum && req->file->missing_offsets->count == 0) {
         data_len = build_finished_pdu(res.msg, start, req);
         ssp_sendto(res);
-        return;
     }
+
+
 }
 
 //fills the current_request struct for the server, incomming requests
@@ -591,6 +593,10 @@ void parse_packet_server(char *packet, uint32_t packet_len, Response res, Reques
         case EOF_PDU:
             process_pdu_eof(&packet[packet_index], req);
             break;
+
+        case ACK_PDU: 
+            ack_response(packet, packet_index, req);
+
         default:
             break;
     }
@@ -624,6 +630,7 @@ void user_request_handler(Response res, Request *req, Client* client, Protocol_s
     memset(res.msg, 0, client->packet_len);
 
     uint32_t start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
+    uint32_t data_len = 0;
 
     switch (req->type)
     {
@@ -636,26 +643,20 @@ void user_request_handler(Response res, Request *req, Client* client, Protocol_s
         case sending_data: 
             if (build_data_packet(res, start, req, client, p_state))
                 req->type = eof;
-            
-            if (p_state->verbose_level == 3) {
-                ssp_printf("------------sending_a_data_packets-----------\n");
-                ssp_print_hex(res.msg, start);
-            }
             ssp_sendto(res);
             break;
 
         case put:
             start = build_put_packet_metadata(res, start, req, client, p_state);
-            
-            if (p_state->verbose_level == 3) {
-                ssp_printf("------------sending_a_put_request------------\n");
-                ssp_print_hex(res.msg, start);
-            }
-
             ssp_sendto(res);
             req->type = sending_data;
             break;
 
+        case finished: 
+            data_len = build_ack(res.msg, start, FINISHED_PDU, req);
+            ssp_sendto(res);
+            req->type = none;
+            break;
 
         default:
             break;

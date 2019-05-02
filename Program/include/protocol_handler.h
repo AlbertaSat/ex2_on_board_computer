@@ -48,8 +48,9 @@ typedef struct request {
     uint8_t flow_lable;
     uint8_t transmission_mode;
 
-
-
+    uint8_t received_metadata;
+    uint8_t received_eof;
+    uint8_t received_finished;
 
     char* messages_to_user;
     char* filestore_requests;

@@ -5,6 +5,22 @@
 #include "utils.h"
 #include <stdio.h>
 
+int test_build_ack_finished_pdu(char *packet, uint32_t start) {
+    printf("testing finished ack creation\n");
+    Request *req;
+    uint8_t len =  test_build_ack_finished_pdu (packet, start, req);
+
+    Pdu_directive *pdu_d = &packet[start];
+    ASSERT_EQUALS_INT("ACK_PDU directive correct", pdu_d->directive_code, ACK_PDU);
+
+    Pdu_ack *ack = (Pdu_ack *)&packet[start + 1];
+    ASSERT_EQUALS_INT("EOF_PDU directive correct", EOF_PDU, ack->directive_code);
+    ASSERT_EQUALS_INT("COND_NO_ERROR correct", COND_NO_ERROR, ack->condition_code);
+    ASSERT_EQUALS_INT("ACK_FINISHED_END correct", ack->directive_subtype_code, ACK_FINISHED_END);
+
+
+
+}
 
 int test_build_ack_eof_pdu(char *packet, uint32_t start) {
     //empty request
