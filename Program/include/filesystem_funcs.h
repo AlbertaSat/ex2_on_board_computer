@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "utils.h"
 
+#define TEMP_FILESIZE 20000
+
 typedef struct offset {
     uint32_t start;
     uint32_t end;
@@ -31,4 +33,5 @@ int write_offset(File *file, void *buff, uint32_t size, uint32_t offset);
 uint32_t calc_check_sum(char *data, uint32_t length);
 uint32_t check_sum_file(File *file, uint16_t stack_buffer);
 void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t offset_end);
+File *create_temp_file(uint64_t transaction_sequence_num);
 #endif 

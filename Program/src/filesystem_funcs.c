@@ -252,3 +252,13 @@ void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t off
     }
 
 }
+
+File *create_temp_file(uint64_t transaction_sequence_num) {
+
+    char temp[75];
+    snprintf(temp, 75, "%s%llu", "temp_", transaction_sequence_num);
+    File *file = create_file(temp, 1);
+    file->total_size = TEMP_FILESIZE;
+
+}
+

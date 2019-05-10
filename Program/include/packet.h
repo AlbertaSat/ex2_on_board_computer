@@ -284,7 +284,7 @@ typedef struct pdu_eof {
     //currently, empty, only need the directive code
 typedef struct pdu_nak_metadata{
 
-} Pdu_nak_metadata
+} Pdu_nak_metadata;
 
     /*
     start_scope is the begining of the nak requests
