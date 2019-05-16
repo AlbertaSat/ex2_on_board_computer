@@ -1,6 +1,4 @@
 
-#include "packet.h"
-
 #ifndef PORT_H
 #define PORT_H
 

@@ -150,20 +150,22 @@ static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, struct soc
 
 static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
 
+
     #ifdef POSIX_PORT
     Protocol_state *p_state = (Protocol_state *) other;
-    struct sockaddr_in* posix_client = (struct sockaddr_in*) &addr;
-
+    struct sockaddr_in* client_addr = (struct sockaddr_in*) &addr;
+    #endif
+    
+    Response res;    
     Client *client = p_state->newClient;
-
-    Response res;
-    res.addr = posix_client;
     res.sfd = sfd;
     res.packet_len = client->packet_len;
+    res.msg = client->req->buff;
+    res.addr = client_addr;
 
     user_request_handler(res, client->req, client, p_state);
     return 0;
-    #endif
+  
 
 }
 

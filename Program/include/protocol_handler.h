@@ -50,7 +50,11 @@ typedef struct request {
 
     uint8_t received_metadata;
     uint8_t received_eof;
+    //counter for resending eof packets == 3
+    uint8_t resent_eof;
     uint8_t received_finished;
+    //counter for resending finished packets == 3
+    uint8_t resent_finished;
 
     char* messages_to_user;
     char* filestore_requests;
