@@ -395,24 +395,24 @@ Request *init_request(uint32_t buff_len) {
 }
 
 
-static void ssp_cleanup_pdu_header(Pdu_header *pdu_header) {
-    free(pdu_header->destination_id);
-    free(pdu_header->source_id);
-    free(pdu_header);
+void ssp_cleanup_pdu_header(Pdu_header *pdu_header) {
+    ssp_free(pdu_header->destination_id);
+    ssp_free(pdu_header->source_id);
+    ssp_free(pdu_header);
 }
 
-static void ssp_cleanup_req(Request *req) {
+void ssp_cleanup_req(Request *req) {
     if (req->file != NULL)
         free_file(req->file);
 
     if (req->pdu_header != NULL)
         ssp_cleanup_pdu_header(req->pdu_header);
 
-    free(req->res.addr);
-    free(req->source_file_name);
-    free(req->destination_file_name);
-    free(req->buff);
-    free(req);
+    ssp_free(req->res.addr);
+    ssp_free(req->source_file_name);
+    ssp_free(req->destination_file_name);
+    ssp_free(req->buff);
+    ssp_free(req);
 }
 
 
@@ -426,10 +426,10 @@ void ssp_cleanup(Protocol_state *p_state) {
     p_state->request_list->free( p_state->request_list, ssp_cleanup_req);
     ssp_cleanup_req(p_state->current_server_request);
     free_mib(p_state->mib);
-    free(p_state->server_handle);
-    free(p_state->server_port);
-    free(p_state->server_thread_attributes);
-    free(p_state);
+    ssp_free(p_state->server_handle);
+    ssp_free(p_state->server_port);
+    ssp_free(p_state->server_thread_attributes);
+    ssp_free(p_state);
 
     #endif
 
@@ -445,8 +445,8 @@ void ssp_cleanup_client(Client *client) {
     #endif
     
     ssp_cleanup_req(client->req);
-    free(client->client_handle);
-    free(client->client_thread_attributes);
+    ssp_free(client->client_handle);
+    ssp_free(client->client_thread_attributes);
     ssp_cleanup_pdu_header(client->pdu_header);
     
     free(client);
@@ -458,5 +458,4 @@ void ssp_free(void *pointer) {
     #ifdef POSIX_PORT
         free(pointer);
     #endif
-
 }

@@ -292,7 +292,7 @@ typedef struct pdu_nak_metadata{
     segments are
     */
 typedef struct pdu_nak {
-    unsigned int start_scope : 32;
+    uint32_t start_scope;
     uint32_t end_scope;
 
     //number of Nak_segments

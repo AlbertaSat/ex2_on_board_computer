@@ -22,6 +22,7 @@ void *ssp_alloc(uint32_t u_memb, size_t size);
 void ssp_sendto(Response res);
 void ssp_cleanup(Protocol_state *state);
 void ssp_cleanup_client(Client *client);
+void ssp_cleanup_req(Request *req);
 void ssp_print_hex(char *stuff, uint32_t size);
 int ssp_open(char *pathname, int flags);
 int ssp_read(int fd, char* buff, size_t size);
@@ -31,6 +32,9 @@ int ssp_write(int fd, const void *buf, size_t count);
 int ssp_close(int fd);
 void ssp_free(void *pointer);
 
+
+
+void ssp_cleanup_pdu_header(Pdu_header *pdu_header);
 void reset_request(Request *req);
 
 #endif

@@ -57,8 +57,6 @@ File *create_file(char *source_file_name, int clear_file_contents) {
         return NULL;
     }
 
-    //ssp_printf("file size: %u\n", total_size);
-
     File *file = ssp_alloc(1, sizeof(File));
     
     file->fd = fd;
@@ -129,7 +127,6 @@ int write_offset(File *file, void *buff, uint32_t size, uint32_t offset) {
 void free_file(void *file) {
 
     File *f = (File *) file;
-    
     f->missing_offsets->free(f->missing_offsets, ssp_free);
 
     ssp_free(f);

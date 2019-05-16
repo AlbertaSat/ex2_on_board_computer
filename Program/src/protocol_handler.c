@@ -244,7 +244,7 @@ static void fill_nak_array(void *element, void *args){
     holder->i++;
 }
 
-void build_nak_packet(char *packet, uint32_t start, Request *req) {
+uint32_t build_nak_packet(char *packet, uint32_t start, Request *req) {
     
     packet[start] = NAK_PDU;
     uint32_t packet_index = start + 1;
@@ -265,6 +265,10 @@ void build_nak_packet(char *packet, uint32_t start, Request *req) {
    
     memcpy(&packet[packet_index], holder.offsets, sizeof(Offset) * count);
     ssp_free(holder.offsets);
+
+    packet_index += sizeof(Offset) * count;
+
+    return packet_index - start;
 }
 
 uint8_t build_ack(char*packet, uint32_t start, uint8_t type, Request *req) {
@@ -334,7 +338,7 @@ static void process_pdu_eof(char *packet, Request *req, Response res) {
 }
 
 //TODO This needs more work, file handling when files already exist ect
-static int process_file_request_metadata(Request *req) {
+int process_file_request_metadata(Request *req) {
 
     if (does_file_exist(req->destination_file_name)){
         //ssp_error("file already exists, overwriting it\n"); COPY TEMP FILE TO THIS FILE
@@ -701,7 +705,7 @@ void parse_packet_server(char *packet, uint32_t packet_len, Response res, Reques
             if (!req->received_metadata)
                 request_metadata(req, res);
             
-            //this sshould probably just set variables for use later for calculating checksums
+            //this should probably just set variables for use later for calculating checksums
             ssp_printf("received eof packet\n");
             process_pdu_eof(&packet[packet_index], req, res);
 

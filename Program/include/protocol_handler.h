@@ -114,14 +114,16 @@ typedef struct protocol_state {
 
 } Protocol_state;
 
-
+//for use
 void parse_packet_server(char* buff, uint32_t packet_len, Response res, Request *req, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client, Protocol_state *p_state);
 void parse_packet_client(char* buff, Response res, Request *req, Client *client, Protocol_state *p_state);
 void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state);
 
+//for testing
 uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_number, uint32_t transmission_mode, Pdu_header *pdu_header);
-uint8_t build_ack_eof_pdu (char *packet, uint32_t start, Request *req);
+uint8_t build_ack (char *packet, uint32_t start, uint8_t type, Request *req);
+int process_file_request_metadata(Request *req);
 
 /*  
     unsigned char *source_file_name,

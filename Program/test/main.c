@@ -82,6 +82,7 @@ int main () {
     packet_tests(header);
 
     free_mib(mib);
+    ssp_cleanup_pdu_header(header);
 
 
 
