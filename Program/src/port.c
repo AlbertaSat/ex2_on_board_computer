@@ -91,6 +91,16 @@ void ssp_print_hex(char *stuff, uint32_t size){
         ssp_printf("\n");
 }   
 
+
+void ssp_thread_cancel(void *thread_handle) {
+    #ifdef POSIX_PORT
+    pthread_t * handle = (pthread_t*) thread_handle;
+    pthread_cancel(*handle);
+    #endif
+
+}
+
+
 void ssp_sendto(Response res) {
     
     #ifdef POSIX_PORT

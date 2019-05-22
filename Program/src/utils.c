@@ -283,7 +283,7 @@ static void *findElement(List *list, uint32_t id, int (*f)(void *element, void *
         if (f != NULL)
             found_with_func = f(cur->element, args);
 
-        if(cur->id == id)
+        if(id != -1 && cur->id == id)
             found_with_id = 1;
 
         if (found_with_func || found_with_id){
@@ -306,7 +306,7 @@ static int insertAt(List *list, void *element, uint32_t id, int (*f)(void *eleme
         if (f != NULL)
             found_with_func = f(cur->element, args);
 
-        if(cur->id == id)
+        if(id != -1 && cur->id == id)
             found_with_id = 1;
 
         if (found_with_func || found_with_id) {
@@ -326,6 +326,7 @@ static int insertAt(List *list, void *element, uint32_t id, int (*f)(void *eleme
  
 static NODE * findNode(List *list, uint32_t id, int (*f)(void *element, void *args), void *args) {
 
+    
     NODE *cur = list->head->next;
     int found_with_func = 0;
     int found_with_id = 0;
@@ -334,7 +335,7 @@ static NODE * findNode(List *list, uint32_t id, int (*f)(void *element, void *ar
         if (f != NULL)
             found_with_func = f(cur->element, args);
 
-        if(cur->id == id)
+        if(id != -1 && cur->id == id)
             found_with_id = 1;
 
         if (found_with_func || found_with_id){

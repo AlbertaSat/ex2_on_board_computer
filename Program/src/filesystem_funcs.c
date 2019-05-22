@@ -179,9 +179,8 @@ static int find_nak(void *element, void* args) {
 
     Offset *offset_in_list = (Offset *) element;
     Offset *offset_to_insert = (Offset *) args;
-    
-    if (offset_to_insert->start >= offset_in_list->start && 
-        offset_to_insert->end <= offset_in_list->end) { 
+
+    if (offset_to_insert->start >= offset_in_list->start && offset_to_insert->end <= offset_in_list->end) { 
         return 1;
     }
 
@@ -197,10 +196,10 @@ void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t off
     offset_to_insert.start = offset_start;
     offset_to_insert.end = offset_end;
     
-    NODE * node = nak_list->findNode(nak_list, 0, find_nak, &offset_to_insert);
+    NODE * node = nak_list->findNode(nak_list, -1, find_nak, &offset_to_insert);
     if (node == NULL){
-        ssp_printf("no begining node for receive_offset, can't add new offset\n");
-        return;
+        ssp_printf("no begining node for receive_offset, or offset we already received, can't add new offset\n");
+        return; 
     }
 
     Offset *offset_in_list = (Offset *) node->element;

@@ -244,6 +244,8 @@ static void fill_nak_array(void *element, void *args){
     holder->i++;
 }
 
+
+
 uint32_t build_nak_packet(char *packet, uint32_t start, Request *req) {
     
     packet[start] = NAK_PDU;
@@ -307,7 +309,10 @@ void request_metadata(Request *req, Response res) {
     return;
 }
 
-
+void set_data_length(char*packet, uint16_t data_len){
+    Pdu_header *header = (Pdu_header*) packet;
+    header->PDU_data_field_len = data_len;
+}
 
 /*------------------------------------------------------------------------------
 
@@ -465,7 +470,7 @@ static void fill_request_pdu_metadata(char *meta_data_packet, Request *req_to_fi
 ------------------------------------------------------------------------------*/
 
 
-static int nak_response(char *packet, uint32_t start, Request *req, Response res, Client *client) {
+int nak_response(char *packet, uint32_t start, Request *req, Response res, Client *client) {
         uint32_t packet_index = start;
         Pdu_nak *nak = (Pdu_nak *) &packet[packet_index];
         uint32_t offset_first = ntohl(nak->start_scope);
@@ -521,12 +526,8 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
 
     switch(directive) {
         case FINISHED_PDU:
-            ssp_printf("received finished pdu\n");
             req->received_finished = 1;
             req->type = finished;
-            start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
-            data_len = build_ack(res.msg, packet_index, FINISHED_PDU, req);
-            ssp_sendto(res);
             break;
         case NAK_PDU:
             req->received_metadata = 1;
@@ -587,20 +588,19 @@ void user_request_handler(Response res, Request *req, Client* client, Protocol_s
 
         case finished:
             if (req->resent_finished == 3) {
-                req->type = none;
+                ssp_printf("file successfully sent\n");
+                ssp_thread_cancel(client->client_handle);
                 break;
             }
             start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
             data_len = build_ack(res.msg, start, FINISHED_PDU, req);
             ssp_sendto(res);
             req->resent_finished++;
-            ssp_print_hex(&res.msg[start], 10);
             break;
 
         default:
             break;
     }
-
 }
 /*------------------------------------------------------------------------------
 

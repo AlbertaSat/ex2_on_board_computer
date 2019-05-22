@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
 
         //will block on pthread_join
         ssp_cleanup_client(new_client);
+        ssp_printf("client disconnected\n");
     }
 
     ssp_cleanup(p_state);

@@ -120,11 +120,13 @@ void user_request_handler(Response res, Request *req, Client *client, Protocol_s
 void parse_packet_client(char* buff, Response res, Request *req, Client *client, Protocol_state *p_state);
 void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state);
 
+
 //for testing
 uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_number, uint32_t transmission_mode, Pdu_header *pdu_header);
 uint8_t build_ack (char *packet, uint32_t start, uint8_t type, Request *req);
 int process_file_request_metadata(Request *req);
-
+int nak_response(char *packet, uint32_t start, Request *req, Response res, Client *client);
+void set_data_length(char*packet, uint16_t data_len);
 /*  
     unsigned char *source_file_name,
     unsigned char *destination_file_name,
