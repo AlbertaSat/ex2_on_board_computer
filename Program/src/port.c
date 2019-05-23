@@ -95,8 +95,8 @@ void ssp_print_hex(char *stuff, uint32_t size){
 void ssp_thread_cancel(void *thread_handle) {
     #ifdef POSIX_PORT
     pthread_t * handle = (pthread_t*) thread_handle;
-    pthread_cancel(*handle);
     #endif
+    pthread_cancel(*handle);
 
 }
 
@@ -144,16 +144,15 @@ static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, struct soc
     struct sockaddr_in* posix_client = (struct sockaddr_in*) &addr;
     #endif
 
-    Protocol_state *p_state = (Protocol_state *) other;
+    Client *client = (Client *) other;
 
     Response res;
     res.addr = posix_client;
     res.sfd = sfd;
     res.packet_len = *buff_size;
-    Client *client = p_state->newClient;
     res.msg = client->req->buff;
     
-    parse_packet_client(packet, res, client->req, client, p_state);
+    parse_packet_client(packet, res, client->req, client);
     return 0;
     
 }
@@ -162,18 +161,17 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
 
 
     #ifdef POSIX_PORT
-    Protocol_state *p_state = (Protocol_state *) other;
     struct sockaddr_in* client_addr = (struct sockaddr_in*) &addr;
     #endif
     
     Response res;    
-    Client *client = p_state->newClient;
+    Client *client = (Client *) other;
     res.sfd = sfd;
     res.packet_len = client->packet_len;
     res.msg = client->req->buff;
     res.addr = client_addr;
 
-    user_request_handler(res, client->req, client, p_state);
+    user_request_handler(res, client->req, client);
     return 0;
   
 
@@ -297,17 +295,17 @@ Protocol_state* ssp_connectionless_server(char *port) {
     
 void *ssp_connectionless_client_task(void* params){
 
-    Protocol_state *p_state = (Protocol_state *) params;
+    Client *client = (Client *) params;
 
     char host_name[INET_ADDRSTRLEN];
     char port[10];
     //convert int to char *
-    snprintf(port, 10, "%d", p_state->newClient->unitdata_port);
+    snprintf(port, 10, "%d", client->unitdata_port);
 
     //convert uint id to char *
-    inet_ntop(AF_INET, &p_state->newClient->unitdata_id, host_name, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &client->unitdata_id, host_name, INET_ADDRSTRLEN);
 
-    udpClient(host_name, port, PACKET_LEN, p_state, p_state, on_send_client, on_recv_client);
+    udpClient(host_name, port, PACKET_LEN, client, client, on_send_client, on_recv_client);
     
     return NULL;
 }
@@ -358,11 +356,9 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     client->mib_info = remote;
     client->pdu_header = get_header_from_mib(p_state->mib, cfdp_id, p_state->my_cfdp_id);
 
-    
-    //TODO lock this
-    p_state->newClient = client;
+    client->p_state = p_state;
 
-    err = pthread_create(handler, attr, ssp_connectionless_client_task, p_state);       
+    err = pthread_create(handler, attr, ssp_connectionless_client_task, client);       
     if (0 != err)
         perror("ERROR pthread_create");
 

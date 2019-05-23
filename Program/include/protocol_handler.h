@@ -72,6 +72,28 @@ typedef struct request {
     Response res;
 } Request;
 
+
+typedef struct protocol_state {
+    uint32_t packet_size;
+    char *server_port;
+    void *server_handle;
+    void *server_thread_attributes;
+    MIB *mib;
+    uint32_t my_cfdp_id;
+    
+    List* request_list; 
+
+    Request *current_server_request;
+   
+    //lock this
+    uint32_t transaction_sequence_number;
+    
+    uint8_t verbose_level;
+
+
+} Protocol_state;
+
+
 //outgoing requests spin up client threads
 typedef struct client {
     
@@ -90,34 +112,15 @@ typedef struct client {
     Pdu_header *pdu_header;
     
     uint8_t is_active;
-
+    Protocol_state *p_state;
+    
 } Client;
 
 
-typedef struct protocol_state {
-    uint32_t packet_size;
-    char *server_port;
-    void *server_handle;
-    void *server_thread_attributes;
-    MIB *mib;
-    uint32_t my_cfdp_id;
-    Client *newClient;
-    List* request_list; 
-
-    Request *current_server_request;
-   
-    //lock this
-    uint32_t transaction_sequence_number;
-    
-    uint8_t verbose_level;
-
-
-} Protocol_state;
-
 //for use
 void parse_packet_server(char* buff, uint32_t packet_len, Response res, Request *req, Protocol_state *p_state);
-void user_request_handler(Response res, Request *req, Client *client, Protocol_state *p_state);
-void parse_packet_client(char* buff, Response res, Request *req, Client *client, Protocol_state *p_state);
+void user_request_handler(Response res, Request *req, Client *client);
+void parse_packet_client(char* buff, Response res, Request *req, Client *client);
 void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state);
 
 

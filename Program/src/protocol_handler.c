@@ -67,7 +67,8 @@ static uint8_t build_finished_pdu(char *packet, uint32_t start, Request *req) {
 }
 
 
-static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *req, Client* client, Protocol_state *p_state) {    
+static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *req
+) {    
     Pdu_header *header = (Pdu_header *) res.msg;
    
     header->PDU_type = DIRECTIVE;
@@ -151,36 +152,36 @@ static uint8_t build_nak_response(char *packet, uint32_t start, uint32_t offset,
 
 //requires a req->file to be created
 //returns 1 on end of file
-static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Client* client, Protocol_state *p_state) {
+static uint8_t build_data_packet(char *packet, uint32_t start, File *file, uint32_t length) {
 
-    if (req->file->next_offset_to_send > req->file->total_size){
+    if (file->next_offset_to_send > file->total_size){
         ssp_error("cant send an offset past the file's length\n");
         return -1;
     }
 
-    Pdu_header *header = (Pdu_header *) res.msg;
+    Pdu_header *header = (Pdu_header *) packet;
     //set header to file directive 0 is directive, 1 is data
     header->PDU_type = 1;
 
     uint16_t packet_index = start;
-    File_data_pdu_contents *packet_offset = (File_data_pdu_contents *) &res.msg[packet_index];
+    File_data_pdu_contents *packet_offset = (File_data_pdu_contents *) &packet[packet_index];
     
     //4 bytes is the size of the offset paramater
-    packet_offset->offset = req->file->next_offset_to_send;
+    packet_offset->offset = file->next_offset_to_send;
     packet_index += 4;
 
-    uint16_t data_size = client->packet_len - packet_index;
+    uint16_t data_size = length - packet_index;
     
     //fill the rest of the packet with data
-    int bytes = get_offset(req->file, &res.msg[packet_index], data_size, req->file->next_offset_to_send);
+    int bytes = get_offset(file, &packet[packet_index], data_size, file->next_offset_to_send);
     if (bytes <= 0){
         ssp_error("could not get offset, this could because the file is empty!\n");
         return -1;
     }
 
     //calculate checksum for data packet, this is used to calculate in transit checksums
-    req->file->partial_checksum += calc_check_sum(&res.msg[packet_index], bytes);
-    req->file->next_offset_to_send += bytes;
+    file->partial_checksum += calc_check_sum(&packet[packet_index], bytes);
+    file->next_offset_to_send += bytes;
 
     //add bytes read, and the packet offset to the data_field length
     header->PDU_data_field_len = htons(bytes + 4);
@@ -191,30 +192,30 @@ static uint8_t build_data_packet(Response res, uint32_t start, Request *req, Cli
     return 0;
 }
 
-static void build_eof_packet(Response res, uint32_t start, Request *req, Client* client, Protocol_state *p_state) {
+static void build_eof_packet(char *packet, uint32_t start, Request *req) {
 
-    Pdu_header *header = (Pdu_header *) res.msg;
+    Pdu_header *header = (Pdu_header *) packet;
     //set header to file directive 0 is directive, 1 is data
     header->PDU_type = 0;
     
     uint8_t packet_index = (uint8_t) start;
-    Pdu_directive *directive = (Pdu_directive *) &res.msg[packet_index];
+    Pdu_directive *directive = (Pdu_directive *) &packet[packet_index];
     directive->directive_code = EOF_PDU;
     packet_index++;
 
-    Pdu_eof *packet = (Pdu_eof *) &res.msg[packet_index];
+    Pdu_eof *eof_packet = (Pdu_eof *) &packet[packet_index];
 
     //this will be need to set from the req struct probably.
     //4 bits, 
-    packet->condition_code = COND_NO_ERROR;
+    eof_packet->condition_code = COND_NO_ERROR;
     //4 bits reserved bits
-    packet->spare = 0;
+    eof_packet->spare = 0;
     packet_index++;
 
     //4 bytes
-    packet->file_size = ntohl(req->file->total_size);
+    eof_packet->file_size = ntohl(req->file->total_size);
     packet_index += 4;
-    packet->checksum = req->file->partial_checksum;
+    eof_packet->checksum = req->file->partial_checksum;
     packet_index += 4;
 
     //TODO addTLV fault_location
@@ -511,9 +512,9 @@ int nak_response(char *packet, uint32_t start, Request *req, Response res, Clien
 
 
 //fills the current request with packet data, responses from servers
-void parse_packet_client(char *packet, Response res, Request *req, Client* client, Protocol_state *p_state) {
+void parse_packet_client(char *packet, Response res, Request *req, Client* client) {
  
-    uint32_t packet_index = process_pdu_header(packet, req, p_state);
+    uint32_t packet_index = process_pdu_header(packet, req, client->p_state);
     if (packet_index == -1)
         return;
 
@@ -542,7 +543,8 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
         case NAK_METADATA:
             ssp_printf("resending metadata\n");
             start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
-            data_len = build_put_packet_metadata(res, packet_index, req, client, p_state);
+            data_len = build_put_packet_metadata(res, packet_index, req);
+            set_data_length(res.msg, data_len);
             ssp_sendto(res);
             break;
         default:
@@ -552,7 +554,7 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
 
 
 //current user request, to send to remote
-void user_request_handler(Response res, Request *req, Client* client, Protocol_state *p_state) {
+void user_request_handler(Response res, Request *req, Client* client) {
 
     if (req->type == none)
         return;
@@ -570,18 +572,19 @@ void user_request_handler(Response res, Request *req, Client* client, Protocol_s
     {
         case eof: 
             req->type = none;
-            build_eof_packet(res, start, req, client, p_state);
+            build_eof_packet(res.msg, start, req);
             ssp_sendto(res);
             break;
 
         case sending_data: 
-            if (build_data_packet(res, start, req, client, p_state))
+            if (build_data_packet(res.msg, start, req->file, client->packet_len))
                 req->type = eof;
             ssp_sendto(res);
+            
             break;
 
         case put:
-            start = build_put_packet_metadata(res, start, req, client, p_state);
+            start = build_put_packet_metadata(res, start, req);
             ssp_sendto(res);
             req->type = sending_data;
             break;
