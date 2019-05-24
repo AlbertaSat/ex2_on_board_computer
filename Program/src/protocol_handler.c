@@ -6,6 +6,9 @@
 #include "packet.h"
 #include "filesystem_funcs.h"
 
+//snprintf
+#include <stdio.h>
+
 /*------------------------------------------------------------------------------
 
                                     creating packets
@@ -122,7 +125,7 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
 static uint8_t build_nak_response(char *packet, uint32_t start, uint32_t offset, Request *req, Client* client) {
 
     if (offset > req->file->total_size) {
-        return -1;
+        return 1;
     }
 
     Pdu_header *header = (Pdu_header *) packet;
@@ -139,7 +142,7 @@ static uint8_t build_nak_response(char *packet, uint32_t start, uint32_t offset,
     int bytes = get_offset(req->file, &packet[packet_index], data_size, offset);
     if (bytes <= 0){
         ssp_error("could not get offset, this could because the file is empty!\n");
-        return -1;
+        return 1;
     }
     
     //add bytes read, and the packet offset to the data_field length
@@ -147,6 +150,7 @@ static uint8_t build_nak_response(char *packet, uint32_t start, uint32_t offset,
     if (bytes <  data_size)
         return 1;
 
+    return 0;
 }
 
 
@@ -156,7 +160,7 @@ static uint8_t build_data_packet(char *packet, uint32_t start, File *file, uint3
 
     if (file->next_offset_to_send > file->total_size){
         ssp_error("cant send an offset past the file's length\n");
-        return -1;
+        return 1;
     }
 
     Pdu_header *header = (Pdu_header *) packet;
@@ -176,7 +180,7 @@ static uint8_t build_data_packet(char *packet, uint32_t start, File *file, uint3
     int bytes = get_offset(file, &packet[packet_index], data_size, file->next_offset_to_send);
     if (bytes <= 0){
         ssp_error("could not get offset, this could because the file is empty!\n");
-        return -1;
+        return 1;
     }
 
     //calculate checksum for data packet, this is used to calculate in transit checksums
@@ -223,12 +227,6 @@ static void build_eof_packet(char *packet, uint32_t start, Request *req) {
 
 }
 
-void print(void *element, void *args) {
-    Offset * o = (Offset *) element;
-    ssp_printf("start: %u, end: %u\n", o->start, o->end);
-}
-
-
 //this is a callback for building nak_array server side
 struct offset_holder {
     Offset *offsets;
@@ -247,7 +245,7 @@ static void fill_nak_array(void *element, void *args){
 
 
 
-uint32_t build_nak_packet(char *packet, uint32_t start, Request *req) {
+static uint32_t build_nak_packet(char *packet, uint32_t start, Request *req) {
     
     packet[start] = NAK_PDU;
     uint32_t packet_index = start + 1;
@@ -261,8 +259,10 @@ uint32_t build_nak_packet(char *packet, uint32_t start, Request *req) {
 
     req->file->missing_offsets->print(req->file->missing_offsets, fill_nak_array, &holder);
     
-    pdu_nak->start_scope = holder.offsets[0].start;;
-    pdu_nak->end_scope = holder.offsets[holder.i-1].end;;
+    pdu_nak->start_scope = holder.offsets[0].start;
+    pdu_nak->end_scope = holder.offsets[holder.i-1].end;
+
+
     pdu_nak->segment_requests = htonll(count);
     packet_index+=16;
    
@@ -285,13 +285,18 @@ uint8_t build_ack(char*packet, uint32_t start, uint8_t type, Request *req) {
     packet_index += 2;
     return packet_index - start;
 }
-uint8_t build_nak_metadata(char *packet, uint32_t start, Request *req) {
-    uint8_t data_len = 1;
-    packet[start] = NAK_METADATA;
+
+static uint8_t build_nak_directive(char *packet, uint32_t start, uint8_t directive) {
+    uint8_t data_len = 2;
+    packet[start] = NAK_DIRECTIVE;
+    packet[start + 1] = directive;
     return data_len;
 }
 
-
+void set_data_length(char*packet, uint16_t data_len){
+    Pdu_header *header = (Pdu_header*) packet;
+    header->PDU_data_field_len = data_len;
+}
 
 /*------------------------------------------------------------------------------
 
@@ -299,21 +304,19 @@ uint8_t build_nak_metadata(char *packet, uint32_t start, Request *req) {
 
 ------------------------------------------------------------------------------*/
 
-void request_metadata(Request *req, Response res) {
+static void request_metadata(Request *req, Response res) {
 
     res.msg = req->buff;
     ssp_printf("sending request for new metadata packet\n");
     uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
     uint16_t data_len = 0;
-    data_len = build_nak_metadata(res.msg, start, req);
+    data_len = build_nak_directive(res.msg, start, META_DATA_PDU);
+    set_data_length(res.msg, data_len);
     ssp_sendto(res);
     return;
 }
 
-void set_data_length(char*packet, uint16_t data_len){
-    Pdu_header *header = (Pdu_header*) packet;
-    header->PDU_data_field_len = data_len;
-}
+
 
 /*------------------------------------------------------------------------------
 
@@ -325,48 +328,45 @@ static void process_pdu_eof(char *packet, Request *req, Response res) {
 
     Pdu_eof *eof_packet = (Pdu_eof *) packet;
 
-    if (!req->received_metadata && req->file == NULL) {
-        req->file = create_temp_file(req->transaction_sequence_number); 
+    if (!req->received_metadata) {
         request_metadata(req, res);
-        req->file->total_size = ntohl(eof_packet->file_size);
     }
+    if (req->file == NULL) {
+        snprintf(req->source_file_name, 75, "%s%llu%s", ".temp_", req->transaction_sequence_number, ".jpeg");
+        req->file = create_temp_file(req->source_file_name);
+    }
+
 
     req->received_eof = 1;
     req->file->eof_checksum = eof_packet->checksum;
+    req->file->total_size = ntohl(eof_packet->file_size);
     
-    //if transmission mode unacknowledged, close file 
-    if (req->transmission_mode == 0) {
-        return;
-    }
-    
-    if (ssp_close(req->file->fd) == -1)
-        ssp_error("could not close file\n");
 }
 
 //TODO This needs more work, file handling when files already exist ect
 int process_file_request_metadata(Request *req) {
 
-    if (does_file_exist(req->destination_file_name)){
-        //ssp_error("file already exists, overwriting it\n"); COPY TEMP FILE TO THIS FILE
-        req->file = create_file(req->destination_file_name, 1);
-    }
-    if (req->file == NULL) {
-        //ssp_printf("creating file: %s\n", req->destination_file_name);
-        req->file = create_file(req->destination_file_name, 1);
-    }
-
+    char temp[75];
     req->received_metadata = 1;
 
-    //add offset for naks
-    Offset *offset = ssp_alloc(1, sizeof(Offset));
-    offset->end = req->file_size;
-    offset->start = 0;
-    
+    if (req->file == NULL)
+        req->file = create_file(req->destination_file_name, 1);
+
+    else if (req->file->is_temp) {
+        snprintf(temp, 75, "%s%llu%s", ".temp_", req->transaction_sequence_number, ".jpeg");
+        change_tempfile_to_actual(temp, req->destination_file_name, req->file_size, req->file);
+        return 1;
+    }
+
     //transmission mode 1 is unacknowledged, therefor no offsets
     if (req->transmission_mode == 1)
         return 1;
 
+    
     ssp_printf("mode acknowledged, building offset map\n");
+    Offset *offset = ssp_alloc(1, sizeof(Offset));
+    offset->end = req->file_size;
+    offset->start = 0;
     req->file->missing_offsets->insert(req->file->missing_offsets, offset, req->file_size);
 
     return 1;
@@ -518,12 +518,10 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
     if (packet_index == -1)
         return;
 
-    Pdu_header *header = (Pdu_header *) packet;    
-    uint16_t incoming_packet_data_len = ntohs(header->PDU_data_field_len);
+    //Pdu_header *header = (Pdu_header *) packet;    
+    //uint16_t incoming_packet_data_len = ntohs(header->PDU_data_field_len);
     uint8_t directive = packet[packet_index];
     packet_index += 1; 
-    //respond   
-    uint32_t data_len, start = 0;
 
     switch(directive) {
         case FINISHED_PDU:
@@ -540,18 +538,35 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
                 req->received_eof = 1;
             }
             break;
-        case NAK_METADATA:
-            ssp_printf("resending metadata\n");
-            start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
-            data_len = build_put_packet_metadata(res, packet_index, req);
-            set_data_length(res.msg, data_len);
-            ssp_sendto(res);
+        case NAK_DIRECTIVE:
+            switch (packet[packet_index])
+            {
+                case META_DATA_PDU:
+                    ssp_printf("resending metadata\n");
+                    req->type = put;
+                    break;
+            
+                case EOF_PDU: 
+                    ssp_printf("resending eof\n");
+                    req->type = eof;
+                    break;
+                
+                default:
+                    break;
+            }
+
             break;
         default:
             break;
     }
 }
+static void check_req_status(Request *req, Client *client) {
 
+    if (req->resent_finished == 3) {
+        ssp_printf("file successfully sent\n");
+        ssp_thread_cancel(client->client_handle);
+    }
+}
 
 //current user request, to send to remote
 void user_request_handler(Response res, Request *req, Client* client) {
@@ -568,6 +583,7 @@ void user_request_handler(Response res, Request *req, Client* client) {
     uint32_t start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
     uint32_t data_len = 0;
 
+    check_req_status(req, client);
     switch (req->type)
     {
         case eof: 
@@ -577,10 +593,15 @@ void user_request_handler(Response res, Request *req, Client* client) {
             break;
 
         case sending_data: 
-            if (build_data_packet(res.msg, start, req->file, client->packet_len))
+            if (req->sent_first_data_round == 1)
+                return;
+
+            if (build_data_packet(res.msg, start, req->file, client->packet_len)) {
                 req->type = eof;
+                req->sent_first_data_round = 1;
+                
+            }
             ssp_sendto(res);
-            
             break;
 
         case put:
@@ -590,13 +611,8 @@ void user_request_handler(Response res, Request *req, Client* client) {
             break;
 
         case finished:
-            if (req->resent_finished == 3) {
-                ssp_printf("file successfully sent\n");
-                ssp_thread_cancel(client->client_handle);
-                break;
-            }
-            start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
             data_len = build_ack(res.msg, start, FINISHED_PDU, req);
+            set_data_length(res.msg, data_len);
             ssp_sendto(res);
             req->resent_finished++;
             break;
@@ -615,24 +631,29 @@ void user_request_handler(Response res, Request *req, Client* client) {
 void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
 
     res.msg = req->buff;
-
     if (req->type == none)
         return;
    
     if (req->buff == NULL)
         ssp_printf("req buffer is null, couldn't process timeout request\n");
 
-
     uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
     uint16_t data_len = 0;
-    Pdu_header *pdu_header = (Pdu_header *) &res.msg;
+    //Pdu_header *pdu_header = (Pdu_header *) &res.msg;
 
     //send request for metadata
     if (!req->received_metadata) {
         ssp_printf("sending request for new metadata packet\n");
-        data_len = build_nak_metadata(res.msg, start, req);
+        data_len = build_nak_directive(res.msg, start, META_DATA_PDU);
+        //set_data_length(res.msg, data_len);
         ssp_sendto(res);
         return;
+    }
+
+    //send missing eofs
+    if (!req->received_eof) {
+        build_nak_directive(res.msg, start, EOF_PDU);
+        ssp_sendto(res);
     }
 
     //send missing NAKS
@@ -642,11 +663,12 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
         ssp_sendto(res);
         return;
     }
-
+    
     //received EOF, send back 3 eof packets
     if (req->received_eof && req->resent_eof < 3) {
         ssp_printf("sending eof ack\n");
         data_len = build_ack(res.msg, start, EOF_PDU, req);
+        //set_data_length(res.msg, data_len);
         ssp_sendto(res);
         req->resent_eof++;
     }
@@ -655,6 +677,7 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
     if (req->resent_finished < 3 && req->file->eof_checksum == req->file->partial_checksum && req->file->missing_offsets->count == 0) {
         ssp_printf("sending finsihed pdu\n");
         data_len = build_finished_pdu(res.msg, start, req);
+        //set_data_length(res.msg, data_len);
         ssp_sendto(res);
         req->resent_finished++;   
     }
@@ -677,10 +700,13 @@ void parse_packet_server(char *packet, uint32_t packet_len, Response res, Reques
     //process file data
     if (header->PDU_type == 1) {
         if (!req->received_metadata) {
+            if (req->file == NULL) {
+                snprintf(req->source_file_name, 75, "%s%llu%s", ".temp_", req->transaction_sequence_number, ".jpeg");
+                ssp_printf("haven't received metadata yet, building temperary file %s\n", req->source_file_name);
+                req->file = create_temp_file(req->source_file_name);
+            }
             request_metadata(req, res);
-            return;
         }
-        //this will only write data if first received a metadata packet
         write_packet_data_to_file(&packet[packet_index], req->packet_data_len, req->file);
         return;
     }
@@ -688,7 +714,6 @@ void parse_packet_server(char *packet, uint32_t packet_len, Response res, Reques
 
     Pdu_directive *directive = (Pdu_directive *) &packet[packet_index];
     packet_index++;
-
     switch (directive->directive_code)
     {
         case META_DATA_PDU:
@@ -770,7 +795,7 @@ int put_request(char *source_file_name,
 
     //enumeration
     req->type = put;
-    
+
     req->dest_cfdp_id = client->cfdp_id;
     req->file_size = file_size;
     

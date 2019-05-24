@@ -21,6 +21,12 @@
 #endif
 #include "protocol_handler.h"
 
+int ssp_rename(const char *old, const char *new) {
+    #ifdef POSIX_PORT
+        return rename(old, new);
+    #endif
+}
+
 int ssp_write(int fd, const void *buf, size_t count) {
     #ifdef POSIX_PORT
         return write(fd, buf, count);

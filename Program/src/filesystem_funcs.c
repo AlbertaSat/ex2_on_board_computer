@@ -188,7 +188,7 @@ static int find_nak(void *element, void* args) {
 }
 
 //ack is 1, nak is 0
-void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t offset_end) {
+int receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t offset_end) {
     
     List * nak_list = file->missing_offsets;
 
@@ -203,14 +203,26 @@ void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t off
     }
 
     Offset *offset_in_list = (Offset *) node->element;
-    //ssp_printf("received offset start:%u end:%u, found node: start:%u end:%u\n", offset_to_insert.start, offset_to_insert.end, offset_in_list->start, offset_in_list->end);
+    ssp_printf("received offset start:%u end:%u, found node: start:%u end:%u\n", offset_to_insert.start, offset_to_insert.end, offset_in_list->start, offset_in_list->end);
+
+    if (offset_in_list->start == offset_in_list->end) {
+        ssp_printf("removing node\n");  
+        node->next->prev = node->prev;
+        node->prev->next = node->next;
+        ssp_free(node->element);
+        ssp_free(node);
+        nak_list->count--;
+    }
+
+    if (offset_to_insert.start > offset_to_insert.end)
+        return;
 
     //insert new node
     if (offset_to_insert.start >= offset_in_list->start && offset_to_insert.end <= offset_in_list->end) {
 
         //remove node if both start and end are equal
         if (offset_to_insert.start == offset_in_list->start && offset_to_insert.end == offset_in_list->end) {
-            //ssp_printf("removing node\n");  
+            ssp_printf("removing node\n");  
             node->next->prev = node->prev;
             node->prev->next = node->next;
             ssp_free(node->element);
@@ -225,7 +237,6 @@ void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t off
             return;
         }
 
-        //ssp_printf("adding new node\n");
         Offset *new_offset = ssp_alloc(1, sizeof(Offset));
         new_offset->start = offset_start;
         new_offset->end = offset_end;
@@ -244,17 +255,45 @@ void receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t off
         new->prev->next = new;
         cur->prev = new;
         nak_list->count++;
+    }
+}
 
+File *create_temp_file(char *file_name) {
+    File *file = create_file(file_name, 1);
+    file->is_temp = 1;
+
+    ssp_printf("mode acknowledged, building offset map\n");
+    Offset *offset = ssp_alloc(1, sizeof(Offset));
+    offset->end = TEMP_FILESIZE;
+    offset->start = 0;
+    file->missing_offsets->insert(file->missing_offsets, offset, TEMP_FILESIZE);
+    return file;
+}
+
+static int print_nak(void *element, void* args) {
+
+    Offset *offset_in_list = (Offset *) element;
+    ssp_printf("start: %u, end: %u\n", offset_in_list->start, offset_in_list->end);
+
+    return 0;
+}
+
+
+int change_tempfile_to_actual(char *temp, char *destination_file_name, uint32_t file_size, File *file) {
+
+    //ssp_printf("renaming %s to: %s", temp, destination_file_name);
+    ssp_rename(temp, destination_file_name);
+    
+    //file->missing_offsets->print(file->missing_offsets, print_nak, NULL);
+    Offset* offset = (Offset*)file->missing_offsets->pop(file->missing_offsets);
+    if (offset == NULL) {
+        ssp_printf("no last node to pop\n");
+        return -1;
     }
 
+
+    offset->end = file_size;
+    file->missing_offsets->push(file->missing_offsets, offset, file_size);
+    file->is_temp = 0;
+   
 }
-
-File *create_temp_file(uint64_t transaction_sequence_num) {
-
-    char temp[75];
-    snprintf(temp, 75, "%s%llu", "temp_", transaction_sequence_num);
-    File *file = create_file(temp, 1);
-    file->total_size = TEMP_FILESIZE;
-
-}
-

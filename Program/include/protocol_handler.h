@@ -55,6 +55,8 @@ typedef struct request {
     uint8_t received_finished;
     //counter for resending finished packets == 3
     uint8_t resent_finished;
+    //bool for sending first blast of data packets
+    uint8_t sent_first_data_round;
 
     char* messages_to_user;
     char* filestore_requests;

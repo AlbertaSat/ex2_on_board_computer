@@ -32,7 +32,9 @@ int ssp_write(int fd, const void *buf, size_t count);
 int ssp_close(int fd);
 void ssp_free(void *pointer);
 
+int ssp_rename(const char *old, const char *new);
 
+void ssp_thread_cancel(void *thread_handle);
 
 void ssp_cleanup_pdu_header(Pdu_header *pdu_header);
 void reset_request(Request *req);
