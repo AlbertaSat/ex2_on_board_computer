@@ -74,7 +74,10 @@ int main(int argc, char** argv) {
     
         //send via acknoleged mode //0 acknowledged, 1 unacknowledged
         //put_request("test.txt", "delivered_file.txt", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
-        put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
+        put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+        put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+        put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+
 
         //will block on pthread_join
         ssp_cleanup_client(new_client);

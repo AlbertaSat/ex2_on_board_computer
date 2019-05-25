@@ -22,7 +22,7 @@ void *ssp_alloc(uint32_t u_memb, size_t size);
 void ssp_sendto(Response res);
 void ssp_cleanup(Protocol_state *state);
 void ssp_cleanup_client(Client *client);
-void ssp_cleanup_req(Request *req);
+void ssp_cleanup_req(void *request);
 void ssp_print_hex(char *stuff, uint32_t size);
 int ssp_open(char *pathname, int flags);
 int ssp_read(int fd, char* buff, size_t size);

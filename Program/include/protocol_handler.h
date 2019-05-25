@@ -104,6 +104,7 @@ typedef struct client {
     uint32_t packet_len;
     
     Request *req;
+    List *req_queue;
 
     //can get rid of these, these are found in mib_info anyway
     uint32_t cfdp_id;
@@ -132,6 +133,7 @@ uint8_t build_ack (char *packet, uint32_t start, uint8_t type, Request *req);
 int process_file_request_metadata(Request *req);
 int nak_response(char *packet, uint32_t start, Request *req, Response res, Client *client);
 void set_data_length(char*packet, uint16_t data_len);
+uint32_t build_nak_packet(char *packet, uint32_t start, Request *req);
 /*  
     unsigned char *source_file_name,
     unsigned char *destination_file_name,

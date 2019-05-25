@@ -243,9 +243,7 @@ static void fill_nak_array(void *element, void *args){
     holder->i++;
 }
 
-
-
-static uint32_t build_nak_packet(char *packet, uint32_t start, Request *req) {
+uint32_t build_nak_packet(char *packet, uint32_t start, Request *req) {
     
     packet[start] = NAK_PDU;
     uint32_t packet_index = start + 1;
@@ -808,6 +806,8 @@ int put_request(char *source_file_name,
     req->transmission_mode = transmission_mode;
     req->messages_to_user = messages_to_user;
     req->filestore_requests = filestore_requests;
+
+    client->req_queue->insert(client->req_queue, req, p_state->transaction_sequence_number);
 
     return 0;
 }

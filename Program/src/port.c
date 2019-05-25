@@ -325,6 +325,7 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     checkAlloc(client, 1);
 
     client->req = init_request(PACKET_LEN);
+    client->req_queue = linked_list();
 
     pthread_t *handler = calloc(sizeof(pthread_t), 1);
     checkAlloc(handler, 1);
@@ -413,7 +414,9 @@ void ssp_cleanup_pdu_header(Pdu_header *pdu_header) {
     ssp_free(pdu_header);
 }
 
-void ssp_cleanup_req(Request *req) {
+void ssp_cleanup_req(void *request) {
+
+    Request *req = (Request *) request;
     if (req->file != NULL)
         free_file(req->file);
 
@@ -456,6 +459,7 @@ void ssp_cleanup_client(Client *client) {
         pthread_join(*handle, NULL);
     #endif
     
+    client->req_queue->free(client->req_queue, ssp_cleanup_req);
     ssp_cleanup_req(client->req);
     ssp_free(client->client_handle);
     ssp_free(client->client_thread_attributes);
