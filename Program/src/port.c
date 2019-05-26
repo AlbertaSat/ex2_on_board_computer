@@ -151,16 +151,14 @@ static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, struct soc
     #endif
 
     Client *client = (Client *) other;
-    /*
     if (client->req == NULL)
-        return;
-    */
+        return 0;
+
     Response res;
     res.addr = posix_client;
     res.sfd = sfd;
     res.packet_len = *buff_size;
     res.msg = client->req->buff;
-
     
     parse_packet_client(packet, res, client->req, client);
     return 0;
@@ -176,19 +174,8 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
     
     Response res;    
     Client *client = (Client *) other;
-
-
-    /*
-    client->req = client->req_queue->pop(client->req_queue);
-    if (client->req == NULL) {
-        client->req = client->req_queue->pop(client->req_queue);
-        ssp_printf("popping new request\n");
-    }
-    if (client->req == NULL){
-        ssp_printf("client->req == null\n");
-        return;
-    }
-    */
+    if (client->req == NULL)
+        return 0;
 
     res.sfd = sfd;
     res.packet_len = client->packet_len;
@@ -282,7 +269,6 @@ Protocol_state* ssp_connectionless_server(char *port) {
 
     strncpy ((char*)state->server_port, port, 10);
 
-
     state->request_list = linked_list();
 
     int err = pthread_attr_init(attr);
@@ -300,7 +286,7 @@ Protocol_state* ssp_connectionless_server(char *port) {
         printf("the stack size is less that PTHREAD_STACK_MIN %d\n", PTHREAD_STACK_MIN);
     }
 
-    err = pthread_create(handler, attr, ssp_connectionless_server_task, state);       
+    err = pthread_create(handler, attr, ssp_connectionless_server_task, state);
     if (0 != err)
         perror("ERROR pthread_create");
 
@@ -397,8 +383,22 @@ void reset_request(Request *req){
     memset(req->destination_file_name, 0, MAX_PATH);
     memset(req->buff, 0, req->buff_len);
     memset(req->res.addr, 0, sizeof(struct sockaddr_in));
-    free_file(req->file);
-    
+    req->dest_cfdp_id = 0;
+    req->fault_handler_overides = 0;
+    req->file_size = 0;
+    req->flow_lable = 0;
+    req->received_eof = 0;
+    req->received_finished = 0;
+    req->received_metadata = 0;
+    req->resent_eof = 0;
+    req->resent_finished = 0;
+    req->segmentation_control = 0;
+    req->transaction_sequence_number = 0;
+    req->transmission_mode = 1;
+    req->type = none;
+    if (req->file != NULL)
+        free_file(req->file);
+    req->file = NULL;
     req->type = none;
     
 }
@@ -482,10 +482,7 @@ void ssp_cleanup_client(Client *client) {
         pthread_join(*handle, NULL);
     #endif
     
-    ssp_printf("segfault, \n");
     client->req_queue->free(client->req_queue, ssp_cleanup_req);
-    
-    ssp_printf("segfault, \n");
     ssp_cleanup_req(client->req);
     ssp_free(client->client_handle);
     ssp_free(client->client_thread_attributes);

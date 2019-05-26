@@ -13,7 +13,7 @@
 
 //Omission of source and destination filenames shall indicate that only Meta
 //data will be delivered
-int put_request(char *source_file_name,
+Request *put_request(char *source_file_name,
             char *destination_file_name,
             uint8_t segmentation_control,
             uint8_t fault_handler_overides,
@@ -55,5 +55,6 @@ int put_request(char *source_file_name,
 
     //client->req_queue->insert(client->req_queue, req, p_state->transaction_sequence_number);
     client->req = req;
-    return 0;
+
+    return req;
 }

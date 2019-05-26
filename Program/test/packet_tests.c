@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "filesystem_funcs.h"
 #include "port.h"
+#include "protocol_handler.h"
 
 #define PACKET_TEST_SIZE 2000 
 
@@ -18,17 +19,6 @@ static int test_respond_to_naks(char *packet, uint32_t packet_index) {
 }
 
 static int test_respond_metadata_request() {
-    
-    //ssp_printf("input a src file:\n");
-    Client *client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
-    
-    //send via acknoleged mode //0 acknowledged, 1 unacknowledged
-    //put_request("test.txt", "delivered_file.txt", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
-    put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 0, NULL, NULL, client, p_state);
-
-    uint32_t start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
-    uint32_t data_len = build_put_packet_metadata(res, packet_index, req, client, p_state);
-    set_data_length(res.msg, data_len);
 }
 
 
@@ -40,7 +30,6 @@ static void nak_print(void *element, void *args){
 static int test_build_nak_packet(char* packet, uint32_t start) {
     printf("testing nak creation 1 \n");
     Request *req = init_request(5000);
-
 
     req->file_size = 100000;
     memcpy(req->destination_file_name, "testestest", 15);

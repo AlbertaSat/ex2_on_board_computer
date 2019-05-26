@@ -3,6 +3,8 @@
 #define REQUESTS_H
 
 #include "stdint.h"
+#include "protocol_handler.h"
+
 typedef struct response {
     int sfd;
     //this is a pointer to buff in a request
@@ -69,5 +71,6 @@ typedef struct request {
     //handler for sending responses back
     Response res;
 } Request;
+
 
 #endif

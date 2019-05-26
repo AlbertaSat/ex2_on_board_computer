@@ -357,11 +357,6 @@ int process_file_request_metadata(Request *req) {
         change_tempfile_to_actual(temp, req->destination_file_name, req->file_size, req->file);
         return 1;
     }
-
-    //transmission mode 1 is unacknowledged, therefor no offsets
-    if (req->transmission_mode == 1)
-        return 1;
-
     
     ssp_printf("mode acknowledged, building offset map\n");
     Offset *offset = ssp_alloc(1, sizeof(Offset));
@@ -398,6 +393,7 @@ static int process_pdu_header(char*packet, Request *req, Protocol_state *p_state
         return -1;
     }
 
+    
     uint16_t packet_data_len = ntohs(header->PDU_data_field_len);
 
     req->packet_data_len = packet_data_len;
@@ -592,6 +588,7 @@ void user_request_handler(Response res, Request *req, Client* client) {
     switch (req->type)
     {
         case eof: 
+            ssp_printf("sending eof\n");
             req->type = none;
             build_eof_packet(res.msg, start, req);
             ssp_sendto(res);
@@ -600,22 +597,25 @@ void user_request_handler(Response res, Request *req, Client* client) {
         case sending_data: 
             if (req->sent_first_data_round == 1)
                 return;
-
+            
+            
             if (build_data_packet(res.msg, start, req->file, client->packet_len)) {
                 req->type = eof;
                 req->sent_first_data_round = 1;
-                
+                ssp_printf("sending data blast\n");
             }
             ssp_sendto(res);
             break;
 
         case put:
+            ssp_printf("sending metadata\n");
             start = build_put_packet_metadata(res, start, req);
             ssp_sendto(res);
             req->type = sending_data;
             break;
 
         case finished:
+            ssp_printf("sending finished packet\n");
             data_len = build_ack(res.msg, start, FINISHED_PDU, req);
             set_data_length(res.msg, data_len);
             ssp_sendto(res);
@@ -647,6 +647,12 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
     uint16_t data_len = 0;
     //Pdu_header *pdu_header = (Pdu_header *) &res.msg;
 
+    if (req->resent_finished == 3) {
+        reset_request(req);
+        ssp_printf("file sent, resetting request\n");
+        return;
+    }
+
     //send request for metadata
     if (!req->received_metadata) {
         ssp_printf("sending request for new metadata packet\n");
@@ -662,6 +668,7 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
         ssp_sendto(res);
     }
 
+    ssp_printf("missing offsets %u\n", req->file->missing_offsets->count);
     //send missing NAKS
     if (req->file->missing_offsets->count > 0) {
         ssp_printf("sending Nak data\n");
@@ -686,6 +693,15 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
         //set_data_length(res.msg, data_len);
         ssp_sendto(res);
         req->resent_finished++;   
+        return;
+    }
+
+    uint32_t time = p_state->timeout++;
+    ssp_printf("timeout %u\n", time);
+    if (time == 20) {
+        p_state->timeout = 0;
+        reset_request(req);
+        ssp_printf("timeout, resetting request\n");
     }
 }
 

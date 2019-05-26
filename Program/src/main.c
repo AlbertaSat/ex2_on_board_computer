@@ -9,7 +9,7 @@
 #include "utils.h"
 #include "server.h"
 #include "mib.h"
-
+#include "requests.h"
 #include "packet.h"
 
 //for itoa
@@ -72,13 +72,12 @@ int main(int argc, char** argv) {
     
         //send via acknoleged mode //0 acknowledged, 1 unacknowledged
         put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+        
         //put_request("pic.jpeg", "remote_pic2.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
         //put_request("pic.jpeg", "remote_pic3.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
 
-
         //will block on pthread_join
         ssp_cleanup_client(new_client);
-        ssp_printf("segfault here?\n");
         ssp_printf("client disconnected\n");
     }
 

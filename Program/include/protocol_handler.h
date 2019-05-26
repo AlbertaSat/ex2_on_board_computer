@@ -24,7 +24,7 @@ typedef struct protocol_state {
     uint32_t transaction_sequence_number;
     
     uint8_t verbose_level;
-
+    uint32_t timeout;
 
 } Protocol_state;
 
@@ -67,20 +67,9 @@ int process_file_request_metadata(Request *req);
 int nak_response(char *packet, uint32_t start, Request *req, Response res, Client *client);
 void set_data_length(char*packet, uint16_t data_len);
 uint32_t build_nak_packet(char *packet, uint32_t start, Request *req);
-/*  
-    unsigned char *source_file_name,
-    unsigned char *destination_file_name,
-    uint8_t segmentation_control,
-    uint8_t fault_handler_overides,
-    uint8_t flow_lable,
-    uint8_t transmission_mode,
-    unsigned char* messages_to_user,
-    unsigned char* filestore_requests,
-    Client *client,
-    Protocol_state *p_state
-*/
-//returns -1 on error
-int put_request(
+
+
+Request *put_request(
             char *source_file_name,
             char *destination_file_name,
             uint8_t segmentation_control,
@@ -92,8 +81,5 @@ int put_request(
             Client *client,
             Protocol_state *p_state
             );
-
-
-
 
 #endif
