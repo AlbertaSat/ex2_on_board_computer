@@ -50,6 +50,7 @@ static int find(void *element, void *args) {
 
 
 static void list_free(void *element) {
+
     free(element);
 }
 
@@ -57,7 +58,6 @@ static void list_free(void *element) {
 int main () {
     
 
-    
     MIB *mib = init_mib();
 
     //setting host name for testing
@@ -78,12 +78,18 @@ int main () {
 
     Pdu_header *header = get_header_from_mib(mib, 2222, 1315);
 
-    packet_tests(header);
+
+    //packet_tests(header);
+    
+    request_test_list_storage();
+
+
+
+
+
 
     free_mib(mib);
     ssp_cleanup_pdu_header(header);
-
-
 
 
 
@@ -172,7 +178,7 @@ int main () {
 
     printf("%c%c\n", *ptr[0], *ptr[1]);
 
-
+    */
     
     List *list = linked_list();
     //static void *findElement(List *list, int (*f)(void *element, void *args), void *args)
@@ -190,15 +196,15 @@ int main () {
     st3->id = 3;
     st3->b = 4;
 
-    list->push(list, st, 1);
-    list->push(list, st2, 2);
+    list->insert(list, st, 1);
+    list->insert(list, st2, 2);
     list->push(list, st3, 3);
 
-
-    list->pop(list);
+    list->push(list, list->pop(list), list->count);
     list->print(list, list_print, NULL);  
     printf("\n\n");
 
+    /*
     list->insert(list, st3, 3);
     list->print(list, list_print, NULL);  
 
@@ -215,12 +221,14 @@ int main () {
     found = list->find(list, 3, NULL, NULL);
     printf("found %d\n", found->id);
 
-    free(list->remove(list, "3", NULL, NULL));
-    free(list->remove(list, "2", NULL, NULL));  
+    void * element = list->pop(list);
+    //free(list->remove(list, "3", NULL, NULL));
+    //free(list->remove(list, "2", NULL, NULL));  
 
 
-    list->print(list, list_print, NULL);  
+    list->print(list, list_print, NULL); 
+ */
     list->free(list, list_free);
-    */
+   
     return 0;
 }

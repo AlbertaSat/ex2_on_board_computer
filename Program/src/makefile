@@ -8,10 +8,10 @@ CFILES += port.c
 CFILES += utils.c
 CFILES += server.c  #used for poxix port
 CFILES += protocol_handler.c
-CFILES += list_callbacks.c
 CFILES += mib.c
 CFILES += filesystem_funcs.c
 CFILES += ringbuf.c
+CFILES += requests.c
 
 #----------------------------test files-------------------------
 CFILES += $(PROJDIR)/test/test.c

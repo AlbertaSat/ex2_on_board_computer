@@ -5,6 +5,8 @@
 #include "string.h"
 #include "packet.h"
 #include "filesystem_funcs.h"
+#include "requests.h"
+
 
 //snprintf
 #include <stdio.h>
@@ -390,6 +392,8 @@ static int process_pdu_header(char*packet, Request *req, Protocol_state *p_state
     packet_index += header->length_of_entity_IDs;
 
     if (p_state->my_cfdp_id != dest_id){
+
+        ssp_printf("sequence number: %u should be %u\n", p_state->my_cfdp_id, transaction_sequence_number);
         ssp_printf("someone is sending packets here that are not for my id %u, dest_id: %u\n", p_state->my_cfdp_id, dest_id);
         return -1;
     }
@@ -525,10 +529,12 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
         case FINISHED_PDU:
             req->received_finished = 1;
             req->type = finished;
+            ssp_printf("received finished pdu\n");
             break;
         case NAK_PDU:
             req->received_metadata = 1;
             nak_response(packet, packet_index, req, res, client);
+            ssp_printf("received Nak pdu\n");
             break;
         case ACK_PDU:
             if (packet[packet_index] == EOF_PDU) {
@@ -561,15 +567,16 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
 static void check_req_status(Request *req, Client *client) {
 
     if (req->resent_finished == 3) {
-        ssp_printf("file successfully sent\n");
-        ssp_thread_cancel(client->client_handle);
+        req->type = none;
+        //ssp_cleanup_req(client->req);
+        //client->req = NULL;
     }
 }
 
 //current user request, to send to remote
 void user_request_handler(Response res, Request *req, Client* client) {
 
-    if (req->type == none)
+    if (req == NULL || req->type == none)
         return;
 
     if (res.msg == NULL) {
@@ -613,6 +620,7 @@ void user_request_handler(Response res, Request *req, Client* client) {
             set_data_length(res.msg, data_len);
             ssp_sendto(res);
             req->resent_finished++;
+            
             break;
 
         default:
@@ -752,62 +760,3 @@ void parse_packet_server(char *packet, uint32_t packet_len, Response res, Reques
     memset(packet, 0, packet_len);
 }
 
-
-
-
-/*------------------------------------------------------------------------------
-
-                                    USER STUFF
-                                    aka: request from person
-
-------------------------------------------------------------------------------*/
-
-
-
-
-//Omission of source and destination filenames shall indicate that only Meta
-//data will be delivered
-int put_request(char *source_file_name,
-            char *destination_file_name,
-            uint8_t segmentation_control,
-            uint8_t fault_handler_overides,
-            uint8_t flow_lable,
-            uint8_t transmission_mode,
-            char* messages_to_user,
-            char* filestore_requests,
-            Client *client,
-            Protocol_state *p_state
-            ) {
-
-    uint32_t file_size = get_file_size(source_file_name);
-    
-    if (file_size == -1)
-        return -1;
-
-    //give the client a new request to perform
-    Request *req = client->req;
-    req->file = create_file(source_file_name, 0);
-
-    //build a request 
-    req->transaction_sequence_number = p_state->transaction_sequence_number++;
-
-    //enumeration
-    req->type = put;
-
-    req->dest_cfdp_id = client->cfdp_id;
-    req->file_size = file_size;
-    
-    memcpy(req->source_file_name, source_file_name ,strnlen(source_file_name, MAX_PATH));
-    memcpy(req->destination_file_name, destination_file_name, strnlen(destination_file_name, MAX_PATH));
-
-    req->segmentation_control = segmentation_control;
-    req->fault_handler_overides = fault_handler_overides;
-    req->flow_lable = flow_lable;
-    req->transmission_mode = transmission_mode;
-    req->messages_to_user = messages_to_user;
-    req->filestore_requests = filestore_requests;
-
-    client->req_queue->insert(client->req_queue, req, p_state->transaction_sequence_number);
-
-    return 0;
-}

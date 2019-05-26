@@ -151,12 +151,16 @@ static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, struct soc
     #endif
 
     Client *client = (Client *) other;
-
+    /*
+    if (client->req == NULL)
+        return;
+    */
     Response res;
     res.addr = posix_client;
     res.sfd = sfd;
     res.packet_len = *buff_size;
     res.msg = client->req->buff;
+
     
     parse_packet_client(packet, res, client->req, client);
     return 0;
@@ -172,6 +176,20 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
     
     Response res;    
     Client *client = (Client *) other;
+
+
+    /*
+    client->req = client->req_queue->pop(client->req_queue);
+    if (client->req == NULL) {
+        client->req = client->req_queue->pop(client->req_queue);
+        ssp_printf("popping new request\n");
+    }
+    if (client->req == NULL){
+        ssp_printf("client->req == null\n");
+        return;
+    }
+    */
+
     res.sfd = sfd;
     res.packet_len = client->packet_len;
     res.msg = client->req->buff;
@@ -179,8 +197,6 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
 
     user_request_handler(res, client->req, client);
     return 0;
-  
-
 }
 
 //this function is a callback when using  my posix ports
@@ -324,7 +340,7 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     Client *client = calloc(sizeof(Client), 1);
     checkAlloc(client, 1);
 
-    client->req = init_request(PACKET_LEN);
+    client->req = NULL;
     client->req_queue = linked_list();
 
     pthread_t *handler = calloc(sizeof(pthread_t), 1);
@@ -350,6 +366,7 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     client->client_thread_attributes = attr;
     client->packet_len = PACKET_LEN;
     client->cfdp_id = cfdp_id;
+
 
     List *entity_list = p_state->mib->remote_entities;
     Remote_entity *remote = entity_list->find(entity_list, cfdp_id, NULL, NULL);
@@ -417,17 +434,23 @@ void ssp_cleanup_pdu_header(Pdu_header *pdu_header) {
 void ssp_cleanup_req(void *request) {
 
     Request *req = (Request *) request;
+
+    if (req == NULL)
+        return;
     if (req->file != NULL)
         free_file(req->file);
-
     if (req->pdu_header != NULL)
         ssp_cleanup_pdu_header(req->pdu_header);
-
-    ssp_free(req->res.addr);
-    ssp_free(req->source_file_name);
-    ssp_free(req->destination_file_name);
-    ssp_free(req->buff);
+    if (req->res.addr != NULL)
+        ssp_free(req->res.addr);
+    if (req->source_file_name != NULL)  
+        ssp_free(req->source_file_name);
+    if (req->destination_file_name != NULL)
+        ssp_free(req->destination_file_name);
+    if (req->buff != NULL)
+        ssp_free(req->buff);
     ssp_free(req);
+
 }
 
 
@@ -438,15 +461,15 @@ void ssp_cleanup(Protocol_state *p_state) {
     pthread_t * handle = (pthread_t*) p_state->server_handle;        
     pthread_join(*handle, NULL);
 
-    p_state->request_list->free( p_state->request_list, ssp_cleanup_req);
+    #endif
+
+    p_state->request_list->free(p_state->request_list, ssp_cleanup_req);
     ssp_cleanup_req(p_state->current_server_request);
     free_mib(p_state->mib);
     ssp_free(p_state->server_handle);
     ssp_free(p_state->server_port);
     ssp_free(p_state->server_thread_attributes);
     ssp_free(p_state);
-
-    #endif
 
 }
 
@@ -459,7 +482,10 @@ void ssp_cleanup_client(Client *client) {
         pthread_join(*handle, NULL);
     #endif
     
+    ssp_printf("segfault, \n");
     client->req_queue->free(client->req_queue, ssp_cleanup_req);
+    
+    ssp_printf("segfault, \n");
     ssp_cleanup_req(client->req);
     ssp_free(client->client_handle);
     ssp_free(client->client_thread_attributes);

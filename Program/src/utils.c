@@ -131,12 +131,10 @@ static void freeNode(NODE *node) {
 static void *pop(List *list) {
 
     if (list->count == 0)
-        return;
-
-    NODE *last_data_node = list->tail->prev;
-    if (last_data_node == NULL)
         return NULL;
 
+    NODE *last_data_node = list->tail->prev;
+    
     NODE *prev = last_data_node->prev;
     prev->next = list->tail;
     list->tail->prev = prev;
@@ -160,11 +158,9 @@ static int insert(List *list, void *element, uint32_t id) {
     if (node == NULL) {
         return 0;
     }
-    if (list->count == 0) {
-        list->tail->prev = node;
-    }
 
     node->next = head->next;
+    node->next->prev = node;
     node->prev = head;
 
     head->next = node;
@@ -263,7 +259,8 @@ static void *removeElement(List *list, uint32_t id, int (*f)(void *element, void
 static void freeList(List *list, void (*f)(void *element))
 {
     NODE *cur = list->head->next;
-    while (cur->next != NULL )
+
+    while (cur->next != NULL && cur->element != NULL)
     {
         NODE *n = cur;
         cur = cur->next;

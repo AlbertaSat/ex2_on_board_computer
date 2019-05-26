@@ -128,7 +128,6 @@ void free_file(void *file) {
 
     File *f = (File *) file;
     f->missing_offsets->free(f->missing_offsets, ssp_free);
-
     ssp_free(f);
 }
 

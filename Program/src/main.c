@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include "protocol_handler.h"
 #include "utils.h"
-#include "list_callbacks.h"
 #include "server.h"
 #include "mib.h"
 
@@ -66,21 +65,20 @@ int main(int argc, char** argv) {
     p_state->verbose_level = conf->verbose_level;
 
     //create a client
-
     if (conf->client_cfdp_id != 0){
 
         //ssp_printf("input a src file:\n");
         Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
     
         //send via acknoleged mode //0 acknowledged, 1 unacknowledged
-        //put_request("test.txt", "delivered_file.txt", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
         put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
-        put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
-        put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+        //put_request("pic.jpeg", "remote_pic2.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+        //put_request("pic.jpeg", "remote_pic3.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
 
 
         //will block on pthread_join
         ssp_cleanup_client(new_client);
+        ssp_printf("segfault here?\n");
         ssp_printf("client disconnected\n");
     }
 
