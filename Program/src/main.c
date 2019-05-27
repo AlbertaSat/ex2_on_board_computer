@@ -71,8 +71,14 @@ int main(int argc, char** argv) {
         Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
     
         //send via acknoleged mode //0 acknowledged, 1 unacknowledged
-        put_request("pic.jpeg", "remote_pic.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+        if (conf->client_cfdp_id == 1)
+            put_request("pic.jpeg", "remote_pic1.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
         
+
+        if (conf->client_cfdp_id == 2)
+            put_request("pic.jpeg", "remote_pic2.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+
+
         //put_request("pic.jpeg", "remote_pic2.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
         //put_request("pic.jpeg", "remote_pic3.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
 

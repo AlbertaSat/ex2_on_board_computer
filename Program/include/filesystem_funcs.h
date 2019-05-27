@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "utils.h"
 
-#define TEMP_FILESIZE 10000000
+#define TEMP_FILESIZE 1000
 
 typedef struct offset {
     uint32_t start;

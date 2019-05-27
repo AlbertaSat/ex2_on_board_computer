@@ -13,6 +13,7 @@
 #include "test.h"
 #include "mib.h"
 #include "packet_tests.h"
+#include "filesystem_tests.h"
 
 struct myStruct {
     int id;
@@ -80,8 +81,8 @@ int main () {
 
 
     //packet_tests(header);
-    
-    request_test_list_storage();
+    file_system_tests();
+    //request_test_list_storage();
 
 
 
@@ -201,8 +202,6 @@ int main () {
     list->push(list, st3, 3);
 
     list->push(list, list->pop(list), list->count);
-    list->print(list, list_print, NULL);  
-    printf("\n\n");
 
     /*
     list->insert(list, st3, 3);

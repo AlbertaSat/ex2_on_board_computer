@@ -562,8 +562,12 @@ void parse_packet_client(char *packet, Response res, Request *req, Client* clien
 }
 static void check_req_status(Request *req, Client *client) {
 
-    if (req->resent_finished == 3) {
+    if (req->resent_finished >= 3){
         req->type = none;
+    }
+    if (req->resent_finished == 3) {
+        ssp_printf("file successfully sent\n");
+        req->resent_finished = 4;
         //ssp_cleanup_req(client->req);
         //client->req = NULL;
     }
@@ -598,7 +602,6 @@ void user_request_handler(Response res, Request *req, Client* client) {
             if (req->sent_first_data_round == 1)
                 return;
             
-            
             if (build_data_packet(res.msg, start, req->file, client->packet_len)) {
                 req->type = eof;
                 req->sent_first_data_round = 1;
@@ -620,7 +623,6 @@ void user_request_handler(Response res, Request *req, Client* client) {
             set_data_length(res.msg, data_len);
             ssp_sendto(res);
             req->resent_finished++;
-            
             break;
 
         default:
@@ -675,6 +677,16 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
         build_nak_packet(res.msg, start, req);
         ssp_sendto(res);
         return;
+
+    } else {
+        if (req->file->eof_checksum == req->file->partial_checksum){
+            ssp_printf("sending finsihed pdu\n");
+            data_len = build_finished_pdu(res.msg, start, req);
+            //set_data_length(res.msg, data_len);
+            ssp_sendto(res);
+            req->resent_finished++;   
+            return;
+        }
     }
     
     //received EOF, send back 3 eof packets
@@ -684,16 +696,6 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
         //set_data_length(res.msg, data_len);
         ssp_sendto(res);
         req->resent_eof++;
-    }
-
-    //send Finished, send back 3 finished packets
-    if (req->resent_finished < 3 && req->file->eof_checksum == req->file->partial_checksum && req->file->missing_offsets->count == 0) {
-        ssp_printf("sending finsihed pdu\n");
-        data_len = build_finished_pdu(res.msg, start, req);
-        //set_data_length(res.msg, data_len);
-        ssp_sendto(res);
-        req->resent_finished++;   
-        return;
     }
 
     uint32_t time = p_state->timeout++;
