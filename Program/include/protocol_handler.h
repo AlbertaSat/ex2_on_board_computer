@@ -67,7 +67,7 @@ int process_file_request_metadata(Request *req);
 int nak_response(char *packet, uint32_t start, Request *req, Response res, Client *client);
 void set_data_length(char*packet, uint16_t data_len);
 uint32_t build_nak_packet(char *packet, uint32_t start, Request *req);
-
+uint16_t get_data_length(char*packet);
 
 Request *put_request(
             char *source_file_name,

@@ -68,12 +68,12 @@ static uint8_t build_finished_pdu(char *packet, uint32_t start, Request *req) {
     data_len += 1;
     packet_index += 1;
 
+    set_data_length(packet, data_len);
     return data_len;
 }
 
 
-static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *req
-) {    
+static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *req) {    
     Pdu_header *header = (Pdu_header *) res.msg;
    
     header->PDU_type = DIRECTIVE;
@@ -117,10 +117,8 @@ static uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *
     memcpy(&res.msg[packet_index], destination_file_name, destination_file_length);
     packet_index += destination_file_length;
 
-    uint8_t total_bytes = packet_index - start; 
-
-    //mark the size of the packet
-    header->PDU_data_field_len = htons(total_bytes);
+    uint8_t data_len = packet_index - start; 
+    set_data_length(res.msg, data_len);
 
     return packet_index;
 }
@@ -147,8 +145,9 @@ static uint8_t build_nak_response(char *packet, uint32_t start, uint32_t offset,
         return 1;
     }
     
-    //add bytes read, and the packet offset to the data_field length
-    header->PDU_data_field_len = htons(bytes + 4);
+    uint16_t data_len = bytes + 4;
+    set_data_length(packet, data_len);
+
     if (bytes <  data_size)
         return 1;
 
@@ -189,8 +188,10 @@ static uint8_t build_data_packet(char *packet, uint32_t start, File *file, uint3
     file->partial_checksum += calc_check_sum(&packet[packet_index], bytes);
     file->next_offset_to_send += bytes;
 
+
     //add bytes read, and the packet offset to the data_field length
-    header->PDU_data_field_len = htons(bytes + 4);
+    uint16_t data_len = bytes + 4;
+    set_data_length(packet, data_len);
 
     if (bytes <  data_size)
         return 1;
@@ -225,7 +226,8 @@ static void build_eof_packet(char *packet, uint32_t start, Request *req) {
     packet_index += 4;
 
     //TODO addTLV fault_location
-    header->PDU_data_field_len = htons(packet_index - start);
+    uint16_t data_len = htons(packet_index - start);
+    set_data_length(packet, data_len);
 
 }
 
@@ -271,7 +273,10 @@ uint32_t build_nak_packet(char *packet, uint32_t start, Request *req) {
 
     packet_index += sizeof(Offset) * count;
 
-    return packet_index - start;
+    uint16_t data_len = packet_index - start;
+    set_data_length(packet, data_len);
+
+    return data_len;
 }
 
 uint8_t build_ack(char*packet, uint32_t start, uint8_t type, Request *req) {
@@ -283,19 +288,29 @@ uint8_t build_ack(char*packet, uint32_t start, uint8_t type, Request *req) {
     pdu_ack->directive_subtype_code = ACK_FINISHED_END;
     pdu_ack->condition_code = COND_NO_ERROR;
     packet_index += 2;
-    return packet_index - start;
+    uint16_t data_len = packet_index - start;
+    set_data_length(packet, data_len);
+
+    return data_len;
 }
 
 static uint8_t build_nak_directive(char *packet, uint32_t start, uint8_t directive) {
     uint8_t data_len = 2;
     packet[start] = NAK_DIRECTIVE;
     packet[start + 1] = directive;
+    
+    set_data_length(packet, data_len);
     return data_len;
 }
 
 void set_data_length(char*packet, uint16_t data_len){
     Pdu_header *header = (Pdu_header*) packet;
-    header->PDU_data_field_len = data_len;
+    header->PDU_data_field_len =  htons(data_len);;
+}
+
+uint16_t get_data_length(char*packet) {
+    Pdu_header *header = (Pdu_header*) packet;
+    return ntohs(header->PDU_data_field_len);
 }
 
 /*------------------------------------------------------------------------------
@@ -311,7 +326,6 @@ static void request_metadata(Request *req, Response res) {
     uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
     uint16_t data_len = 0;
     data_len = build_nak_directive(res.msg, start, META_DATA_PDU);
-    set_data_length(res.msg, data_len);
     ssp_sendto(res);
     return;
 }
@@ -417,6 +431,9 @@ static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  Fil
     uint32_t offset_start = packet->offset;
     uint32_t offset_end = offset_start + data_len - 4;
     
+    if (!receive_offset(file, 0, offset_start, offset_end))
+        return;
+
     int bytes = write_offset(file, &data_packet[4], data_len - 4, offset_start);
     if (bytes <= 0) {
         ssp_error("no new data was written\n");
@@ -428,7 +445,6 @@ static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  Fil
     if (file->missing_offsets->count == 0)
         return;
 
-    receive_offset(file, 0, offset_start, offset_end);
 }
 
 
@@ -620,7 +636,6 @@ void user_request_handler(Response res, Request *req, Client* client) {
         case finished:
             ssp_printf("sending finished packet\n");
             data_len = build_ack(res.msg, start, FINISHED_PDU, req);
-            set_data_length(res.msg, data_len);
             ssp_sendto(res);
             req->resent_finished++;
             break;
@@ -659,14 +674,13 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
     if (!req->received_metadata) {
         ssp_printf("sending request for new metadata packet\n");
         data_len = build_nak_directive(res.msg, start, META_DATA_PDU);
-        //set_data_length(res.msg, data_len);
         ssp_sendto(res);
         return;
     }
 
     //send missing eofs
     if (!req->received_eof) {
-        build_nak_directive(res.msg, start, EOF_PDU);
+        data_len = build_nak_directive(res.msg, start, EOF_PDU);
         ssp_sendto(res);
     }
 
@@ -679,13 +693,16 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
         return;
 
     } else {
+
         if (req->file->eof_checksum == req->file->partial_checksum){
             ssp_printf("sending finsihed pdu\n");
             data_len = build_finished_pdu(res.msg, start, req);
-            //set_data_length(res.msg, data_len);
             ssp_sendto(res);
             req->resent_finished++;   
             return;
+        }
+        else {
+            ssp_printf("checksum have: %u checksum_need: %u\n", req->file->partial_checksum, req->file->eof_checksum);
         }
     }
     
@@ -693,7 +710,6 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
     if (req->received_eof && req->resent_eof < 3) {
         ssp_printf("sending eof ack\n");
         data_len = build_ack(res.msg, start, EOF_PDU, req);
-        //set_data_length(res.msg, data_len);
         ssp_sendto(res);
         req->resent_eof++;
     }
