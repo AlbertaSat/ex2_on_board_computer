@@ -32,7 +32,6 @@ This is my file for server.c. It develops a udp server for select.
 #include <netinet/in.h>
 #include <netdb.h> 
 
-
 static int exit_now;
 
 
@@ -40,6 +39,7 @@ static int exit_now;
 //see header file
 int prepareUdpHost(char *port)
 {
+
     struct addrinfo hints, *res;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
@@ -144,7 +144,7 @@ static int resizeBuff(char **buffer, uint32_t *newBufferSize, uint32_t *prev_buf
 
 //see header file
 void udpSelectServer(char* port, int packet_len,
-    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, struct sockaddr_storage client, void *other), 
+    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, void *other), 
     int (*onTimeOut)(void *other),
     int (*onStdIn)(void *other),
     void *other)
@@ -213,7 +213,7 @@ void udpSelectServer(char* port, int packet_len,
         {
             
             socklen_t client_len = sizeof(*client);
-            int count = recvfrom(sfd, buff, packet_len, 0, (struct sockaddr*)client, &client_len);
+            int count = recvfrom(sfd, buff, packet_len, 0, (void *) client, &client_len);
             
 
             if (count == -1)
@@ -227,7 +227,7 @@ void udpSelectServer(char* port, int packet_len,
             }
             else
             {
-                if (onRecv(sfd, buff, buff_size, *client, other) == -1)
+                if (onRecv(sfd, buff, buff_size, (void*) client, other) == -1)
                     printf("recv failed\n");
             }
         }
@@ -244,7 +244,7 @@ void udpSelectServer(char* port, int packet_len,
 //https://www.cs.cmu.edu/afs/cs/academic/class/15213-f99/www/class26/udpclient.c
 void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, 
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
-    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, struct sockaddr_in client, void *onRecvParams) 
+    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, void *onRecvParams) 
 ) {
 
     int sfd, count, port_val;
@@ -309,7 +309,7 @@ void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, vo
         }
         else
         {
-            if (onRecv(sfd, buff, buff_size, serveraddr, onRecvParams) == -1)
+            if (onRecv(sfd, buff, buff_size, (void *)&serveraddr, onRecvParams) == -1)
                 printf("recv failed\n");
         }
         
@@ -319,4 +319,5 @@ void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, vo
     free(buff);
     close(sfd);
 }
+
 

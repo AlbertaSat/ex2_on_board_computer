@@ -12,7 +12,6 @@ typedef struct protocol_state {
     uint32_t packet_size;
     char *server_port;
     void *server_handle;
-    void *server_thread_attributes;
     MIB *mib;
     uint32_t my_cfdp_id;
     
@@ -33,7 +32,6 @@ typedef struct protocol_state {
 typedef struct client {
     
     void *client_handle;
-    void *client_thread_attributes;
     uint32_t packet_len;
     
     Request *req;

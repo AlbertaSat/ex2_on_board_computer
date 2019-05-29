@@ -74,6 +74,12 @@ Pdu_header *get_header_from_mib(MIB *mib, uint32_t dest_id, uint32_t source_id){
     return pdu_header;
 }
 
+void ssp_cleanup_pdu_header(Pdu_header *pdu_header) {
+    ssp_free(pdu_header->destination_id);
+    ssp_free(pdu_header->source_id);
+    ssp_free(pdu_header);
+}
+
 /*
     //building the pdu header here
     client->pdu_header = ssp_alloc(1, sizeof(Pdu_header));

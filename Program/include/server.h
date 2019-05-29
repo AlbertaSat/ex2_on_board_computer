@@ -43,7 +43,7 @@ int prepareUdpHost(char *port);
 ------------------------------------------------------------------------------*/
 
 void udpSelectServer(char *port, int packet_len,
-    int (*onRecv)(int sfd, char *msg,  uint32_t *buff_size, struct sockaddr_storage client, void *other), 
+    int (*onRecv)(int sfd, char *msg,  uint32_t *buff_size, void *addr, void *other), 
     int (*onTimeOut)(void *other),
     int (*onStdIn)(void *other),
     void *other);
@@ -61,7 +61,7 @@ int *prepareSignalHandler(void);
 
 void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, 
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
-    int (*onRecv)(int sfd, char *msg, uint32_t *buff_size, struct sockaddr_in client, void *onRecvParams));
+    int (*onRecv)(int sfd, char *msg, uint32_t *buff_size, void* addr, void *onRecvParams));
 
     
 #endif //SERVER_H

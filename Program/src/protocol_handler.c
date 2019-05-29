@@ -324,8 +324,7 @@ static void request_metadata(Request *req, Response res) {
     res.msg = req->buff;
     ssp_printf("sending request for new metadata packet\n");
     uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
-    uint16_t data_len = 0;
-    data_len = build_nak_directive(res.msg, start, META_DATA_PDU);
+    build_nak_directive(res.msg, start, META_DATA_PDU);
     ssp_sendto(res);
     return;
 }
@@ -602,7 +601,6 @@ void user_request_handler(Response res, Request *req, Client* client) {
     memset(res.msg, 0, client->packet_len);
 
     uint32_t start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
-    uint32_t data_len = 0;
 
     check_req_status(req, client);
     switch (req->type)
@@ -635,7 +633,7 @@ void user_request_handler(Response res, Request *req, Client* client) {
 
         case finished:
             ssp_printf("sending finished packet\n");
-            data_len = build_ack(res.msg, start, FINISHED_PDU, req);
+            build_ack(res.msg, start, FINISHED_PDU, req);
             ssp_sendto(res);
             req->resent_finished++;
             break;
@@ -651,6 +649,17 @@ void user_request_handler(Response res, Request *req, Client* client) {
 
 ------------------------------------------------------------------------------*/
 
+static void reset_timeout(Protocol_state *p_state, Request *req) {
+
+    uint32_t time = p_state->timeout++;
+    ssp_printf("timeout %u\n", time);
+    if (time == 20) {
+        p_state->timeout = 0;
+        reset_request(req);
+        ssp_printf("timeout, resetting request\n");
+    }
+}
+
 void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
 
     res.msg = req->buff;
@@ -660,8 +669,9 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
     if (req->buff == NULL)
         ssp_printf("req buffer is null, couldn't process timeout request\n");
 
+    reset_timeout(p_state, req);
+
     uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
-    uint16_t data_len = 0;
     //Pdu_header *pdu_header = (Pdu_header *) &res.msg;
 
     if (req->resent_finished == 3) {
@@ -673,14 +683,14 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
     //send request for metadata
     if (!req->received_metadata) {
         ssp_printf("sending request for new metadata packet\n");
-        data_len = build_nak_directive(res.msg, start, META_DATA_PDU);
+        build_nak_directive(res.msg, start, META_DATA_PDU);
         ssp_sendto(res);
         return;
     }
 
     //send missing eofs
     if (!req->received_eof) {
-        data_len = build_nak_directive(res.msg, start, EOF_PDU);
+    build_nak_directive(res.msg, start, EOF_PDU);
         ssp_sendto(res);
     }
 
@@ -696,7 +706,7 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
 
         if (req->file->eof_checksum == req->file->partial_checksum){
             ssp_printf("sending finsihed pdu\n");
-            data_len = build_finished_pdu(res.msg, start, req);
+             build_finished_pdu(res.msg, start, req);
             ssp_sendto(res);
             req->resent_finished++;   
             return;
@@ -709,18 +719,12 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
     //received EOF, send back 3 eof packets
     if (req->received_eof && req->resent_eof < 3) {
         ssp_printf("sending eof ack\n");
-        data_len = build_ack(res.msg, start, EOF_PDU, req);
+        build_ack(res.msg, start, EOF_PDU, req);
         ssp_sendto(res);
         req->resent_eof++;
     }
 
-    uint32_t time = p_state->timeout++;
-    ssp_printf("timeout %u\n", time);
-    if (time == 20) {
-        p_state->timeout = 0;
-        reset_request(req);
-        ssp_printf("timeout, resetting request\n");
-    }
+
 }
 
 //fills the current_request struct for the server, incomming requests
@@ -737,6 +741,8 @@ void parse_packet_server(char *packet, uint32_t packet_len, Response res, Reques
         req->pdu_header = get_header_from_mib(p_state->mib, req->dest_cfdp_id, p_state->my_cfdp_id);
     }
 
+    //will protbably have to timeout different clients? how does that work with ddos?
+    p_state->timeout = 0;
     //process file data
     if (header->PDU_type == 1) {
         if (!req->received_metadata) {

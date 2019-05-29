@@ -11,6 +11,7 @@
 #include "mib.h"
 #include "requests.h"
 #include "packet.h"
+#include "tasks.h"
 
 //for itoa
 #include <stdio.h>

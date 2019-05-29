@@ -72,5 +72,7 @@ typedef struct request {
     Response res;
 } Request;
 
-
+void ssp_cleanup_req(void *request);
+Request *init_request(uint32_t buff_len);
+void reset_request(Request *req);
 #endif

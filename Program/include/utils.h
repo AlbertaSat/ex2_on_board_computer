@@ -86,5 +86,6 @@ Config *configuration(int argc, char **argv);
 #define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 
 NODE *createNode(void *element, uint32_t id);
+void ssp_print_hex(char *stuff, int size);
 
 #endif //UTILS_H

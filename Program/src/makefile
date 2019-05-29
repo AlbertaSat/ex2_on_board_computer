@@ -12,6 +12,7 @@ CFILES += mib.c
 CFILES += filesystem_funcs.c
 CFILES += ringbuf.c
 CFILES += requests.c
+CFILES += tasks.c
 
 #----------------------------test files-------------------------
 CFILES += $(PROJDIR)/test/test.c

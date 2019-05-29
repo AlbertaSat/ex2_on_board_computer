@@ -261,14 +261,14 @@ File *create_temp_file(char *file_name) {
     return file;
 }
 
+/*
 static int print_nak(void *element, void* args) {
 
     Offset *offset_in_list = (Offset *) element;
     ssp_printf("start: %u, end: %u\n", offset_in_list->start, offset_in_list->end);
-
     return 0;
 }
-
+*/
 
 int change_tempfile_to_actual(char *temp, char *destination_file_name, uint32_t file_size, File *file) {
 
@@ -286,5 +286,5 @@ int change_tempfile_to_actual(char *temp, char *destination_file_name, uint32_t 
     offset->end = file_size;
     file->missing_offsets->push(file->missing_offsets, offset, file_size);
     file->is_temp = 0;
-   
+    return 0;
 }
