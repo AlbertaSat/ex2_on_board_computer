@@ -391,18 +391,16 @@ List *linked_list()
 }
 
 
-//TODO write an array
-/*
-int add_element_array_list(List *list, void *element) {
-}
+//size is the number of bytes we want to print
+void ssp_print_hex(char *stuff, int size){
+    
+    uint32_t current_packet_index = 0;
+    ssp_printf("printing number of bytes: %u\n", size);
 
-List *array_list() {
-
-    List *new_list = calloc(sizeof(List), 1);
-    if (checkAlloc(new_list, 0));
-        return NULL;
-
-}
-
-*/
-
+        for (int j = 0; j < size; j += 1) {
+            ssp_printf("%x.", 
+            stuff[current_packet_index]);
+            current_packet_index += 1; 
+        }
+        ssp_printf("\n");
+}   
