@@ -140,8 +140,8 @@ void *ssp_connectionless_server_task(void *params) {
 }
 
 
-Protocol_state* ssp_connectionless_server(char *port) {
-    
+void ssp_connectionless_server(Protocol_state *p_state) {
+    /*
     Protocol_state *state = ssp_alloc(sizeof(Protocol_state), 1);
     state->packet_size = PACKET_LEN;
 
@@ -150,11 +150,9 @@ Protocol_state* ssp_connectionless_server(char *port) {
     strncpy ((char*)state->server_port, port, 10);
 
     state->request_list = linked_list();
-
     state->current_server_request = init_request(state->packet_size);
-    state->server_handle = ssp_thread_create(STACK_ALLOCATION, ssp_connectionless_server_task, state);
-    return state;
-
+    */
+    p_state->server_handle = ssp_thread_create(STACK_ALLOCATION, ssp_connectionless_server_task, p_state);
 }
 
     
@@ -215,7 +213,8 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
 
 
 
-void ssp_cleanup(Protocol_state *p_state) {
+
+void ssp_cleanup_p_state(Protocol_state *p_state) {
 
     ssp_thread_join(p_state->server_handle);
     p_state->request_list->free(p_state->request_list, ssp_cleanup_req);

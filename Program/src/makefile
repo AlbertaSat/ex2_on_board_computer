@@ -13,6 +13,7 @@ CFILES += filesystem_funcs.c
 CFILES += ringbuf.c
 CFILES += requests.c
 CFILES += tasks.c
+CFILES += file_delivery_app.c
 
 #----------------------------test files-------------------------
 CFILES += $(PROJDIR)/test/test.c
@@ -65,6 +66,7 @@ CFLAGS += $(INCLUDE) $(CWARNS)
 OBJS_FILES = $(patsubst %.c, %.o, $(CFILES))
 
 all: $(MAIN)
+	mv *.o ../obj
 
 .PHONY: clean 
 

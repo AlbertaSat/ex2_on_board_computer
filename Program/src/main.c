@@ -12,7 +12,7 @@
 #include "requests.h"
 #include "packet.h"
 #include "tasks.h"
-
+#include "file_delivery_app.h"
 //for itoa
 #include <stdio.h>
 #include <string.h>
@@ -33,37 +33,8 @@ int main(int argc, char** argv) {
         ssp_printf("can't start server, please select an ID (-i #) and client ID (-c #) \n");
         return 1;
     }
-
-    //Memory information base
-    MIB *mib = init_mib();
-
-    //setting host name for testing
-    char *host_name = "127.0.0.1";
-    uint32_t addr[sizeof(uint32_t)];
-    inet_pton(AF_INET, host_name, addr);
-    
-    //adding new cfdp entities to management information base
-    add_new_cfdp_entity(mib, 1, *addr, 1111);
-    add_new_cfdp_entity(mib, 2, *addr, 1112);   
-    add_new_cfdp_entity(mib, 3, *addr, 1113);   
-    add_new_cfdp_entity(mib, 4, *addr, 1114);   
-
-    //find server client in mib
-    Remote_entity* server_entity = mib->remote_entities->find(mib->remote_entities, conf->my_cfdp_id, NULL, NULL);
-    if (server_entity == NULL) {
-        printf("couldn't find entity\n");
-    }
-    
-    //connectionless server
-    char port[17];
-    snprintf(port, 17, "%u", server_entity->UT_port);
-
-    Protocol_state *p_state = ssp_connectionless_server(port);
-
-    //set this node's Id, this has to be hardcoded/assigned
-    p_state->my_cfdp_id = conf->my_cfdp_id;
-    p_state->mib = mib;
-    p_state->verbose_level = conf->verbose_level;
+    Protocol_state *p_state = init_ftp(conf->my_cfdp_id);
+    ssp_connectionless_server(p_state);
 
     //create a client
     if (conf->client_cfdp_id != 0){
@@ -88,8 +59,8 @@ int main(int argc, char** argv) {
         ssp_printf("client disconnected\n");
     }
 
-    ssp_cleanup(p_state);
-    free(conf); 
+    ssp_cleanup_p_state(p_state);
+    ssp_free(conf); 
 
     
     return 0;
