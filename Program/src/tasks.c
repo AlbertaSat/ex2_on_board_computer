@@ -8,6 +8,7 @@
 #include <string.h>
 #include "mib.h"
 #include "filesystem_funcs.h"
+#include <stdio.h>
 
 /*------------------------------------------------------------------------------
     
@@ -81,6 +82,32 @@ static int on_time_out_posix(void *other) {
     return 0;
 }
 
+static int check_exit_server(void *params) {
+    Protocol_state *p_state = (Protocol_state*) params;
+    if (p_state->close)
+        return 1;
+    return 0;
+}
+
+static int check_exit_client(void *params) {
+    Client *client = (Client*) params;
+    if (client->close)
+        return 1;
+    return 0;
+}
+
+static void on_exit_client (void *params) {
+    Client *client = (Client*) params;
+    ssp_cleanup_client(client);
+}
+
+static void on_exit_server (void *params) {
+    Protocol_state *p_state = (Protocol_state*) params;
+    ssp_cleanup_p_state(p_state);
+}
+
+
+
 
 //this function is just for posix fun
 static int on_stdin(void *other) {
@@ -133,26 +160,10 @@ void *ssp_connectionless_server_task(void *params) {
     p_state->transaction_sequence_number = 1;
 
     #ifdef POSIX_PORT
-        udpSelectServer(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, p_state);
+        udpSelectServer(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
     #endif
 
     return NULL;
-}
-
-
-void ssp_connectionless_server(Protocol_state *p_state) {
-    /*
-    Protocol_state *state = ssp_alloc(sizeof(Protocol_state), 1);
-    state->packet_size = PACKET_LEN;
-
-    state->server_port = ssp_alloc(sizeof(char), 10);
-    checkAlloc(state->server_port, 1);
-    strncpy ((char*)state->server_port, port, 10);
-
-    state->request_list = linked_list();
-    state->current_server_request = init_request(state->packet_size);
-    */
-    p_state->server_handle = ssp_thread_create(STACK_ALLOCATION, ssp_connectionless_server_task, p_state);
 }
 
     
@@ -167,43 +178,14 @@ void *ssp_connectionless_client_task(void* params){
 
     //convert uint id to char *
     inet_ntop(AF_INET, &client->unitdata_id, host_name, INET_ADDRSTRLEN);
-
-    udpClient(host_name, port, PACKET_LEN, client, client, on_send_client, on_recv_client);
     
+    #ifdef POSIX_PORT
+        udpClient(host_name, port, PACKET_LEN, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
+    #endif
     return NULL;
 }
 
 
-
-Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
-
-
-    Client *client = ssp_alloc(sizeof(Client), 1);
-    checkAlloc(client, 1);
-
-    client->req = NULL;
-    client->req_queue = linked_list();
-    client->packet_len = PACKET_LEN;
-    client->cfdp_id = cfdp_id;
-
-
-    List *entity_list = p_state->mib->remote_entities;
-    Remote_entity *remote = entity_list->find(entity_list, cfdp_id, NULL, NULL);
-
-    if (remote == NULL)
-        ssp_printf("couldn't find entity in Remote_entity list\n");
-
-    //TODO clean this up, we don't need multiple instances of UT_ports etc
-    client->unitdata_port = remote->UT_port;
-    client->unitdata_id = remote->UT_address;
-    client->mib_info = remote;
-
-    client->pdu_header = get_header_from_mib(p_state->mib, cfdp_id, p_state->my_cfdp_id);
-    client->p_state = p_state;
-
-    client->client_handle = ssp_thread_create(STACK_ALLOCATION, ssp_connectionless_client_task, client);
-    return client;
-}
 
 /*------------------------------------------------------------------------------
     
@@ -215,12 +197,9 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
 
 
 void ssp_cleanup_p_state(Protocol_state *p_state) {
-
-    ssp_thread_join(p_state->server_handle);
     p_state->request_list->free(p_state->request_list, ssp_cleanup_req);
     ssp_cleanup_req(p_state->current_server_request);
     free_mib(p_state->mib);
-    ssp_free(p_state->server_handle);
     ssp_free(p_state->server_port);
     ssp_free(p_state);
 
@@ -228,11 +207,8 @@ void ssp_cleanup_p_state(Protocol_state *p_state) {
 
 
 void ssp_cleanup_client(Client *client) {
-
-    ssp_thread_join(client->client_handle);
     client->req_queue->free(client->req_queue, ssp_cleanup_req);
     ssp_cleanup_req(client->req);
-    ssp_free(client->client_handle);
     ssp_cleanup_pdu_header(client->pdu_header);
     ssp_free(client);
 }

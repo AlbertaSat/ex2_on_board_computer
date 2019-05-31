@@ -16,8 +16,6 @@ CFILES += tasks.c
 CFILES += file_delivery_app.c
 
 #----------------------------test files-------------------------
-CFILES += $(PROJDIR)/test/test.c
-INCLUDE += -I$(PROJDIR)/test
 
 #entrypoint
 MAIN = main
@@ -65,8 +63,8 @@ CFLAGS += $(INCLUDE) $(CWARNS)
 #---------------------------Build---------------------------
 OBJS_FILES = $(patsubst %.c, %.o, $(CFILES))
 
-all: $(MAIN)
-	mv *.o ../obj
+all: $(MAIN) 
+	ar -rsc file_delivery_app.a $(OBJS_FILES)
 
 .PHONY: clean 
 

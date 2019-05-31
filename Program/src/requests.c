@@ -23,8 +23,6 @@ void ssp_cleanup_req(void *request) {
         free_file(req->file);
     if (req->pdu_header != NULL)
         ssp_cleanup_pdu_header(req->pdu_header);
-    if (req->res.addr != NULL)
-        ssp_free(req->res.addr);
     if (req->source_file_name != NULL)  
         ssp_free(req->source_file_name);
     if (req->destination_file_name != NULL)
@@ -81,7 +79,6 @@ Request *init_request(uint32_t buff_len) {
     req->buff_len = buff_len;
     req->buff = ssp_alloc(buff_len, sizeof(char));
     
-    req->res.addr = ssp_alloc(1, sizeof(struct sockaddr_in));
     req->type = none;
     checkAlloc(req->buff,  1);
     return req;

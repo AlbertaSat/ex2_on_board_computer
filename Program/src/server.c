@@ -147,6 +147,8 @@ void udpSelectServer(char* port, int packet_len,
     int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, void *other), 
     int (*onTimeOut)(void *other),
     int (*onStdIn)(void *other),
+    int (*checkExit)(void *other),
+    void (*onExit)(void *other),
     void *other)
 {
     int sfd = prepareUdpHost(port);
@@ -172,6 +174,7 @@ void udpSelectServer(char* port, int packet_len,
     client = calloc(sizeof(struct sockaddr_storage), 1);
     checkAlloc(client, 1);
 
+
     for (;;)
     {
         struct timeval timeout = {
@@ -182,11 +185,12 @@ void udpSelectServer(char* port, int packet_len,
         fd_set readFds = masterReadFds;
         int nrdy = select(sfd + 1, &readFds, NULL, NULL, &timeout);
 
-        if (exit_now){
+
+        if (exit_now || checkExit(other)){
             printf("exiting server thread\n");
             break;
         }
-
+    
         if(!resizeBuff(&buff, buff_size, &prev_buff_size)){
             printf("packet too large, cannot resize buffer\n");
         }
@@ -236,16 +240,19 @@ void udpSelectServer(char* port, int packet_len,
     free(client);
     free(buff);
     close(sfd);
+    onExit(other);
 }
 
 
 
 
 //https://www.cs.cmu.edu/afs/cs/academic/class/15213-f99/www/class26/udpclient.c
-void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, 
+void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
-    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, void *onRecvParams) 
-) {
+    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, void *onRecvParams) ,
+    int (*checkExit)(void *checkExitParams),
+    void (*onExit)(void *params))
+{
 
     int sfd, count, port_val;
     socklen_t serverlen;
@@ -285,7 +292,7 @@ void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, vo
         
     for (;;) {
 
-        if (exit_now)
+        if (exit_now || checkExit(checkExitParams))
              break;
         
         if(!resizeBuff(&buff, buff_size, &prev_buff_size)){
@@ -318,6 +325,7 @@ void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, vo
     free(buff_size);
     free(buff);
     close(sfd);
+    onExit(onExitParams);
 }
 
 

@@ -25,6 +25,9 @@ typedef struct protocol_state {
     uint8_t verbose_level;
     uint32_t timeout;
 
+    //bool for exiting the server thread
+    uint8_t close;
+
 } Protocol_state;
 
 
@@ -45,9 +48,12 @@ typedef struct client {
     Remote_entity *mib_info;
     Pdu_header *pdu_header;
     
-    uint8_t is_active;
-    Protocol_state *p_state;
-    
+    Protocol_state *p_state;    
+
+    //bool for exiting the client thread
+    uint8_t close;
+
+
 } Client;
 
 

@@ -2,10 +2,12 @@
 #include "mib.h"
 #include "protocol_handler.h"
 #include "port.h"
-#include "stddef.h"
-#include "stdint.h"
-#include "string.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 #include "file_delivery_app.h"
+#include "tasks.h"
+#include <stdio.h>
 
 Protocol_state  *init_ftp(uint32_t my_cfdp_address) {
 
@@ -26,7 +28,7 @@ Protocol_state  *init_ftp(uint32_t my_cfdp_address) {
     //find server client in mib
     Remote_entity* server_entity = mib->remote_entities->find(mib->remote_entities, my_cfdp_address, NULL, NULL);
     if (server_entity == NULL) {
-        printf("couldn't find your id in the information base\n");
+        ssp_printf("couldn't find your id in the information base\n");
     }
     
     char port[20];
@@ -47,4 +49,44 @@ Protocol_state  *init_ftp(uint32_t my_cfdp_address) {
     p_state->current_server_request = init_request(p_state->packet_size);
 
     return p_state;
+}
+
+
+
+void ssp_connectionless_server(Protocol_state *p_state) {
+
+
+    p_state->server_handle = ssp_thread_create(STACK_ALLOCATION, ssp_connectionless_server_task, p_state);
+}
+
+
+
+Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
+
+
+    Client *client = ssp_alloc(sizeof(Client), 1);
+    checkAlloc(client, 1);
+
+    client->req = NULL;
+    client->req_queue = linked_list();
+    client->packet_len = PACKET_LEN;
+    client->cfdp_id = cfdp_id;
+
+
+    List *entity_list = p_state->mib->remote_entities;
+    Remote_entity *remote = entity_list->find(entity_list, cfdp_id, NULL, NULL);
+
+    if (remote == NULL)
+        ssp_printf("couldn't find entity in Remote_entity list\n");
+
+    //TODO clean this up, we don't need multiple instances of UT_ports etc
+    client->unitdata_port = remote->UT_port;
+    client->unitdata_id = remote->UT_address;
+    client->mib_info = remote;
+
+    client->pdu_header = get_header_from_mib(p_state->mib, cfdp_id, p_state->my_cfdp_id);
+    client->p_state = p_state;
+
+    client->client_handle = ssp_thread_create(STACK_ALLOCATION, ssp_connectionless_client_task, client);
+    return client;
 }

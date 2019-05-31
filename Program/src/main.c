@@ -55,11 +55,13 @@ int main(int argc, char** argv) {
         //put_request("pic.jpeg", "remote_pic3.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
 
         //will block on pthread_join
-        ssp_cleanup_client(new_client);
+
+        ssp_thread_join(new_client->client_handle);
         ssp_printf("client disconnected\n");
     }
 
-    ssp_cleanup_p_state(p_state);
+    ssp_thread_join(p_state->server_handle);
+
     ssp_free(conf); 
 
     

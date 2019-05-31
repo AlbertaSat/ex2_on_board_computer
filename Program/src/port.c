@@ -164,6 +164,7 @@ void ssp_thread_join(void *thread_handle) {
     #ifdef POSIX_PORT
         pthread_t * handle = (pthread_t*) thread_handle;
         pthread_join(*handle, NULL);
+        ssp_free(thread_handle);
     #endif
 
 }

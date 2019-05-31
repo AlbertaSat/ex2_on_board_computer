@@ -583,6 +583,7 @@ static void check_req_status(Request *req, Client *client) {
     if (req->resent_finished == 3) {
         ssp_printf("file successfully sent\n");
         req->resent_finished = 4;
+        client->close = 1;
         //ssp_cleanup_req(client->req);
         //client->req = NULL;
     }

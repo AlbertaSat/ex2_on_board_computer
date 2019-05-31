@@ -42,10 +42,12 @@ int prepareUdpHost(char *port);
     Return:     None
 ------------------------------------------------------------------------------*/
 
-void udpSelectServer(char *port, int packet_len,
-    int (*onRecv)(int sfd, char *msg,  uint32_t *buff_size, void *addr, void *other), 
+void udpSelectServer(char* port, int packet_len,
+    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, void *other), 
     int (*onTimeOut)(void *other),
     int (*onStdIn)(void *other),
+    int (*checkExit)(void *other),
+    void (*onExit)(void *other),
     void *other);
 
 /*-----------------------------CALLBACK onTimeOut-------------------------------
@@ -59,9 +61,10 @@ void udpSelectServer(char *port, int packet_len,
 
 int *prepareSignalHandler(void);
 
-void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, 
+void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
-    int (*onRecv)(int sfd, char *msg, uint32_t *buff_size, void* addr, void *onRecvParams));
+    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, void *onRecvParams) ,
+    int (*checkExit)(void *checkExitParams),
+    void (*onExit)(void *params));
 
-    
 #endif //SERVER_H
