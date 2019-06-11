@@ -1,0 +1,1 @@
+./compressor --input sat2.bin --output sat2_out.fl --rows 1638 --columns 2048 --bands 3 --in_format BI --in_depth 1  --dyn_range 8 --word_len 8 --out_format BI --out_depth 1  --sample_adaptive  --u_max 18 --y_star 6 --y_0 1  --k 6 --pred_bands 3  --reg_size 32 --w_resolution 4 --w_interval 16
