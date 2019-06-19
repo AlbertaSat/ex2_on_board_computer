@@ -381,7 +381,7 @@ int process_file_request_metadata(Request *req) {
 }
 
 //sets destination id in request as the incomming source id, sets transaction number 
-static int process_pdu_header(char*packet, Request *req, Protocol_state *p_state) {
+int process_pdu_header(char*packet, Request *req, Protocol_state *p_state) {
 
     uint8_t packet_index = PACKET_STATIC_HEADER_LEN;
     Pdu_header *header = (Pdu_header *) packet;
@@ -413,6 +413,12 @@ static int process_pdu_header(char*packet, Request *req, Protocol_state *p_state
     req->transmission_mode = header->transmission_mode;
     req->dest_cfdp_id = source_id;
     req->transaction_sequence_number = transaction_sequence_number;
+
+
+    //set header for responding
+    if (req->pdu_header == NULL){
+        req->pdu_header = get_header_from_mib(p_state->mib, req->dest_cfdp_id, p_state->my_cfdp_id);
+    }
 
     return packet_index;
 
@@ -729,18 +735,22 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
 }
 
 //fills the current_request struct for the server, incomming requests
-void parse_packet_server(char *packet, uint32_t packet_len, Response res, Request *req, Protocol_state *p_state) {
-
+void parse_packet_server(char *packet, uint32_t packet_index, Response res, Request *req, Protocol_state *p_state) {
+/*
     uint32_t packet_index = process_pdu_header(packet, req, p_state);
     if (packet_index == -1)
         return;
-
-    Pdu_header *header = (Pdu_header *) packet;
 
     //set header for responding
     if (req->pdu_header == NULL){
         req->pdu_header = get_header_from_mib(p_state->mib, req->dest_cfdp_id, p_state->my_cfdp_id);
     }
+*/
+
+    if (packet_index == 0)
+        return;
+        
+    Pdu_header *header = (Pdu_header *) packet;
 
     //will protbably have to timeout different clients? how does that work with ddos?
     p_state->timeout = 0;
@@ -797,7 +807,5 @@ void parse_packet_server(char *packet, uint32_t packet_len, Response res, Reques
         default:
             break;
     }
-
-    memset(packet, 0, packet_len);
 }
 

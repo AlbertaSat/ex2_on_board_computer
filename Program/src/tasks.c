@@ -25,7 +25,14 @@ static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr
     res.packet_len = p_state->packet_size;
     p_state->current_server_request->res = res;
 
-    parse_packet_server(packet, res.packet_len, res, p_state->current_server_request, p_state);
+
+    uint32_t packet_index = process_pdu_header(packet, p_state->current_server_request, p_state);
+    if (packet_index == -1)
+        return;
+
+    parse_packet_server(packet, packet_index, res, p_state->current_server_request, p_state);
+
+    memset(packet, 0, res.packet_len);
     return 0;
 
 }

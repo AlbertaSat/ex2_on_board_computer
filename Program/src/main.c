@@ -45,16 +45,9 @@ int main(int argc, char** argv) {
         //send via acknoleged mode //0 acknowledged, 1 unacknowledged
         if (conf->client_cfdp_id == 1)
             put_request("pic.jpeg", "remote_pic1.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
-        
 
         if (conf->client_cfdp_id == 2)
             put_request("pic.jpeg", "remote_pic2.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
-
-
-        //put_request("pic.jpeg", "remote_pic2.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
-        //put_request("pic.jpeg", "remote_pic3.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
-
-        //will block on pthread_join
 
         ssp_thread_join(new_client->client_handle);
         ssp_printf("client disconnected\n");
