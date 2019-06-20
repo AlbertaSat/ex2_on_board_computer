@@ -15,10 +15,11 @@
 
 void ssp_cleanup_req(void *request) {
 
+    if (request == NULL)
+        return;
+
     Request *req = (Request *) request;
 
-    if (req == NULL)
-        return;
     if (req->file != NULL)
         free_file(req->file);
     if (req->pdu_header != NULL)
@@ -29,7 +30,8 @@ void ssp_cleanup_req(void *request) {
         ssp_free(req->destination_file_name);
     if (req->buff != NULL)
         ssp_free(req->buff);
-    ssp_free(req);
+    if (req != NULL)
+        ssp_free(req);
 
 }
 
@@ -78,7 +80,7 @@ Request *init_request(uint32_t buff_len) {
     req->file = NULL;
     req->buff_len = buff_len;
     req->buff = ssp_alloc(buff_len, sizeof(char));
-    
+    req->is_active = 0;
     req->type = none;
     checkAlloc(req->buff,  1);
     return req;
@@ -112,7 +114,7 @@ Request *put_request(char *source_file_name,
 
     //enumeration
     req->type = put;
-
+    req->is_active = 1;
     req->dest_cfdp_id = client->cfdp_id;
     req->file_size = file_size;
     
@@ -127,7 +129,7 @@ Request *put_request(char *source_file_name,
     req->filestore_requests = filestore_requests;
 
     //client->req_queue->insert(client->req_queue, req, p_state->transaction_sequence_number);
-    client->req = req;
+    client->current_request = req;
 
     return req;
 }

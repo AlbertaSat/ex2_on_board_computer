@@ -260,8 +260,9 @@ static void freeList(List *list, void (*f)(void *element))
 {
     NODE *cur = list->head->next;
 
-    while (cur->next != NULL && cur->element != NULL)
+    while (cur->next != NULL)
     {
+        ssp_printf("%d\n", cur->id);
         NODE *n = cur;
         cur = cur->next;
         f(n->element);

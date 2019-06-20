@@ -17,7 +17,7 @@ typedef struct protocol_state {
     
     List* request_list; 
 
-    Request *current_server_request;
+    Request *current_request;
    
     //lock this
     uint32_t transaction_sequence_number;
@@ -37,8 +37,8 @@ typedef struct client {
     void *client_handle;
     uint32_t packet_len;
     
-    Request *req;
-    List *req_queue;
+    Request *current_request;
+    List *request_list;
 
     //can get rid of these, these are found in mib_info anyway
     uint32_t cfdp_id;
@@ -62,7 +62,7 @@ void parse_packet_server(char* buff, uint32_t packet_index, Response res, Reques
 void user_request_handler(Response res, Request *req, Client *client);
 void parse_packet_client(char* buff, Response res, Request *req, Client *client);
 void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state);
-int process_pdu_header(char*packet, Request *req, Protocol_state *p_state);
+int process_pdu_header(char*packet, Request **req, List *request_list, Protocol_state *p_state);
 
 //for testing
 uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_number, uint32_t transmission_mode, Pdu_header *pdu_header);

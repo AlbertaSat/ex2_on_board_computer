@@ -41,6 +41,9 @@ typedef struct request {
 
     uint32_t packet_data_len;
 
+    //check to see if this request is empty
+    uint8_t is_active;
+    
     uint8_t segmentation_control;
     uint8_t fault_handler_overides;
     uint8_t flow_lable;

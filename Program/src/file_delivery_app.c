@@ -46,16 +46,13 @@ Protocol_state  *init_ftp(uint32_t my_cfdp_address) {
     strncpy ((char*)p_state->server_port, port, 10);
 
     p_state->request_list = linked_list();
-    p_state->current_server_request = init_request(p_state->packet_size);
-
+    p_state->current_request = NULL;
     return p_state;
 }
 
 
 
 void ssp_connectionless_server(Protocol_state *p_state) {
-
-
     p_state->server_handle = ssp_thread_create(STACK_ALLOCATION, ssp_connectionless_server_task, p_state);
 }
 
@@ -67,8 +64,8 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     Client *client = ssp_alloc(sizeof(Client), 1);
     checkAlloc(client, 1);
 
-    client->req = NULL;
-    client->req_queue = linked_list();
+    client->current_request = NULL;
+    client->request_list = linked_list();
     client->packet_len = PACKET_LEN;
     client->cfdp_id = cfdp_id;
 

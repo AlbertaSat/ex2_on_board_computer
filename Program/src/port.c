@@ -73,7 +73,6 @@ int ssp_close(int fd) {
     stacks
 ------------------------------------------------------------------------------*/
 
-
 void ssp_sendto(Response res) {
     
     #ifdef POSIX_PORT
@@ -84,14 +83,6 @@ void ssp_sendto(Response res) {
             ssp_error("ERROR in ssp_sendto");
     #endif
 }
-
-
-
-
-
-
-
-
 
 /*------------------------------------------------------------------------------
     Std lib functions, for custom memory allocation, and stdio
@@ -106,6 +97,7 @@ void *ssp_alloc(uint32_t n_memb, size_t size) {
 void ssp_free(void *pointer) {
     #ifdef POSIX_PORT
         free(pointer);
+        pointer = NULL;
     #endif
 }
 

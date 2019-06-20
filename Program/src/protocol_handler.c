@@ -380,8 +380,12 @@ int process_file_request_metadata(Request *req) {
     return 1;
 }
 
+static int find_first_empty_request(void *element, void *args) {
+    Request *req = (Request *) element;
+    return !req->is_active;
+}
 //sets destination id in request as the incomming source id, sets transaction number 
-int process_pdu_header(char*packet, Request *req, Protocol_state *p_state) {
+int process_pdu_header(char*packet, Request **req, List *request_list, Protocol_state *p_state) {
 
     uint8_t packet_index = PACKET_STATIC_HEADER_LEN;
     Pdu_header *header = (Pdu_header *) packet;
@@ -400,25 +404,47 @@ int process_pdu_header(char*packet, Request *req, Protocol_state *p_state) {
     packet_index += header->length_of_entity_IDs;
 
     if (p_state->my_cfdp_id != dest_id){
-
         ssp_printf("sequence number: %u should be %u\n", p_state->my_cfdp_id, transaction_sequence_number);
         ssp_printf("someone is sending packets here that are not for my id %u, dest_id: %u\n", p_state->my_cfdp_id, dest_id);
-        return -1;
+        return 0;
     }
 
-    
     uint16_t packet_data_len = ntohs(header->PDU_data_field_len);
-
-    req->packet_data_len = packet_data_len;
-    req->transmission_mode = header->transmission_mode;
-    req->dest_cfdp_id = source_id;
-    req->transaction_sequence_number = transaction_sequence_number;
-
-
-    //set header for responding
-    if (req->pdu_header == NULL){
-        req->pdu_header = get_header_from_mib(p_state->mib, req->dest_cfdp_id, p_state->my_cfdp_id);
+    Request *request = *req;
+    
+    //if packet is from the same request, don't' change current request
+    if (request != NULL && request->transaction_sequence_number == transaction_sequence_number){
+        request->packet_data_len = packet_data_len;    
+        return packet_index;
     }
+
+    //look for active request in list
+    Request *found_req = request_list->find(request_list, transaction_sequence_number, NULL, NULL);
+    if (found_req == NULL) 
+    {
+
+        ssp_printf("no current active requests, looking for new one\n");
+        found_req = request_list->find(request_list, 0, find_first_empty_request, NULL);
+
+        //use already initialized one if can
+        if (found_req == NULL) {
+            found_req = init_request(p_state->packet_size);
+            ssp_printf("no inactive requests, inserting new one\n");
+        }
+            
+        //Make new request and add it
+        found_req->packet_data_len = packet_data_len;
+        found_req->transmission_mode = header->transmission_mode;
+        found_req->dest_cfdp_id = source_id;
+        found_req->transaction_sequence_number = transaction_sequence_number;
+        found_req->pdu_header = get_header_from_mib(p_state->mib, source_id, p_state->my_cfdp_id);
+        found_req->is_active = 1;
+        request_list->push(request_list, found_req, transaction_sequence_number);
+    } 
+
+    *req = found_req;
+
+    ssp_printf("Transaction number in process header% d\n", (*req)->transaction_sequence_number);
 
     return packet_index;
 
@@ -533,7 +559,7 @@ int nak_response(char *packet, uint32_t start, Request *req, Response res, Clien
 //fills the current request with packet data, responses from servers
 void parse_packet_client(char *packet, Response res, Request *req, Client* client) {
  
-    uint32_t packet_index = process_pdu_header(packet, req, client->p_state);
+    uint32_t packet_index = process_pdu_header(packet, &req, client->request_list, client->p_state);
     if (packet_index == -1)
         return;
 
@@ -736,16 +762,6 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
 
 //fills the current_request struct for the server, incomming requests
 void parse_packet_server(char *packet, uint32_t packet_index, Response res, Request *req, Protocol_state *p_state) {
-/*
-    uint32_t packet_index = process_pdu_header(packet, req, p_state);
-    if (packet_index == -1)
-        return;
-
-    //set header for responding
-    if (req->pdu_header == NULL){
-        req->pdu_header = get_header_from_mib(p_state->mib, req->dest_cfdp_id, p_state->my_cfdp_id);
-    }
-*/
 
     if (packet_index == 0)
         return;

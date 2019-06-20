@@ -23,14 +23,19 @@ static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr
     res.addr = addr;
     res.sfd = sfd;
     res.packet_len = p_state->packet_size;
-    p_state->current_server_request->res = res;
+
+    Request **request_container = &p_state->current_request;
+
+    uint32_t packet_index = process_pdu_header(packet, request_container, p_state->request_list, p_state);
+
+    if (packet_index == 0)
+        return -1;
 
 
-    uint32_t packet_index = process_pdu_header(packet, p_state->current_server_request, p_state);
-    if (packet_index == -1)
-        return;
+    ssp_printf("Transaction number % d\n", (*request_container)->transaction_sequence_number);
+    (*request_container)->res = res;
 
-    parse_packet_server(packet, packet_index, res, p_state->current_server_request, p_state);
+    parse_packet_server(packet, packet_index, res, (*request_container), p_state);
 
     memset(packet, 0, res.packet_len);
     return 0;
@@ -41,16 +46,16 @@ static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, void *addr
     
 
     Client *client = (Client *) other;
-    if (client->req == NULL)
+    if (client->current_request == NULL)
         return 0;
 
     Response res;
     res.addr = addr;
     res.sfd = sfd;
     res.packet_len = *buff_size;
-    res.msg = client->req->buff;
+    res.msg = client->current_request->buff;
     
-    parse_packet_client(packet, res, client->req, client);
+    parse_packet_client(packet, res, client->current_request, client);
     return 0;
     
 }
@@ -64,15 +69,15 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
     
     Response res;    
     Client *client = (Client *) other;
-    if (client->req == NULL)
+    if (client->current_request == NULL)
         return 0;
 
     res.sfd = sfd;
     res.packet_len = client->packet_len;
-    res.msg = client->req->buff;
+    res.msg = client->current_request->buff;
     res.addr = client_addr;
 
-    user_request_handler(res, client->req, client);
+    user_request_handler(res, client->current_request, client);
     return 0;
 }
 
@@ -80,11 +85,14 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
 static int on_time_out_posix(void *other) {
 
     Protocol_state *p_state = (Protocol_state*) other;
-    if(p_state->current_server_request->transaction_sequence_number == 0)
+    if(p_state->current_request == NULL)
         return 0;
 
-    Response res = p_state->current_server_request->res;
-    on_server_time_out(res, p_state->current_server_request, p_state); 
+    if(p_state->current_request->transaction_sequence_number == 0)
+        return 0;
+
+    Response res = p_state->current_request->res;
+    on_server_time_out(res, p_state->current_request, p_state); 
     
     return 0;
 }
@@ -205,7 +213,7 @@ void *ssp_connectionless_client_task(void* params){
 
 void ssp_cleanup_p_state(Protocol_state *p_state) {
     p_state->request_list->free(p_state->request_list, ssp_cleanup_req);
-    ssp_cleanup_req(p_state->current_server_request);
+    //ssp_cleanup_req(p_state->current_request);
     free_mib(p_state->mib);
     ssp_free(p_state->server_port);
     ssp_free(p_state);
@@ -214,8 +222,8 @@ void ssp_cleanup_p_state(Protocol_state *p_state) {
 
 
 void ssp_cleanup_client(Client *client) {
-    client->req_queue->free(client->req_queue, ssp_cleanup_req);
-    ssp_cleanup_req(client->req);
+    client->request_list->free(client->request_list, ssp_cleanup_req);
+    ssp_cleanup_req(client->current_request);
     ssp_cleanup_pdu_header(client->pdu_header);
     ssp_free(client);
 }
