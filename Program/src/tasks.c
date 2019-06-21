@@ -213,7 +213,6 @@ void *ssp_connectionless_client_task(void* params){
 
 void ssp_cleanup_p_state(Protocol_state *p_state) {
     p_state->request_list->free(p_state->request_list, ssp_cleanup_req);
-    //ssp_cleanup_req(p_state->current_request);
     free_mib(p_state->mib);
     ssp_free(p_state->server_port);
     ssp_free(p_state);

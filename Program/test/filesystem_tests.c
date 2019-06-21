@@ -23,7 +23,6 @@ static receive_offset_tests(){
     receive_offset(file, 0, 50, 100);
     file->missing_offsets->print(file->missing_offsets, nak_print, 0);
 
-
 }
 
 int file_system_tests() {

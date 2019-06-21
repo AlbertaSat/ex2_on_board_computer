@@ -384,7 +384,9 @@ static int find_first_empty_request(void *element, void *args) {
     Request *req = (Request *) element;
     return !req->is_active;
 }
-//sets destination id in request as the incomming source id, sets transaction number 
+/*creates a request struct if there is none for the incomming request based on transaction sequence number or
+finds the correct request struct and replaces req with the new pointer. Returns the possition in the packet 
+where the data portion is, returns 0 on fail*/
 int process_pdu_header(char*packet, Request **req, List *request_list, Protocol_state *p_state) {
 
     uint8_t packet_index = PACKET_STATIC_HEADER_LEN;

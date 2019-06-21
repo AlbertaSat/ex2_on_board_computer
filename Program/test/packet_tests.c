@@ -16,9 +16,13 @@ static int test_respond_to_naks(char *packet, uint32_t packet_index) {
 
     ssp_cleanup_req(req);
 
+    return 0;
+
 }
 
 static int test_respond_metadata_request() {
+
+    return 0;
 }
 
 
@@ -123,13 +127,11 @@ static int test_build_nak_packet(char* packet, uint32_t start) {
     ASSERT_EQUALS_INT("correct packet offset 3 end", end_scope, 100000);
 
     Pdu_header *header = (Pdu_header*) packet;
-    ssp_printf("datalen %u\n", header->PDU_data_field_len);
-    ssp_printf("datalen %u\n", data_len);
 
-    ASSERT_EQUALS_INT("correct packet data_len", data_len, header->PDU_data_field_len);
+    ASSERT_EQUALS_INT("correct packet data_len", data_len, ntohs(header->PDU_data_field_len));
 
     ssp_cleanup_req(req);
-    return 1;
+    return 0;
 }
 
 int test_build_ack_finished_pdu(char *packet, uint32_t start) {
@@ -143,6 +145,9 @@ int test_build_ack_finished_pdu(char *packet, uint32_t start) {
     ASSERT_EQUALS_INT("EOF_PDU directive correct", EOF_PDU, ack->directive_code);
     ASSERT_EQUALS_INT("COND_NO_ERROR correct", COND_NO_ERROR, ack->condition_code);
     ASSERT_EQUALS_INT("ACK_FINISHED_END correct", ack->directive_subtype_code, ACK_FINISHED_END);
+
+
+    return 0;
 }
 
 
@@ -160,6 +165,8 @@ int test_build_ack_eof_pdu(char *packet, uint32_t start) {
     ASSERT_EQUALS_INT("EOF_PDU directive correct", EOF_PDU, ack->directive_code);
     ASSERT_EQUALS_INT("COND_NO_ERROR correct", COND_NO_ERROR, ack->condition_code);
     ASSERT_EQUALS_INT("ACK_FINISHED_END correct", ack->directive_subtype_code, ACK_FINISHED_END);
+
+    return 0;
 }
 
 int test_build_pdu_header_header(char *packet, Pdu_header *header, uint64_t sequence_number) {
@@ -210,5 +217,6 @@ int packet_tests(Pdu_header *header) {
 
 
     ssp_free(packet);
+    return 0;
 
 }
