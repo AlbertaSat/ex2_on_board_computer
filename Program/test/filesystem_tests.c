@@ -26,5 +26,7 @@ static receive_offset_tests(){
 }
 
 int file_system_tests() {
-    receive_offset_tests();
+    int error = 0;
+    error = receive_offset_tests();
+    return error;
 }

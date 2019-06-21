@@ -262,7 +262,6 @@ static void freeList(List *list, void (*f)(void *element))
 
     while (cur->next != NULL)
     {
-        ssp_printf("%d\n", cur->id);
         NODE *n = cur;
         cur = cur->next;
         f(n->element);
@@ -290,14 +289,12 @@ static void *findElement(List *list, uint32_t id, int (*f)(void *element, void *
         if (f != NULL)
             found_with_func = f(cur->element, args);
 
-        if(id != -1 && cur->id == id)
+        if(id != 0 && cur->id == id)
             found_with_id = 1;
 
         if (found_with_func || found_with_id){
             return cur->element;
-
         }
-            
         cur = cur->next;
     }
     return NULL;
@@ -313,7 +310,7 @@ static int insertAt(List *list, void *element, uint32_t id, int (*f)(void *eleme
         if (f != NULL)
             found_with_func = f(cur->element, args);
 
-        if(id != -1 && cur->id == id)
+        if(id != 0 && cur->id == id)
             found_with_id = 1;
 
         if (found_with_func || found_with_id) {
@@ -342,7 +339,7 @@ static NODE * findNode(List *list, uint32_t id, int (*f)(void *element, void *ar
         if (f != NULL)
             found_with_func = f(cur->element, args);
 
-        if(id != -1 && cur->id == id)
+        if(id != 0 && cur->id == id)
             found_with_id = 1;
 
         if (found_with_func || found_with_id){

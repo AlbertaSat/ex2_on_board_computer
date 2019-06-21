@@ -380,9 +380,28 @@ int process_file_request_metadata(Request *req) {
     return 1;
 }
 
+
+
+
+
 static int find_first_empty_request(void *element, void *args) {
     Request *req = (Request *) element;
     return !req->is_active;
+}
+
+//for finding the struct in the list
+struct request_search_params {
+    uint32_t source_id;
+    uint32_t transaction_sequence_number;
+};
+
+//for finding the struct in the list
+static int find_request(void *element, void *args) {
+    Request *req = (Request *) element;
+    struct request_search_params *params = (struct request_search_params *) args;
+    if (req->dest_cfdp_id == params->source_id && req->transaction_sequence_number == params->transaction_sequence_number)
+        return 1;
+    return 0;
 }
 /*creates a request struct if there is none for the incomming request based on transaction sequence number or
 finds the correct request struct and replaces req with the new pointer. Returns the possition in the packet 
@@ -415,13 +434,21 @@ int process_pdu_header(char*packet, Request **req, List *request_list, Protocol_
     Request *request = *req;
     
     //if packet is from the same request, don't' change current request
-    if (request != NULL && request->transaction_sequence_number == transaction_sequence_number){
+    if (request != NULL && request->transaction_sequence_number == transaction_sequence_number && request->dest_cfdp_id == source_id){
         request->packet_data_len = packet_data_len;    
         return packet_index;
     }
 
     //look for active request in list
-    Request *found_req = request_list->find(request_list, transaction_sequence_number, NULL, NULL);
+    struct request_search_params params = {
+        source_id,
+        transaction_sequence_number,
+    };
+
+
+
+    Request *found_req = request_list->find(request_list, 0, find_request, &params);
+
     if (found_req == NULL) 
     {
 
@@ -445,8 +472,6 @@ int process_pdu_header(char*packet, Request **req, List *request_list, Protocol_
     } 
 
     *req = found_req;
-
-    ssp_printf("Transaction number in process header% d\n", (*req)->transaction_sequence_number);
 
     return packet_index;
 

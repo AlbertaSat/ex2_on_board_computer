@@ -6,8 +6,7 @@
 
 
 
-
-void request_test_list_storage();
+int request_tests();
 
 
 

@@ -36,8 +36,11 @@ int main () {
     //free_mib(mib);
     //ssp_cleanup_pdu_header(header);
     int error = 0;
-    error = protocol_handler_test();
 
+    error = request_tests();
+    error = protocol_handler_test();
+    error = packet_tests();
+    //error = file_system_tests();
 
    return 0;
 }

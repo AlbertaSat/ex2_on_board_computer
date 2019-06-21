@@ -7,6 +7,7 @@
 #include "filesystem_funcs.h"
 #include "port.h"
 #include "protocol_handler.h"
+#include "mib.h"
 
 #define PACKET_TEST_SIZE 2000 
 
@@ -205,17 +206,36 @@ int test_build_pdu_header_header(char *packet, Pdu_header *header, uint64_t sequ
     return packet_index;
 }
 
-int packet_tests(Pdu_header *header) {
+int packet_tests() {
 
     printf("starting Packet Tests (creating and changing packet values)\n");
+
+    //Memory information base
+    MIB *mib = init_mib();
+
+    //setting host name for testing
+    char *host_name = "127.0.0.1";
+    uint32_t addr[sizeof(uint32_t)];
+    inet_pton(AF_INET, host_name, addr);
+    
+    //adding new cfdp entities to management information base
+    add_new_cfdp_entity(mib, 1, *addr, 1111);
+    add_new_cfdp_entity(mib, 2, *addr, 1112);   
+    add_new_cfdp_entity(mib, 3, *addr, 1113);   
+    add_new_cfdp_entity(mib, 4, *addr, 1114);   
+
+    Pdu_header *pdu_header = get_header_from_mib(mib, 1, 2);
+
+
     char *packet = calloc(PACKET_TEST_SIZE, sizeof(char));
     uint64_t sequence_number = 12345663234;
-    int packet_index = test_build_pdu_header_header(packet, header, sequence_number);
+    int packet_index = test_build_pdu_header_header(packet, pdu_header, sequence_number);
     test_build_ack_eof_pdu(packet, packet_index);
     test_build_nak_packet(packet, packet_index);
     test_respond_to_naks(packet, packet_index);
 
-
+    free_mib(mib);
+    ssp_cleanup_pdu_header(pdu_header);
     ssp_free(packet);
     return 0;
 
