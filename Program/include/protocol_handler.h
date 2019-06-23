@@ -23,7 +23,6 @@ typedef struct protocol_state {
     uint32_t transaction_sequence_number;
     
     uint8_t verbose_level;
-    uint32_t timeout;
 
     //bool for exiting the server thread
     uint8_t close;
@@ -61,8 +60,8 @@ typedef struct client {
 void parse_packet_server(char* buff, uint32_t packet_index, Response res, Request *req, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client);
 void parse_packet_client(char* buff, Response res, Request *req, Client *client);
-void on_server_time_out(Response res, Request *current_request, Protocol_state *p_state);
-int process_pdu_header(char*packet, Request **req, List *request_list, Protocol_state *p_state);
+void on_server_time_out(Response res, Request *current_request);
+int process_pdu_header(char*packet, Response res, Request **req, List *request_list, Protocol_state *p_state);
 
 //for testing
 uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_number, uint32_t transmission_mode, Pdu_header *pdu_header);

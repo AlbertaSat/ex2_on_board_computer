@@ -12,6 +12,8 @@ typedef struct response {
     //this is type (struct sockaddr_in) in posix
     void *addr;
     //getting rid of this soon in favour of client based packet sizes
+
+    size_t size_of_addr;
     uint32_t packet_len;
     
 } Response;
@@ -43,6 +45,9 @@ typedef struct request {
 
     //check to see if this request is empty
     uint8_t is_active;
+    
+    //timeout
+    uint8_t timeout;
     
     uint8_t segmentation_control;
     uint8_t fault_handler_overides;

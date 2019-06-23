@@ -30,6 +30,8 @@ void ssp_cleanup_req(void *request) {
         ssp_free(req->destination_file_name);
     if (req->buff != NULL)
         ssp_free(req->buff);
+    if (req->res.addr != NULL)
+        ssp_free(req->res.addr);
     if (req != NULL)
         ssp_free(req);
 
@@ -37,6 +39,9 @@ void ssp_cleanup_req(void *request) {
 
 
 void reset_request(Request *req){
+
+    req->is_active = 0;
+/*
     memset(req->source_file_name, 0, MAX_PATH);
     memset(req->destination_file_name, 0, MAX_PATH);
     memset(req->buff, 0, req->buff_len);
@@ -54,6 +59,7 @@ void reset_request(Request *req){
     req->transaction_sequence_number = 0;
     req->transmission_mode = 1;
     req->type = none;
+    req->is_active = 0;
     if (req->file != NULL)
         free_file(req->file);
 
@@ -63,7 +69,7 @@ void reset_request(Request *req){
     }
     req->file = NULL;
     req->type = none;
-    
+    */
 }
 
 

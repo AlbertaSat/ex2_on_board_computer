@@ -16,24 +16,22 @@
 
 ------------------------------------------------------------------------------*/
 //this function is a callback when using my posix port
-static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr, void *other) {
+static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
 
     Protocol_state *p_state = (Protocol_state *) other;
     Response res;
     res.addr = addr;
     res.sfd = sfd;
     res.packet_len = p_state->packet_size;
+    res.size_of_addr = size_of_addr;
 
     Request **request_container = &p_state->current_request;
 
-    uint32_t packet_index = process_pdu_header(packet, request_container, p_state->request_list, p_state);
+    uint32_t packet_index = process_pdu_header(packet, res, request_container, p_state->request_list, p_state);
+    p_state->current_request = (*request_container);
 
     if (packet_index == 0)
         return -1;
-
-
-    ssp_printf("Transaction number % d\n", (*request_container)->transaction_sequence_number);
-    (*request_container)->res = res;
 
     parse_packet_server(packet, packet_index, res, (*request_container), p_state);
 
@@ -81,6 +79,27 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
     return 0;
 }
 
+
+static int timeout_remove_request(void *request, void *args) {
+    Request *req = (Request *) request;
+    Request *req2 = (Request *) args;
+    if (req->dest_cfdp_id == req2->dest_cfdp_id && req->transaction_sequence_number == req2->transaction_sequence_number)
+        return 1;
+    return 0;
+}
+
+static void timeout_check(void *request, void *args) {
+    Request *req = (Request *) request;
+    List *req_list = (List *) args;
+
+    on_server_time_out(req->res, req); 
+
+    if (!req->is_active) {
+        Request *removed = req_list->remove(req_list, 0, timeout_remove_request, req);
+        ssp_cleanup_req(removed);
+    }
+
+}
 //this function is a callback when using  my posix ports
 static int on_time_out_posix(void *other) {
 
@@ -88,11 +107,7 @@ static int on_time_out_posix(void *other) {
     if(p_state->current_request == NULL)
         return 0;
 
-    if(p_state->current_request->transaction_sequence_number == 0)
-        return 0;
-
-    Response res = p_state->current_request->res;
-    on_server_time_out(res, p_state->current_request, p_state); 
+    p_state->request_list->print(p_state->request_list, timeout_check, p_state->request_list);
     
     return 0;
 }

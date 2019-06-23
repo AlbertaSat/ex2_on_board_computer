@@ -381,14 +381,6 @@ int process_file_request_metadata(Request *req) {
 }
 
 
-
-
-
-static int find_first_empty_request(void *element, void *args) {
-    Request *req = (Request *) element;
-    return !req->is_active;
-}
-
 //for finding the struct in the list
 struct request_search_params {
     uint32_t source_id;
@@ -406,7 +398,7 @@ static int find_request(void *element, void *args) {
 /*creates a request struct if there is none for the incomming request based on transaction sequence number or
 finds the correct request struct and replaces req with the new pointer. Returns the possition in the packet 
 where the data portion is, returns 0 on fail*/
-int process_pdu_header(char*packet, Request **req, List *request_list, Protocol_state *p_state) {
+int process_pdu_header(char*packet, Response res, Request **req, List *request_list, Protocol_state *p_state) {
 
     uint8_t packet_index = PACKET_STATIC_HEADER_LEN;
     Pdu_header *header = (Pdu_header *) packet;
@@ -425,7 +417,6 @@ int process_pdu_header(char*packet, Request **req, List *request_list, Protocol_
     packet_index += header->length_of_entity_IDs;
 
     if (p_state->my_cfdp_id != dest_id){
-        ssp_printf("sequence number: %u should be %u\n", p_state->my_cfdp_id, transaction_sequence_number);
         ssp_printf("someone is sending packets here that are not for my id %u, dest_id: %u\n", p_state->my_cfdp_id, dest_id);
         return 0;
     }
@@ -445,30 +436,32 @@ int process_pdu_header(char*packet, Request **req, List *request_list, Protocol_
         transaction_sequence_number,
     };
 
-
-
     Request *found_req = request_list->find(request_list, 0, find_request, &params);
 
     if (found_req == NULL) 
     {
-
-        ssp_printf("no current active requests, looking for new one\n");
-        found_req = request_list->find(request_list, 0, find_first_empty_request, NULL);
-
-        //use already initialized one if can
-        if (found_req == NULL) {
-            found_req = init_request(p_state->packet_size);
-            ssp_printf("no inactive requests, inserting new one\n");
-        }
-            
+        found_req = init_request(p_state->packet_size);
+        ssp_printf("incoming new request\n");
         //Make new request and add it
         found_req->packet_data_len = packet_data_len;
         found_req->transmission_mode = header->transmission_mode;
+        found_req->transaction_sequence_number = transaction_sequence_number;
         found_req->dest_cfdp_id = source_id;
         found_req->transaction_sequence_number = transaction_sequence_number;
         found_req->pdu_header = get_header_from_mib(p_state->mib, source_id, p_state->my_cfdp_id);
         found_req->is_active = 1;
+        
+        ssp_printf("addr length %d\n", res.size_of_addr);
+
+        found_req->res.addr = ssp_alloc(res.size_of_addr, 1);
+        memcpy(found_req->res.addr, res.addr, res.size_of_addr);
+
+        found_req->res.packet_len = p_state->packet_size;
+        found_req->res.sfd = res.sfd;
+        found_req->res.msg = found_req->buff;
         request_list->push(request_list, found_req, transaction_sequence_number);
+        ssp_printf("source id: %d transaction sequence numer :%d\n", source_id, transaction_sequence_number);
+
     } 
 
     *req = found_req;
@@ -586,7 +579,7 @@ int nak_response(char *packet, uint32_t start, Request *req, Response res, Clien
 //fills the current request with packet data, responses from servers
 void parse_packet_client(char *packet, Response res, Request *req, Client* client) {
  
-    uint32_t packet_index = process_pdu_header(packet, &req, client->request_list, client->p_state);
+    uint32_t packet_index = process_pdu_header(packet, res, &req, client->request_list, client->p_state);
     if (packet_index == -1)
         return;
 
@@ -643,8 +636,6 @@ static void check_req_status(Request *req, Client *client) {
         ssp_printf("file successfully sent\n");
         req->resent_finished = 4;
         client->close = 1;
-        //ssp_cleanup_req(client->req);
-        //client->req = NULL;
     }
 }
 
@@ -709,28 +700,28 @@ void user_request_handler(Response res, Request *req, Client* client) {
 
 ------------------------------------------------------------------------------*/
 
-static void reset_timeout(Protocol_state *p_state, Request *req) {
+static void reset_timeout(Request *req) {
 
-    uint32_t time = p_state->timeout++;
-    ssp_printf("timeout %u\n", time);
+    uint8_t time = req->timeout++;
+    ssp_printf("timeout %u for id: %u sequence: %u\n", time, req->dest_cfdp_id, req->transaction_sequence_number);
     if (time == 20) {
-        p_state->timeout = 0;
+        req->timeout = 0;
         reset_request(req);
         ssp_printf("timeout, resetting request\n");
     }
 }
 
-void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
+void on_server_time_out(Response res, Request *req) {
 
-    res.msg = req->buff;
     if (req->type == none)
         return;
    
     if (req->buff == NULL)
         ssp_printf("req buffer is null, couldn't process timeout request\n");
 
-    reset_timeout(p_state, req);
+    reset_timeout(req);
 
+    ssp_printf("source id: %d transaction sequence numer :%d\n", req->dest_cfdp_id, req->transaction_sequence_number);
     uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
     //Pdu_header *pdu_header = (Pdu_header *) &res.msg;
 
@@ -775,7 +766,6 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
             ssp_printf("checksum have: %u checksum_need: %u\n", req->file->partial_checksum, req->file->eof_checksum);
         }
     }
-    
     //received EOF, send back 3 eof packets
     if (req->received_eof && req->resent_eof < 3) {
         ssp_printf("sending eof ack\n");
@@ -783,8 +773,6 @@ void on_server_time_out(Response res, Request *req, Protocol_state *p_state) {
         ssp_sendto(res);
         req->resent_eof++;
     }
-
-
 }
 
 //fills the current_request struct for the server, incomming requests
@@ -796,7 +784,7 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
     Pdu_header *header = (Pdu_header *) packet;
 
     //will protbably have to timeout different clients? how does that work with ddos?
-    p_state->timeout = 0;
+    req->timeout = 0;
     //process file data
     if (header->PDU_type == 1) {
         if (!req->received_metadata) {
