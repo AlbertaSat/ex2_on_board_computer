@@ -134,8 +134,7 @@ Request *put_request(char *source_file_name,
     req->messages_to_user = messages_to_user;
     req->filestore_requests = filestore_requests;
 
-    //client->req_queue->insert(client->req_queue, req, p_state->transaction_sequence_number);
-    client->current_request = req;
+    client->request_list->insert(client->request_list, req, p_state->transaction_sequence_number);
 
     return req;
 }

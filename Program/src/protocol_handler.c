@@ -438,6 +438,7 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
 
     Request *found_req = request_list->find(request_list, 0, find_request, &params);
 
+    //server side, receiving requests
     if (found_req == NULL) 
     {
         found_req = init_request(p_state->packet_size);
@@ -450,17 +451,13 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
         found_req->transaction_sequence_number = transaction_sequence_number;
         found_req->pdu_header = get_header_from_mib(p_state->mib, source_id, p_state->my_cfdp_id);
         found_req->is_active = 1;
-        
-        ssp_printf("addr length %d\n", res.size_of_addr);
-
         found_req->res.addr = ssp_alloc(res.size_of_addr, 1);
         memcpy(found_req->res.addr, res.addr, res.size_of_addr);
-
+        
         found_req->res.packet_len = p_state->packet_size;
         found_req->res.sfd = res.sfd;
         found_req->res.msg = found_req->buff;
         request_list->push(request_list, found_req, transaction_sequence_number);
-        ssp_printf("source id: %d transaction sequence numer :%d\n", source_id, transaction_sequence_number);
 
     } 
 
@@ -577,11 +574,8 @@ int nak_response(char *packet, uint32_t start, Request *req, Response res, Clien
 
 
 //fills the current request with packet data, responses from servers
-void parse_packet_client(char *packet, Response res, Request *req, Client* client) {
+void parse_packet_client(char *packet, uint32_t packet_index, Response res, Request *req, Client* client) {
  
-    uint32_t packet_index = process_pdu_header(packet, res, &req, client->request_list, client->p_state);
-    if (packet_index == -1)
-        return;
 
     //Pdu_header *header = (Pdu_header *) packet;    
     //uint16_t incoming_packet_data_len = ntohs(header->PDU_data_field_len);
@@ -635,7 +629,6 @@ static void check_req_status(Request *req, Client *client) {
     if (req->resent_finished == 3) {
         ssp_printf("file successfully sent\n");
         req->resent_finished = 4;
-        client->close = 1;
     }
 }
 

@@ -53,6 +53,7 @@ typedef struct List
     //returns a void pointer that should be cast to the type
     void *(*find)(struct List *list, uint32_t id, int (*f)(void *element, void *args), void *args);
     struct NODE *(*findNode)(struct List *list, uint32_t id, int (*f)(void *element, void *args), void *args);
+    void (*freeNode)(NODE *node); 
 
 } List;
 
