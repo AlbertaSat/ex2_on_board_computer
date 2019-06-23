@@ -1,10 +1,10 @@
 /*
 Luca Fossati (Luca.Fossati@esa.int), European Space Agency
 
-Software distributed under the "European Space Agency Public License – v2.0".
+Software distributed under the "European Space Agency Public License ï¿½ v2.0".
 
 All Distribution of the Software and/or Modifications, as Source Code or Object Code,
-must be, as a whole, under the terms of the European Space Agency Public License – v2.0.
+must be, as a whole, under the terms of the European Space Agency Public License ï¿½ v2.0.
 If You Distribute the Software and/or Modifications as Object Code, You must:
 (a)	provide in addition a copy of the Source Code of the Software and/or
 Modifications to each recipient; or
@@ -12,11 +12,11 @@ Modifications to each recipient; or
 means for anyone who possesses the Object Code or received the Software and/or Modifications
 from You, and inform recipients how to obtain a copy of the Source Code.
 
-The Software is provided to You on an “as is” basis and without warranties of any
+The Software is provided to You on an ï¿½as isï¿½ basis and without warranties of any
 kind, including without limitation merchantability, fitness for a particular purpose,
 absence of defects or errors, accuracy or non-infringement of intellectual property
 rights.
-Except as expressly set forth in the "European Space Agency Public License – v2.0",
+Except as expressly set forth in the "European Space Agency Public License ï¿½ v2.0",
 neither Licensor nor any Contributor shall be liable, including, without limitation, for direct, indirect,
 incidental, or consequential damages (including without limitation loss of profit),
 however caused and on any theory of liability, arising in any way out of the use or
@@ -290,7 +290,7 @@ int main(int argc, char *argv[]){
             break;
         }
     }while(foundOpt >= 0);
-
+    // END OF INPUT PARSING
     ///Now we need to perform a few checks that the necessary options have been provided
     //and we can call the function to perform the encoding.
     if(samples_file[0] == '\x0'){

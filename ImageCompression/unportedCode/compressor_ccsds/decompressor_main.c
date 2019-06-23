@@ -1,10 +1,10 @@
 /*
 Luca Fossati (Luca.Fossati@esa.int), European Space Agency
 
-Software distributed under the "European Space Agency Public License – v2.0".
+Software distributed under the "European Space Agency Public License ï¿½ v2.0".
 
 All Distribution of the Software and/or Modifications, as Source Code or Object Code,
-must be, as a whole, under the terms of the European Space Agency Public License – v2.0.
+must be, as a whole, under the terms of the European Space Agency Public License ï¿½ v2.0.
 If You Distribute the Software and/or Modifications as Object Code, You must:
 (a)	provide in addition a copy of the Source Code of the Software and/or
 Modifications to each recipient; or
@@ -12,11 +12,11 @@ Modifications to each recipient; or
 means for anyone who possesses the Object Code or received the Software and/or Modifications
 from You, and inform recipients how to obtain a copy of the Source Code.
 
-The Software is provided to You on an “as is” basis and without warranties of any
+The Software is provided to You on an ï¿½as isï¿½ basis and without warranties of any
 kind, including without limitation merchantability, fitness for a particular purpose,
 absence of defects or errors, accuracy or non-infringement of intellectual property
 rights.
-Except as expressly set forth in the "European Space Agency Public License – v2.0",
+Except as expressly set forth in the "European Space Agency Public License ï¿½ v2.0",
 neither Licensor nor any Contributor shall be liable, including, without limitation, for direct, indirect,
 incidental, or consequential damages (including without limitation loss of profit),
 however caused and on any theory of liability, arising in any way out of the use or
@@ -51,6 +51,14 @@ decompressor --input compressedImage --output uncompressedImage --out_format [BS
 #include "decoder.h"
 #include "utils.h"
 #include "unpredict.h"
+
+
+#define MAXW 64  // maximum number of lines to read
+#define MAXC 32  // longest word in abridged Dict. is 28 char
+size_t getwords (const char *words[MAXW], FILE *fp);
+
+
+
 
 //String specifying the program command line
 #define USAGE_STRING "Usage: %s --input compressedImage --output uncompressedImage --out_format [BSQ|bi] --out_depth num \
@@ -92,10 +100,36 @@ int main(int argc, char *argv[]){
     memset(&input_params, 0, sizeof(input_feature_t));
     memset(&predictor_params, 0, sizeof(predictor_config_t));
     input_params.byte_ordering = LITTLE;
+    char* filename = "decompress_test.hdr";
+    const char *words[MAXW];    /* array to hold words  */
+    size_t nwords = 0;                  /* number of words read */
+    size_t i;
+    
+    // File I/O Parsing
+    FILE *fp = fopen (filename, "r");
 
-    //Lets do some simple command line option parsing
+    // validate file open 
+    if (!fp) {  
+        fprintf (stderr, "error: file open failed '%s'.\n", filename);
+        return 1;
+    }
+    nwords = getwords (words, fp);
+
+    if (fp != stdin) fclose (fp);   /* close file */
+
+    printf ("\n %ld words read from '%s':\n\n", nwords, filename);
+
+    for (i = 0; i < nwords; i++)
+        printf ("  words[%2zu] : %s\n", i, words[i]);
+ 
+    // Lets do some simple command line option parsing
+    printf("argc: %d\n", argc);
+    for(int i = 0; i < argc; i++){
+        printf("argv is:%s\n", argv[i]);
+    }
     do{
         foundOpt = getopt_long(argc, argv, "", options, NULL);
+        
         switch(foundOpt){
             case 1:
                 strcpy(in_file, optarg);
@@ -130,8 +164,8 @@ int main(int argc, char *argv[]){
                     input_params.byte_ordering = BIG;
                 }
                 else{
-                    fprintf(stderr, "\nError, %s unknown input byte ordering\n\n", optarg);
-                    fprintf(stderr, USAGE_STRING, argv[0]);
+                    // fprintf(stderr, "\nError, %s unknown input byte ordering\n\n", optarg);
+                    // fprintf(stderr, USAGE_STRING, argv[0]);
                     return -1;
                 }
             break;
@@ -140,8 +174,8 @@ int main(int argc, char *argv[]){
             break;
             case '?':
             default:
-                fprintf(stderr, "\nError in the program command line!!\n\n");
-                fprintf(stderr, USAGE_STRING, argv[0]);
+                // fprintf(stderr, "\nError in the program command line!!\n\n");
+                // fprintf(stderr, USAGE_STRING, argv[0]);
                 return -1;
             break;
         }
@@ -150,13 +184,13 @@ int main(int argc, char *argv[]){
     ///Now we need to perform a few checks that the necessary options have been provided
     //and we can call the function to perform the encoding.
     if(in_file[0] == '\x0'){
-        fprintf(stderr, "\nError, please indicate the file containing the input compressed file\n\n");
-        fprintf(stderr, USAGE_STRING, argv[0]);
+        // fprintf(stderr, "\nError, please indicate the file containing the input compressed file\n\n");
+        // fprintf(stderr, USAGE_STRING, argv[0]);
         return -1;
     }
     if(out_file[0] == '\x0'){
-        fprintf(stderr, "\nError, please indicate the file where the decompressed image will be saved\n\n");
-        fprintf(stderr, USAGE_STRING, argv[0]);
+        // fprintf(stderr, "\nError, please indicate the file where the decompressed image will be saved\n\n");
+        // fprintf(stderr, USAGE_STRING, argv[0]);
         return -1;
     }
 
@@ -211,3 +245,20 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
+/* function to read words, 1 - per line, from 'fp' */
+size_t getwords (const char *words[MAXW], FILE *fp)
+{
+    size_t idx = 0;                     /* index of words read */
+
+    /* read each line in file into words array
+       note: includes trailing newline character */
+    while (idx < MAXW && fgets (words[idx], MAXC, fp)) {
+        idx++;
+        /* note you should check if chars remain in line */
+    }
+
+    if (idx == MAXW)   /* check word count against MAXW */
+        fprintf (stderr, "warning: MAXW words read.\n");
+
+    return idx;
+}
