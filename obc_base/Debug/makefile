@@ -4,12 +4,53 @@
 
 SHELL = cmd.exe
 
-CG_TOOL_ROOT := C:/ti/ccs900/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS
+CG_TOOL_ROOT := C:/ti/ccs901/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS
 
 GEN_OPTS__FLAG := 
 GEN_CMDS__FLAG := 
 
 ORDERED_OBJS += \
+"./Project/FileTests/tests.obj" \
+"./Project/host/redconf.obj" \
+"./reliance_edge/core/driver/blockio.obj" \
+"./reliance_edge/core/driver/buffer.obj" \
+"./reliance_edge/core/driver/core.obj" \
+"./reliance_edge/core/driver/dir.obj" \
+"./reliance_edge/core/driver/format.obj" \
+"./reliance_edge/core/driver/imap.obj" \
+"./reliance_edge/core/driver/imapextern.obj" \
+"./reliance_edge/core/driver/imapinline.obj" \
+"./reliance_edge/core/driver/inode.obj" \
+"./reliance_edge/core/driver/inodedata.obj" \
+"./reliance_edge/core/driver/volume.obj" \
+"./reliance_edge/fse/fse.obj" \
+"./reliance_edge/os/freertos/services/osassert.obj" \
+"./reliance_edge/os/freertos/services/osbdev.obj" \
+"./reliance_edge/os/freertos/services/osclock.obj" \
+"./reliance_edge/os/freertos/services/osmutex.obj" \
+"./reliance_edge/os/freertos/services/osoutput.obj" \
+"./reliance_edge/os/freertos/services/ostask.obj" \
+"./reliance_edge/os/freertos/services/ostimestamp.obj" \
+"./reliance_edge/posix/path.obj" \
+"./reliance_edge/posix/posix.obj" \
+"./reliance_edge/tests/posix/fsstress.obj" \
+"./reliance_edge/tests/util/atoi.obj" \
+"./reliance_edge/tests/util/math.obj" \
+"./reliance_edge/tests/util/printf.obj" \
+"./reliance_edge/tests/util/rand.obj" \
+"./reliance_edge/tools/getopt.obj" \
+"./reliance_edge/tools/toolcmn.obj" \
+"./reliance_edge/tools/imgbld/ibcommon.obj" \
+"./reliance_edge/tools/imgbld/ibfse.obj" \
+"./reliance_edge/tools/imgbld/ibposix.obj" \
+"./reliance_edge/tools/imgbld/imgbld.obj" \
+"./reliance_edge/util/bitmap.obj" \
+"./reliance_edge/util/crc.obj" \
+"./reliance_edge/util/endian.obj" \
+"./reliance_edge/util/memory.obj" \
+"./reliance_edge/util/namelen.obj" \
+"./reliance_edge/util/sign.obj" \
+"./reliance_edge/util/string.obj" \
 "./source/HL_adc.obj" \
 "./source/HL_can.obj" \
 "./source/HL_crc.obj" \
@@ -49,6 +90,7 @@ ORDERED_OBJS += \
 "./source/HL_sys_vim.obj" \
 "./source/HL_system.obj" \
 "./source/main_blinky.obj" \
+"./source/mmc-hercules.obj" \
 "./source/os_croutine.obj" \
 "./source/os_event_groups.obj" \
 "./source/os_heap.obj" \
@@ -59,7 +101,6 @@ ORDERED_OBJS += \
 "./source/os_queue.obj" \
 "./source/os_tasks.obj" \
 "./source/os_timer.obj" \
-"../source/HL_sys_link.cmd" \
 $(GEN_CMDS__FLAG) \
 -llibc.a \
 
@@ -70,7 +111,29 @@ RMDIR := RMDIR /S/Q
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Project/FileTests/subdir_vars.mk
+-include Project/host/subdir_vars.mk
+-include reliance_edge/core/driver/subdir_vars.mk
+-include reliance_edge/fse/subdir_vars.mk
+-include reliance_edge/os/freertos/services/subdir_vars.mk
+-include reliance_edge/posix/subdir_vars.mk
+-include reliance_edge/tests/posix/subdir_vars.mk
+-include reliance_edge/tests/util/subdir_vars.mk
+-include reliance_edge/tools/subdir_vars.mk
+-include reliance_edge/tools/imgbld/subdir_vars.mk
+-include reliance_edge/util/subdir_vars.mk
 -include source/subdir_vars.mk
+-include Project/FileTests/subdir_rules.mk
+-include Project/host/subdir_rules.mk
+-include reliance_edge/core/driver/subdir_rules.mk
+-include reliance_edge/fse/subdir_rules.mk
+-include reliance_edge/os/freertos/services/subdir_rules.mk
+-include reliance_edge/posix/subdir_rules.mk
+-include reliance_edge/tests/posix/subdir_rules.mk
+-include reliance_edge/tests/util/subdir_rules.mk
+-include reliance_edge/tools/subdir_rules.mk
+-include reliance_edge/tools/imgbld/subdir_rules.mk
+-include reliance_edge/util/subdir_rules.mk
 -include source/subdir_rules.mk
 -include objects.mk
 
@@ -181,30 +244,32 @@ BIN_OUTPUTS__QUOTED += \
 
 
 # All Target
-all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
-	@$(MAKE) --no-print-directory -Onone "obc_base.out"
+all: obc_base.out
 
 # Tool invocations
-obc_base.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
+obc_base.out: $(OBJS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Linker'
-	"C:/ti/ccs900/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/bin/armcl" -mv7R5 --code_state=32 --float_support=VFPv3D16 -g --diag_warning=225 --diag_wrap=off --display_error_number --enum_type=packed --abi=eabi -z -m"obc_base.map" --heap_size=0x800 --stack_size=0x800 -i"C:/ti/ccs900/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/lib" -i"C:/ti/ccs900/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="obc_base_linkInfo.xml" --rom_model --be32 -o "obc_base.out" $(ORDERED_OBJS)
+	"C:/ti/ccs901/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/bin/armcl" -mv7R5 --code_state=32 --float_support=VFPv3D16 -g --diag_warning=225 --diag_wrap=off --display_error_number --enum_type=packed --abi=eabi -z -m"obc_base.map" --heap_size=0x800 --stack_size=0x800 -i"C:/ti/ccs901/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/lib" -i"C:/ti/ccs901/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="obc_base_linkInfo.xml" --rom_model --be32 -o "obc_base.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 obc_base.hex: $(EXE_OUTPUTS)
 	@echo 'Building files: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo 'Invoking: ARM Hex Utility'
-	"C:/ti/ccs900/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/bin/armhex"  -o "obc_base.hex" $(EXE_OUTPUTS__QUOTED)
+	"C:/ti/ccs901/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/bin/armhex"  -o "obc_base.hex" $(EXE_OUTPUTS__QUOTED)
 	@echo 'Finished building: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "source\HL_adc.obj" "source\HL_can.obj" "source\HL_crc.obj" "source\HL_dcc.obj" "source\HL_ecap.obj" "source\HL_emac.obj" "source\HL_emif.obj" "source\HL_epc.obj" "source\HL_eqep.obj" "source\HL_errata.obj" "source\HL_errata_SSWF021_45.obj" "source\HL_esm.obj" "source\HL_etpwm.obj" "source\HL_gio.obj" "source\HL_het.obj" "source\HL_i2c.obj" "source\HL_lin.obj" "source\HL_mdio.obj" "source\HL_mibspi.obj" "source\HL_nmpu.obj" "source\HL_notification.obj" "source\HL_phy_dp83640.obj" "source\HL_phy_tlk111.obj" "source\HL_pinmux.obj" "source\HL_pom.obj" "source\HL_sci.obj" "source\HL_sys_core.obj" "source\HL_sys_dma.obj" "source\HL_sys_intvecs.obj" "source\HL_sys_main.obj" "source\HL_sys_mpu.obj" "source\HL_sys_pcr.obj" "source\HL_sys_phantom.obj" "source\HL_sys_pmm.obj" "source\HL_sys_pmu.obj" "source\HL_sys_startup.obj" "source\HL_sys_vim.obj" "source\HL_system.obj" "source\main_blinky.obj" "source\os_croutine.obj" "source\os_event_groups.obj" "source\os_heap.obj" "source\os_list.obj" "source\os_mpu_wrappers.obj" 
-	-$(RM) "source\os_port.obj" "source\os_portasm.obj" "source\os_queue.obj" "source\os_tasks.obj" "source\os_timer.obj" 
-	-$(RM) "source\HL_adc.d" "source\HL_can.d" "source\HL_crc.d" "source\HL_dcc.d" "source\HL_ecap.d" "source\HL_emac.d" "source\HL_emif.d" "source\HL_epc.d" "source\HL_eqep.d" "source\HL_errata.d" "source\HL_errata_SSWF021_45.d" "source\HL_esm.d" "source\HL_etpwm.d" "source\HL_gio.d" "source\HL_het.d" "source\HL_i2c.d" "source\HL_lin.d" "source\HL_mdio.d" "source\HL_mibspi.d" "source\HL_nmpu.d" "source\HL_notification.d" "source\HL_phy_dp83640.d" "source\HL_phy_tlk111.d" "source\HL_pinmux.d" "source\HL_pom.d" "source\HL_sci.d" "source\HL_sys_dma.d" "source\HL_sys_main.d" "source\HL_sys_pcr.d" "source\HL_sys_phantom.d" "source\HL_sys_pmm.d" "source\HL_sys_startup.d" "source\HL_sys_vim.d" "source\HL_system.d" "source\main_blinky.d" "source\os_croutine.d" "source\os_event_groups.d" "source\os_heap.d" "source\os_list.d" "source\os_mpu_wrappers.d" "source\os_port.d" "source\os_queue.d" "source\os_tasks.d" "source\os_timer.d" 
+	-$(RM) "Project\FileTests\tests.obj" "Project\host\redconf.obj" "reliance_edge\core\driver\blockio.obj" "reliance_edge\core\driver\buffer.obj" "reliance_edge\core\driver\core.obj" "reliance_edge\core\driver\dir.obj" "reliance_edge\core\driver\format.obj" "reliance_edge\core\driver\imap.obj" "reliance_edge\core\driver\imapextern.obj" "reliance_edge\core\driver\imapinline.obj" "reliance_edge\core\driver\inode.obj" "reliance_edge\core\driver\inodedata.obj" "reliance_edge\core\driver\volume.obj" "reliance_edge\fse\fse.obj" "reliance_edge\os\freertos\services\osassert.obj" "reliance_edge\os\freertos\services\osbdev.obj" "reliance_edge\os\freertos\services\osclock.obj" "reliance_edge\os\freertos\services\osmutex.obj" "reliance_edge\os\freertos\services\osoutput.obj" "reliance_edge\os\freertos\services\ostask.obj" "reliance_edge\os\freertos\services\ostimestamp.obj" "reliance_edge\posix\path.obj" "reliance_edge\posix\posix.obj" "reliance_edge\tests\posix\fsstress.obj" "reliance_edge\tests\util\atoi.obj" 
+	-$(RM) "reliance_edge\tests\util\math.obj" "reliance_edge\tests\util\printf.obj" "reliance_edge\tests\util\rand.obj" "reliance_edge\tools\getopt.obj" "reliance_edge\tools\toolcmn.obj" "reliance_edge\tools\imgbld\ibcommon.obj" "reliance_edge\tools\imgbld\ibfse.obj" "reliance_edge\tools\imgbld\ibposix.obj" "reliance_edge\tools\imgbld\imgbld.obj" "reliance_edge\util\bitmap.obj" "reliance_edge\util\crc.obj" "reliance_edge\util\endian.obj" "reliance_edge\util\memory.obj" "reliance_edge\util\namelen.obj" "reliance_edge\util\sign.obj" "reliance_edge\util\string.obj" "source\HL_adc.obj" "source\HL_can.obj" "source\HL_crc.obj" "source\HL_dcc.obj" "source\HL_ecap.obj" "source\HL_emac.obj" "source\HL_emif.obj" "source\HL_epc.obj" "source\HL_eqep.obj" "source\HL_errata.obj" "source\HL_errata_SSWF021_45.obj" "source\HL_esm.obj" "source\HL_etpwm.obj" "source\HL_gio.obj" "source\HL_het.obj" "source\HL_i2c.obj" "source\HL_lin.obj" "source\HL_mdio.obj" "source\HL_mibspi.obj" "source\HL_nmpu.obj" "source\HL_notification.obj" 
+	-$(RM) "source\HL_phy_dp83640.obj" "source\HL_phy_tlk111.obj" "source\HL_pinmux.obj" "source\HL_pom.obj" "source\HL_sci.obj" "source\HL_sys_core.obj" "source\HL_sys_dma.obj" "source\HL_sys_intvecs.obj" "source\HL_sys_main.obj" "source\HL_sys_mpu.obj" "source\HL_sys_pcr.obj" "source\HL_sys_phantom.obj" "source\HL_sys_pmm.obj" "source\HL_sys_pmu.obj" "source\HL_sys_startup.obj" "source\HL_sys_vim.obj" "source\HL_system.obj" "source\main_blinky.obj" "source\mmc-hercules.obj" "source\os_croutine.obj" "source\os_event_groups.obj" "source\os_heap.obj" "source\os_list.obj" "source\os_mpu_wrappers.obj" "source\os_port.obj" "source\os_portasm.obj" "source\os_queue.obj" "source\os_tasks.obj" "source\os_timer.obj" 
+	-$(RM) "Project\FileTests\tests.d" "Project\host\redconf.d" "reliance_edge\core\driver\blockio.d" "reliance_edge\core\driver\buffer.d" "reliance_edge\core\driver\core.d" "reliance_edge\core\driver\dir.d" "reliance_edge\core\driver\format.d" "reliance_edge\core\driver\imap.d" "reliance_edge\core\driver\imapextern.d" "reliance_edge\core\driver\imapinline.d" "reliance_edge\core\driver\inode.d" "reliance_edge\core\driver\inodedata.d" "reliance_edge\core\driver\volume.d" "reliance_edge\fse\fse.d" "reliance_edge\os\freertos\services\osassert.d" "reliance_edge\os\freertos\services\osbdev.d" "reliance_edge\os\freertos\services\osclock.d" "reliance_edge\os\freertos\services\osmutex.d" "reliance_edge\os\freertos\services\osoutput.d" "reliance_edge\os\freertos\services\ostask.d" "reliance_edge\os\freertos\services\ostimestamp.d" "reliance_edge\posix\path.d" "reliance_edge\posix\posix.d" "reliance_edge\tests\posix\fsstress.d" "reliance_edge\tests\util\atoi.d" "reliance_edge\tests\util\math.d" "reliance_edge\tests\util\printf.d" 
+	-$(RM) "reliance_edge\tests\util\rand.d" "reliance_edge\tools\getopt.d" "reliance_edge\tools\toolcmn.d" "reliance_edge\tools\imgbld\ibcommon.d" "reliance_edge\tools\imgbld\ibfse.d" "reliance_edge\tools\imgbld\ibposix.d" "reliance_edge\tools\imgbld\imgbld.d" "reliance_edge\util\bitmap.d" "reliance_edge\util\crc.d" "reliance_edge\util\endian.d" "reliance_edge\util\memory.d" "reliance_edge\util\namelen.d" "reliance_edge\util\sign.d" "reliance_edge\util\string.d" "source\HL_adc.d" "source\HL_can.d" "source\HL_crc.d" "source\HL_dcc.d" "source\HL_ecap.d" "source\HL_emac.d" "source\HL_emif.d" "source\HL_epc.d" "source\HL_eqep.d" "source\HL_errata.d" "source\HL_errata_SSWF021_45.d" "source\HL_esm.d" "source\HL_etpwm.d" "source\HL_gio.d" "source\HL_het.d" "source\HL_i2c.d" "source\HL_lin.d" "source\HL_mdio.d" "source\HL_mibspi.d" "source\HL_nmpu.d" "source\HL_notification.d" "source\HL_phy_dp83640.d" "source\HL_phy_tlk111.d" "source\HL_pinmux.d" "source\HL_pom.d" "source\HL_sci.d" "source\HL_sys_dma.d" 
+	-$(RM) "source\HL_sys_main.d" "source\HL_sys_pcr.d" "source\HL_sys_phantom.d" "source\HL_sys_pmm.d" "source\HL_sys_startup.d" "source\HL_sys_vim.d" "source\HL_system.d" "source\main_blinky.d" "source\mmc-hercules.d" "source\os_croutine.d" "source\os_event_groups.d" "source\os_heap.d" "source\os_list.d" "source\os_mpu_wrappers.d" "source\os_port.d" "source\os_queue.d" "source\os_tasks.d" "source\os_timer.d" 
 	-$(RM) "source\HL_sys_core.d" "source\HL_sys_intvecs.d" "source\HL_sys_mpu.d" "source\HL_sys_pmu.d" "source\os_portasm.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
