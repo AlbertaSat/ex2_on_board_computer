@@ -1,9 +1,9 @@
 # Luca Fossati (Luca.Fossati@esa.int), European Space Agency
 
-# Software distributed under the "European Space Agency Public License – v2.0".
+# Software distributed under the "European Space Agency Public License ï¿½ v2.0".
 
 # All Distribution of the Software and/or Modifications, as Source Code or Object Code,
-# must be, as a whole, under the terms of the European Space Agency Public License – v2.0.
+# must be, as a whole, under the terms of the European Space Agency Public License ï¿½ v2.0.
 # If You Distribute the Software and/or Modifications as Object Code, You must:
 # (a)	provide in addition a copy of the Source Code of the Software and/or
 # Modifications to each recipient; or
@@ -11,11 +11,11 @@
 # means for anyone who possesses the Object Code or received the Software and/or Modifications
 # from You, and inform recipients how to obtain a copy of the Source Code.
 
-# The Software is provided to You on an “as is” basis and without warranties of any
+# The Software is provided to You on an ï¿½as isï¿½ basis and without warranties of any
 # kind, including without limitation merchantability, fitness for a particular purpose,
 # absence of defects or errors, accuracy or non-infringement of intellectual property
 # rights.
-# Except as expressly set forth in the "European Space Agency Public License – v2.0",
+# Except as expressly set forth in the "European Space Agency Public License ï¿½ v2.0",
 # neither Licensor nor any Contributor shall be liable, including, without limitation, for direct, indirect,
 # incidental, or consequential damages (including without limitation loss of profit),
 # however caused and on any theory of liability, arising in any way out of the use or
@@ -28,13 +28,13 @@ CCFLAGS = -O2 -finline-functions -pipe -march=native -fomit-frame-pointer -DNDEB
 #CCFLAGS = -g3 -Wall
 CC = gcc
 
-all: compressor converter decompressor
+all: compressor decompressor
 
 compressor_main.o: ../compressor_main.c ../entropy_encoder.h ../predictor.h Makefile
 	$(CC) $(CCFLAGS) -DNO_COMPUTE_LOCAL -c -o compressor_main.o ../compressor_main.c
 
-converter.o: ../converter.c ../entropy_encoder.h ../predictor.h Makefile
-	$(CC) $(CCFLAGS) -DNO_COMPUTE_LOCAL -c -o converter.o ../converter.c
+# converter.o: ../converter.c ../entropy_encoder.h ../predictor.h Makefile
+# 	$(CC) $(CCFLAGS) -DNO_COMPUTE_LOCAL -c -o converter.o ../converter.c
 
 entropy_encoder.o: ../entropy_encoder.c ../entropy_encoder.h ../predictor.h ../utils.h Makefile
 	$(CC) $(CCFLAGS) -DNO_COMPUTE_LOCAL -c -o entropy_encoder.o ../entropy_encoder.c
@@ -63,8 +63,8 @@ decompressor: decompressor_main.o utils.o unpredict.o decoder.o predictor_noloca
 compressor: compressor_main.o entropy_encoder.o predictor.o utils.o Makefile
 	$(CC) $(CCFLAGS) -o compressor compressor_main.o entropy_encoder.o predictor.o utils.o $(LINK_FLAGS)
 
-converter: converter.o entropy_encoder.o predictor.o utils.o Makefile
-	$(CC) $(CCFLAGS) -o converter converter.o entropy_encoder.o predictor.o utils.o $(LINK_FLAGS)
+# converter: converter.o entropy_encoder.o predictor.o utils.o Makefile
+# 	$(CC) $(CCFLAGS) -o converter converter.o entropy_encoder.o predictor.o utils.o $(LINK_FLAGS)
     
 clean:
 	rm -rf compressor converter decompressor *.o *~ ../*~
