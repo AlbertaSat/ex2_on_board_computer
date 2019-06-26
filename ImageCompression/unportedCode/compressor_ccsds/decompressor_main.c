@@ -80,10 +80,10 @@ int main(int argc, char *argv[]){
     FILE * fh = fopen(filename, "r");
     char *key = malloc(MAX_KEY_LEN);
     char *val = malloc(MAX_KEY_LEN);
-    int test;
+    int input_match;
 
     // Reading From File
-    while(test = fscanf(fh, "%s = %s\n", key, val) != -1) {
+    while(input_match = fscanf(fh, "%s = %s\n", key, val) != -1) {
 
         if(strcmp("input", key) == 0){
             strcpy(in_file, val);
