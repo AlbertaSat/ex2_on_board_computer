@@ -40,22 +40,45 @@ static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr
 
 }
 
-static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, void *addr, void *other) {
+static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
     
 
     Client *client = (Client *) other;
-    if (client->current_request == NULL)
-        return 0;
 
     Response res;
     res.addr = addr;
     res.sfd = sfd;
-    res.packet_len = *buff_size;
-    res.msg = client->current_request->buff;
-    
-    parse_packet_client(packet, res, client->current_request, client);
+    res.packet_len = client->packet_len;
+    res.size_of_addr = size_of_addr;
+
+    Request **request_container = &client->current_request;
+
+    uint32_t packet_index = process_pdu_header(packet, res, request_container, client->request_list, client->p_state);
+    if (packet_index == -1) {
+        ssp_printf("error parsing header\n");
+        return -1;
+    }
+     
+    res.msg = (*request_container)->buff;
+    parse_packet_client(packet, packet_index, res, (*request_container), client);
+
+    memset(packet, 0, res.packet_len);
     return 0;
     
+}
+
+
+static struct user_request_check_params {
+    Response res;
+    Client *client;
+};
+
+static void user_request_check(void *request, void *args) {
+    Request * req = (Request *) request;
+    struct user_request_check_params* params = (struct user_request_check_params *) args;
+
+    params->res.msg = req->buff;
+    user_request_handler(params->res, req, params->client);
 }
 
 static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
@@ -64,18 +87,21 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
     #ifdef POSIX_PORT
     struct sockaddr_in* client_addr = (struct sockaddr_in*) &addr;
     #endif
-    
+
     Response res;    
     Client *client = (Client *) other;
-    if (client->current_request == NULL)
-        return 0;
 
     res.sfd = sfd;
     res.packet_len = client->packet_len;
-    res.msg = client->current_request->buff;
     res.addr = client_addr;
+    
+    struct user_request_check_params params = {
+        res,
+        client
+    };
 
-    user_request_handler(res, client->current_request, client);
+    client->request_list->print(client->request_list, user_request_check, &params);
+    
     return 0;
 }
 
@@ -95,8 +121,9 @@ static void timeout_check(void *request, void *args) {
     on_server_time_out(req->res, req); 
 
     if (!req->is_active) {
-        Request *removed = req_list->remove(req_list, 0, timeout_remove_request, req);
-        ssp_cleanup_req(removed);
+        Request *remove_this = req_list->remove(req_list, 0, timeout_remove_request, req);
+        ssp_cleanup_req(remove_this);
+        
     }
 
 }
@@ -237,7 +264,6 @@ void ssp_cleanup_p_state(Protocol_state *p_state) {
 
 void ssp_cleanup_client(Client *client) {
     client->request_list->free(client->request_list, ssp_cleanup_req);
-    ssp_cleanup_req(client->current_request);
     ssp_cleanup_pdu_header(client->pdu_header);
     ssp_free(client);
 }

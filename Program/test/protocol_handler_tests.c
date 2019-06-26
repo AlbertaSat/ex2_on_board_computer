@@ -20,15 +20,22 @@ static int test_process_pdu_header() {
     Protocol_state *p_state = init_ftp(1);
     Request **req_container = &p_state->current_request; 
     
+    Response res;
+    int addr = 16;
+    res.addr = &addr;
+    res.sfd = 1;
+    res.packet_len = p_state->packet_size;
+    res.size_of_addr = 16;
+
     //test 1
     char *packet = build_mock_packet(p_state, 2);
-    process_pdu_header(packet, req_container, p_state->request_list, p_state);
+    process_pdu_header(packet, res, req_container, p_state->request_list, p_state);
     ASSERT_EQUALS_INT("request transaction number should equal", (*req_container)->transaction_sequence_number, 1);
     ASSERT_EQUALS_INT("souce id should equal", (*req_container)->dest_cfdp_id, 2);
 
     //test 2
     char *packet2 = build_mock_packet(p_state, 3);
-    process_pdu_header(packet2, req_container, p_state->request_list, p_state);
+    process_pdu_header(packet2, res, req_container, p_state->request_list, p_state);
     ASSERT_EQUALS_INT("request transaction number should equal", (*req_container)->transaction_sequence_number, 1);
     ASSERT_NOT_EQUALS_INT("souce id should not equal", (*req_container)->dest_cfdp_id, 2);
     ASSERT_EQUALS_INT("souce id should equal", (*req_container)->dest_cfdp_id, 3);

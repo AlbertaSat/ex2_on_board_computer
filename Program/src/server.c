@@ -249,7 +249,7 @@ void udpSelectServer(char* port, int packet_len,
 //https://www.cs.cmu.edu/afs/cs/academic/class/15213-f99/www/class26/udpclient.c
 void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
-    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, void *onRecvParams) ,
+    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *onRecvParams) ,
     int (*checkExit)(void *checkExitParams),
     void (*onExit)(void *params))
 {
@@ -316,7 +316,7 @@ void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, vo
         }
         else
         {
-            if (onRecv(sfd, buff, buff_size, (void *)&serveraddr, onRecvParams) == -1)
+            if (onRecv(sfd, buff, buff_size, (void *)&serveraddr, sizeof(struct sockaddr), onRecvParams) == -1)
                 printf("recv failed\n");
         }
         

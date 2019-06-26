@@ -125,7 +125,8 @@ NODE *createNode(void *element, uint32_t id)
 
 
 static void freeNode(NODE *node) {
-    ssp_free(node);    
+    if (node != NULL)
+        ssp_free(node);    
 }
 
 static void *pop(List *list) {
@@ -204,16 +205,18 @@ static int push(List *list, void *element, uint32_t id)
 static void printList(List *list, void (*f)(void *element, void *args), void *args)
 {
     NODE *cur = list->head->next;
+    NODE *next;
     while (cur->next != NULL)
     {
+        next = cur->next;
         f(cur->element, args);
-        cur = cur->next;
+        cur = next;
     }
 }
 
 
 /*------------------------------------------------------------------------------
-    This function removes an element from the linked list, returns the element stored if success
+    This function removes an element from the linked list, returns the node stored if success
     and NULL if item not found. it can use either an id, or callback to find the
     element (callback can be the find function)
 ------------------------------------------------------------------------------*/
@@ -238,10 +241,10 @@ static void *removeElement(List *list, uint32_t id, int (*f)(void *element, void
 
             previous->next = next;
             next->prev = previous;
-            void *element = cur->element;
-            
-            freeNode(cur);
+
             list->count--;
+            void *element = cur->element;
+            freeNode(cur);
             return element;
         }
         cur = cur->next;
@@ -328,9 +331,8 @@ static int insertAt(List *list, void *element, uint32_t id, int (*f)(void *eleme
 }
 
  
-static NODE * findNode(List *list, uint32_t id, int (*f)(void *element, void *args), void *args) {
+static NODE *findNode(List *list, uint32_t id, int (*f)(void *element, void *args), void *args) {
 
-    
     NODE *cur = list->head->next;
     int found_with_func = 0;
     int found_with_id = 0;
@@ -344,13 +346,10 @@ static NODE * findNode(List *list, uint32_t id, int (*f)(void *element, void *ar
 
         if (found_with_func || found_with_id){
             return cur;
-
         }
-            
         cur = cur->next;
     }
     return NULL;
-
 }
 //see header file return NULL if fails
 
@@ -385,6 +384,8 @@ List *linked_list()
     newList->find = findElement;
     newList->insertAt = insertAt;
     newList->findNode = findNode;
+    newList->freeNode = freeNode;
+
     return newList;
 }
 

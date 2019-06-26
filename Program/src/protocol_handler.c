@@ -157,7 +157,8 @@ static uint8_t build_nak_response(char *packet, uint32_t start, uint32_t offset,
 
 //requires a req->file to be created
 //returns 1 on end of file
-static uint8_t build_data_packet(char *packet, uint32_t start, File *file, uint32_t length) {
+//length is the total size of the packet
+uint8_t build_data_packet(char *packet, uint32_t start, File *file, uint32_t length) {
 
     if (file->next_offset_to_send > file->total_size){
         ssp_error("cant send an offset past the file's length\n");
@@ -174,7 +175,7 @@ static uint8_t build_data_packet(char *packet, uint32_t start, File *file, uint3
     //4 bytes is the size of the offset paramater
     packet_offset->offset = file->next_offset_to_send;
     packet_index += 4;
-
+    
     uint16_t data_size = length - packet_index;
     
     //fill the rest of the packet with data
@@ -391,10 +392,13 @@ struct request_search_params {
 static int find_request(void *element, void *args) {
     Request *req = (Request *) element;
     struct request_search_params *params = (struct request_search_params *) args;
-    if (req->dest_cfdp_id == params->source_id && req->transaction_sequence_number == params->transaction_sequence_number)
-        return 1;
+    if (req->dest_cfdp_id == params->source_id && req->transaction_sequence_number == params->transaction_sequence_number){
+      return 1;
+    }
     return 0;
 }
+
+
 /*creates a request struct if there is none for the incomming request based on transaction sequence number or
 finds the correct request struct and replaces req with the new pointer. Returns the possition in the packet 
 where the data portion is, returns 0 on fail*/
@@ -436,8 +440,9 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
         transaction_sequence_number,
     };
 
-    Request *found_req = request_list->find(request_list, 0, find_request, &params);
+    Request *found_req = (Request *) request_list->find(request_list, 0, find_request, &params);
 
+    //server side, receiving requests
     if (found_req == NULL) 
     {
         found_req = init_request(p_state->packet_size);
@@ -450,20 +455,15 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
         found_req->transaction_sequence_number = transaction_sequence_number;
         found_req->pdu_header = get_header_from_mib(p_state->mib, source_id, p_state->my_cfdp_id);
         found_req->is_active = 1;
-        
-        ssp_printf("addr length %d\n", res.size_of_addr);
-
         found_req->res.addr = ssp_alloc(res.size_of_addr, 1);
         memcpy(found_req->res.addr, res.addr, res.size_of_addr);
-
+        
         found_req->res.packet_len = p_state->packet_size;
         found_req->res.sfd = res.sfd;
         found_req->res.msg = found_req->buff;
         request_list->push(request_list, found_req, transaction_sequence_number);
-        ssp_printf("source id: %d transaction sequence numer :%d\n", source_id, transaction_sequence_number);
 
     } 
-
     *req = found_req;
 
     return packet_index;
@@ -479,6 +479,7 @@ static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  Fil
     }
 
     File_data_pdu_contents *packet = (File_data_pdu_contents *)data_packet;
+    
     uint32_t offset_start = packet->offset;
     uint32_t offset_end = offset_start + data_len - 4;
     
@@ -577,11 +578,8 @@ int nak_response(char *packet, uint32_t start, Request *req, Response res, Clien
 
 
 //fills the current request with packet data, responses from servers
-void parse_packet_client(char *packet, Response res, Request *req, Client* client) {
+void parse_packet_client(char *packet, uint32_t packet_index, Response res, Request *req, Client* client) {
  
-    uint32_t packet_index = process_pdu_header(packet, res, &req, client->request_list, client->p_state);
-    if (packet_index == -1)
-        return;
 
     //Pdu_header *header = (Pdu_header *) packet;    
     //uint16_t incoming_packet_data_len = ntohs(header->PDU_data_field_len);
@@ -635,7 +633,6 @@ static void check_req_status(Request *req, Client *client) {
     if (req->resent_finished == 3) {
         ssp_printf("file successfully sent\n");
         req->resent_finished = 4;
-        client->close = 1;
     }
 }
 
@@ -711,6 +708,11 @@ static void reset_timeout(Request *req) {
     }
 }
 
+static void print_offsets(void *element, void *args) {
+
+    Offset *off = (Offset *) element;
+    ssp_printf("missing offset start: %d end:%d\n", off->start, off->end);
+}
 void on_server_time_out(Response res, Request *req) {
 
     if (req->type == none)
@@ -721,8 +723,8 @@ void on_server_time_out(Response res, Request *req) {
 
     reset_timeout(req);
 
-    ssp_printf("source id: %d transaction sequence numer :%d\n", req->dest_cfdp_id, req->transaction_sequence_number);
     uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
+
     //Pdu_header *pdu_header = (Pdu_header *) &res.msg;
 
     if (req->resent_finished == 3) {
@@ -757,7 +759,7 @@ void on_server_time_out(Response res, Request *req) {
 
         if (req->file->eof_checksum == req->file->partial_checksum){
             ssp_printf("sending finsihed pdu\n");
-             build_finished_pdu(res.msg, start, req);
+            build_finished_pdu(res.msg, start, req);
             ssp_sendto(res);
             req->resent_finished++;   
             return;
@@ -783,6 +785,9 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
         
     Pdu_header *header = (Pdu_header *) packet;
 
+    uint16_t len = get_data_length(packet);
+    ssp_printf("packet data length %d\n", len);
+
     //will protbably have to timeout different clients? how does that work with ddos?
     req->timeout = 0;
     //process file data
@@ -795,7 +800,7 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
             }
             request_metadata(req, res);
         }
-        write_packet_data_to_file(&packet[packet_index], req->packet_data_len, req->file);
+        write_packet_data_to_file(&packet[packet_index], len, req->file);
         return;
     }
     

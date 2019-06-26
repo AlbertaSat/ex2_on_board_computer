@@ -134,8 +134,9 @@ Request *put_request(char *source_file_name,
     req->messages_to_user = messages_to_user;
     req->filestore_requests = filestore_requests;
 
-    //client->req_queue->insert(client->req_queue, req, p_state->transaction_sequence_number);
-    client->current_request = req;
+    req->res.addr = ssp_alloc(sizeof(uint64_t), 1);
+
+    client->request_list->insert(client->request_list, req, 0);
 
     return req;
 }

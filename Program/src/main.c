@@ -34,8 +34,9 @@ int main(int argc, char** argv) {
         return 1;
     }
     Protocol_state *p_state = init_ftp(conf->my_cfdp_id);
+    
     ssp_connectionless_server(p_state);
-
+        
     //create a client
     if (conf->client_cfdp_id != 0){
 
@@ -43,18 +44,20 @@ int main(int argc, char** argv) {
         Client *new_client = ssp_connectionless_client(conf->client_cfdp_id, p_state);
     
         //send via acknoleged mode //0 acknowledged, 1 unacknowledged
-        if (conf->my_cfdp_id == 2)
+        if (conf->my_cfdp_id == 2) {
             put_request("pic.jpeg", "remote_pic1.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
-
-        if (conf->my_cfdp_id == 3)
             put_request("pic.jpeg", "remote_pic2.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+        }
+        if (conf->my_cfdp_id == 3)
+            put_request("pic.jpeg", "remote_pic3.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+
+    
 
         ssp_thread_join(new_client->client_handle);
         ssp_printf("client disconnected\n");
     }
 
     ssp_thread_join(p_state->server_handle);
-
     ssp_free(conf); 
 
     
