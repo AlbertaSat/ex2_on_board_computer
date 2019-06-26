@@ -76,7 +76,6 @@ int ssp_close(int fd) {
 void ssp_sendto(Response res) {
     
     #ifdef POSIX_PORT
-    
         struct sockaddr* addr = (struct sockaddr*) res.addr;
         int n = sendto(res.sfd, res.msg, res.packet_len, 0, addr, sizeof(*addr));
         if (n < 0) 

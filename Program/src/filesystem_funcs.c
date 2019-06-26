@@ -198,6 +198,8 @@ int receive_offset(File *file, uint8_t ack, uint32_t offset_start, uint32_t offs
     
     NODE * node = nak_list->findNode(nak_list, -1, find_nak, &offset_to_insert);
     if (node == NULL){
+
+        ssp_printf("trying to receive offset start:%u end:%u\n", offset_to_insert.start, offset_to_insert.end);
         ssp_printf("no begining node for receive_offset, or offset we already received, can't add new offset\n");
         return 0; 
     }

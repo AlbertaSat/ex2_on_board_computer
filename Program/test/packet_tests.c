@@ -8,6 +8,7 @@
 #include "port.h"
 #include "protocol_handler.h"
 #include "mib.h"
+#include "file_delivery_app.h"
 
 #define PACKET_TEST_SIZE 2000 
 
@@ -24,6 +25,26 @@ static int test_respond_to_naks(char *packet, uint32_t packet_index) {
 static int test_respond_metadata_request() {
 
     return 0;
+}
+
+test_build_data_packet(char *packet, uint32_t packet_index){
+
+    File *file = create_file("testfile", 0);
+
+    build_data_packet(packet, packet_index, file, 1000);
+
+    ASSERT_EQUALS_INT("test proper datapacket offset set", (uint64_t)packet[packet_index], 0);
+    ASSERT_EQUALS_STR("test proper datapacket creation", &packet[packet_index + 4], "tempfileyo", 10);
+    
+    ASSERT_EQUALS_INT("should equal 100", packet_index + 87 + 4, 100);
+    build_data_packet(packet, packet_index, file, 1000);
+    
+    uint32_t offset_in_packet = 0;
+    memcpy(&offset_in_packet, &packet[packet_index], 4);
+    ssp_printf("offset size %u\n", offset_in_packet);
+    ASSERT_EQUALS_INT("test proper datapacket offset set", offset_in_packet, 987);
+
+    free_file(file);
 }
 
 
@@ -233,6 +254,11 @@ int packet_tests() {
     test_build_ack_eof_pdu(packet, packet_index);
     test_build_nak_packet(packet, packet_index);
     test_respond_to_naks(packet, packet_index);
+
+
+    memset(packet, 0, PACKET_TEST_SIZE);
+    packet_index = test_build_pdu_header_header(packet, pdu_header, sequence_number);
+    test_build_data_packet(packet, packet_index);
 
     free_mib(mib);
     ssp_cleanup_pdu_header(pdu_header);

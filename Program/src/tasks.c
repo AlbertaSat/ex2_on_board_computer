@@ -58,12 +58,10 @@ static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, void *addr
         ssp_printf("error parsing header\n");
         return -1;
     }
-        
-    client->current_request = (*request_container);
-    client->current_request->res = res;
-    ssp_printf("server transaction number %d and Id %d\n", (*request_container)->transaction_sequence_number, (*request_container)->dest_cfdp_id);
-
+     
+    res.msg = (*request_container)->buff;
     parse_packet_client(packet, packet_index, res, (*request_container), client);
+
     memset(packet, 0, res.packet_len);
     return 0;
     
@@ -266,7 +264,6 @@ void ssp_cleanup_p_state(Protocol_state *p_state) {
 
 void ssp_cleanup_client(Client *client) {
     client->request_list->free(client->request_list, ssp_cleanup_req);
-    ssp_cleanup_req(client->current_request);
     ssp_cleanup_pdu_header(client->pdu_header);
     ssp_free(client);
 }
