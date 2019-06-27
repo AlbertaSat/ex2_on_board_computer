@@ -425,12 +425,13 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
         return 0;
     }
 
-    uint16_t packet_data_len = ntohs(header->PDU_data_field_len);
+    uint16_t len = get_data_length(packet);
+
     Request *request = *req;
     
     //if packet is from the same request, don't' change current request
-    if (request != NULL && request->transaction_sequence_number == transaction_sequence_number && request->dest_cfdp_id == source_id){
-        request->packet_data_len = packet_data_len;    
+    if (request != NULL && request->transaction_sequence_number == transaction_sequence_number && request->dest_cfdp_id == source_id){ 
+        (*req)->packet_data_len = len;         
         return packet_index;
     }
 
@@ -448,29 +449,29 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
         found_req = init_request(p_state->packet_size);
         ssp_printf("incoming new request\n");
         //Make new request and add it
-        found_req->packet_data_len = packet_data_len;
         found_req->transmission_mode = header->transmission_mode;
         found_req->transaction_sequence_number = transaction_sequence_number;
         found_req->dest_cfdp_id = source_id;
         found_req->transaction_sequence_number = transaction_sequence_number;
         found_req->pdu_header = get_header_from_mib(p_state->mib, source_id, p_state->my_cfdp_id);
-        found_req->is_active = 1;
+        found_req->type = put;
         found_req->res.addr = ssp_alloc(res.size_of_addr, 1);
         memcpy(found_req->res.addr, res.addr, res.size_of_addr);
-        
         found_req->res.packet_len = p_state->packet_size;
         found_req->res.sfd = res.sfd;
         found_req->res.msg = found_req->buff;
         request_list->push(request_list, found_req, transaction_sequence_number);
 
     } 
+
+    found_req->packet_data_len = len;
     *req = found_req;
 
     return packet_index;
 
 }
 
-static void write_packet_data_to_file(char *data_packet, uint32_t data_len,  File *file) {
+static void write_packet_data_to_file(char *data_packet, uint32_t data_len, File *file) {
 
 
     if(file == NULL) {
@@ -540,8 +541,8 @@ static void fill_request_pdu_metadata(char *meta_data_packet, Request *req_to_fi
 int nak_response(char *packet, uint32_t start, Request *req, Response res, Client *client) {
         uint32_t packet_index = start;
         Pdu_nak *nak = (Pdu_nak *) &packet[packet_index];
-        uint32_t offset_first = ntohl(nak->start_scope);
-        uint32_t offset_last = ntohl(nak->end_scope);
+        //uint32_t offset_first = ntohl(nak->start_scope);
+        //uint32_t offset_last = ntohl(nak->end_scope);
         uint64_t segments = ntohll(nak->segment_requests);
         packet_index += 16;
 
@@ -564,10 +565,6 @@ int nak_response(char *packet, uint32_t start, Request *req, Response res, Clien
             memcpy(&offset_end, &packet[packet_index], 4);
             offset_end = ntohl(offset_end);
             packet_index += 4;
-
-            printf("offset sending first %u last %u\n", offset_start, offset_end);
-            printf("first %u and end %u\n", offset_first, offset_last);
-
             build_nak_response(req->buff, outgoing_packet_index, offset_start, req, client);
             ssp_sendto(res);
         }
@@ -639,15 +636,13 @@ static void check_req_status(Request *req, Client *client) {
 //current user request, to send to remote
 void user_request_handler(Response res, Request *req, Client* client) {
 
-    if (req == NULL || req->type == none)
+    if (req == NULL)
         return;
 
     if (res.msg == NULL) {
         ssp_printf("req->buff is null, couldn't process user request\n");
         return;
     }
-    memset(res.msg, 0, client->packet_len);
-
     uint32_t start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
 
     check_req_status(req, client);
@@ -700,7 +695,7 @@ void user_request_handler(Response res, Request *req, Client* client) {
 static void reset_timeout(Request *req) {
 
     uint8_t time = req->timeout++;
-    ssp_printf("timeout %u for id: %u sequence: %u\n", time, req->dest_cfdp_id, req->transaction_sequence_number);
+    //ssp_printf("timeout %u for id: %u sequence: %u\n", time, req->dest_cfdp_id, req->transaction_sequence_number);
     if (time == 20) {
         req->timeout = 0;
         reset_request(req);
@@ -715,17 +710,15 @@ static void print_offsets(void *element, void *args) {
 }
 void on_server_time_out(Response res, Request *req) {
 
-    if (req->type == none)
+    if (req == NULL)
         return;
-   
-    if (req->buff == NULL)
-        ssp_printf("req buffer is null, couldn't process timeout request\n");
 
     reset_timeout(req);
 
-    uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
+    if (req->transmission_mode == 1)
+        return; 
 
-    //Pdu_header *pdu_header = (Pdu_header *) &res.msg;
+    uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
 
     if (req->resent_finished == 3) {
         reset_request(req);
@@ -743,11 +736,10 @@ void on_server_time_out(Response res, Request *req) {
 
     //send missing eofs
     if (!req->received_eof) {
-    build_nak_directive(res.msg, start, EOF_PDU);
+        build_nak_directive(res.msg, start, EOF_PDU);
         ssp_sendto(res);
     }
 
-    ssp_printf("missing offsets %u\n", req->file->missing_offsets->count);
     //send missing NAKS
     if (req->file->missing_offsets->count > 0) {
         ssp_printf("sending Nak data\n");
@@ -785,11 +777,8 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
         
     Pdu_header *header = (Pdu_header *) packet;
 
-    uint16_t len = get_data_length(packet);
-    ssp_printf("packet data length %d\n", len);
-
-    //will protbably have to timeout different clients? how does that work with ddos?
     req->timeout = 0;
+
     //process file data
     if (header->PDU_type == 1) {
         if (!req->received_metadata) {
@@ -800,7 +789,7 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
             }
             request_metadata(req, res);
         }
-        write_packet_data_to_file(&packet[packet_index], len, req->file);
+        write_packet_data_to_file(&packet[packet_index], req->packet_data_len, req->file);
         return;
     }
     
@@ -826,7 +815,6 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
             if (!req->received_metadata)
                 request_metadata(req, res);
             
-            //this should probably just set variables for use later for calculating checksums
             ssp_printf("received eof packet\n");
             process_pdu_eof(&packet[packet_index], req, res);
 

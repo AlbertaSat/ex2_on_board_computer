@@ -67,8 +67,25 @@ static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, void *addr
     
 }
 
+static int remove_request(void *request, void *args) {
+    Request *req = (Request *) request;
+    Request *req2 = (Request *) args;
+    if (req->dest_cfdp_id == req2->dest_cfdp_id && req->transaction_sequence_number == req2->transaction_sequence_number)
+        return 1;
+    return 0;
+}
 
-static struct user_request_check_params {
+static void remove_request_check(void *request, void *args) {
+    Request *req = (Request *) request;
+    List *req_list = (List *) args;
+
+    if (req->type == none) {
+        Request *remove_this = req_list->remove(req_list, 0, remove_request, req);
+        ssp_cleanup_req(remove_this);
+    }
+}
+
+struct user_request_check_params {
     Response res;
     Client *client;
 };
@@ -78,7 +95,10 @@ static void user_request_check(void *request, void *args) {
     struct user_request_check_params* params = (struct user_request_check_params *) args;
 
     params->res.msg = req->buff;
+   
+    memset(params->res.msg, 0, params->client->packet_len);
     user_request_handler(params->res, req, params->client);
+    remove_request_check(request, params->client->request_list);
 }
 
 static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
@@ -90,7 +110,10 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
 
     Response res;    
     Client *client = (Client *) other;
-
+    if (client->request_list->count == 0){
+        return 0;
+    }
+        
     res.sfd = sfd;
     res.packet_len = client->packet_len;
     res.addr = client_addr;
@@ -102,30 +125,14 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
 
     client->request_list->print(client->request_list, user_request_check, &params);
     
-    return 0;
-}
-
-
-static int timeout_remove_request(void *request, void *args) {
-    Request *req = (Request *) request;
-    Request *req2 = (Request *) args;
-    if (req->dest_cfdp_id == req2->dest_cfdp_id && req->transaction_sequence_number == req2->transaction_sequence_number)
-        return 1;
+    
     return 0;
 }
 
 static void timeout_check(void *request, void *args) {
     Request *req = (Request *) request;
-    List *req_list = (List *) args;
-
     on_server_time_out(req->res, req); 
-
-    if (!req->is_active) {
-        Request *remove_this = req_list->remove(req_list, 0, timeout_remove_request, req);
-        ssp_cleanup_req(remove_this);
-        
-    }
-
+    remove_request_check(request, args);
 }
 //this function is a callback when using  my posix ports
 static int on_time_out_posix(void *other) {

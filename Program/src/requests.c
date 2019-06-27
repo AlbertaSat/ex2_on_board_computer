@@ -39,37 +39,7 @@ void ssp_cleanup_req(void *request) {
 
 
 void reset_request(Request *req){
-
-    req->is_active = 0;
-/*
-    memset(req->source_file_name, 0, MAX_PATH);
-    memset(req->destination_file_name, 0, MAX_PATH);
-    memset(req->buff, 0, req->buff_len);
-    memset(req->res.addr, 0, sizeof(struct sockaddr_in));
-    req->dest_cfdp_id = 0;
-    req->fault_handler_overides = 0;
-    req->file_size = 0;
-    req->flow_lable = 0;
-    req->received_eof = 0;
-    req->received_finished = 0;
-    req->received_metadata = 0;
-    req->resent_eof = 0;
-    req->resent_finished = 0;
-    req->segmentation_control = 0;
-    req->transaction_sequence_number = 0;
-    req->transmission_mode = 1;
     req->type = none;
-    req->is_active = 0;
-    if (req->file != NULL)
-        free_file(req->file);
-
-    if (req->pdu_header != NULL) {
-        ssp_cleanup_pdu_header(req->pdu_header);
-        req->pdu_header = NULL;
-    }
-    req->file = NULL;
-    req->type = none;
-    */
 }
 
 
@@ -86,7 +56,6 @@ Request *init_request(uint32_t buff_len) {
     req->file = NULL;
     req->buff_len = buff_len;
     req->buff = ssp_alloc(buff_len, sizeof(char));
-    req->is_active = 0;
     req->type = none;
     checkAlloc(req->buff,  1);
     return req;
@@ -120,7 +89,6 @@ Request *put_request(char *source_file_name,
 
     //enumeration
     req->type = put;
-    req->is_active = 1;
     req->dest_cfdp_id = client->cfdp_id;
     req->file_size = file_size;
     

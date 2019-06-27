@@ -152,7 +152,6 @@ void udpSelectServer(char* port, int packet_len,
     void *other)
 {
     int sfd = prepareUdpHost(port);
-    prepareSignalHandler();
 
     fd_set masterReadFds;
     FD_ZERO(&masterReadFds);

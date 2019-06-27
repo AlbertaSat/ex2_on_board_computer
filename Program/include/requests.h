@@ -43,9 +43,6 @@ typedef struct request {
 
     uint32_t packet_data_len;
 
-    //check to see if this request is empty
-    uint8_t is_active;
-    
     //timeout
     uint8_t timeout;
     
