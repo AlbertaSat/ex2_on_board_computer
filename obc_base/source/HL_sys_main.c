@@ -120,36 +120,38 @@ int main(void)
 {
 /* USER CODE BEGIN (3) */
     gioInit();
+
     gioSetDirection(gioPORTB, 0xFFFFFFFF);
-    //main_blinky();
+    main_blinky();
 
     int32_t iErr;
     const char *pszVolume0 = gaRedVolConf[0].pszPathPrefix;
     const char *pszVolume1 = gaRedVolConf[1].pszPathPrefix;
 
-    iErr = red_init();
-    if (iErr == -1)
-    {
-        //fprintf(stderr, "Unexpected error %d from red_init()\n", (int)red_errno);
-        gioToggleBit(gioPORTB,6);
-        exit(red_errno);
-    }
-
-    iErr = red_format(pszVolume0);
-    if (iErr == -1)
-    {
-        //fprintf(stderr, "Unexpected error %d from red_format()\n", (int)red_errno);
-        gioToggleBit(gioPORTB,6);
-        exit(red_errno);
-    }
-
-    iErr = red_mount(pszVolume0);
-    if (iErr == -1)
-    {
-        //fprintf(stderr, "Unexpected error %d from red_mount()\n", (int)red_errno);
-        gioToggleBit(gioPORTB,6);
-        exit(red_errno);
-    }
+    //iErr = red_init(); // TODO: Line currently causes errors
+//    fprintf("%d\n", iErr);
+//    if (iErr == -1)
+//    {
+//        //fprintf(stderr, "Unexpected error %d from red_init()\n", (int)red_errno);
+//        gioToggleBit(gioPORTB,6);
+//        exit(red_errno);
+//    }
+//
+//    iErr = red_format(pszVolume0);
+//    if (iErr == -1)
+//    {
+//        //fprintf(stderr, "Unexpected error %d from red_format()\n", (int)red_errno);
+//        gioToggleBit(gioPORTB,6);
+//        exit(red_errno);
+//    }
+//
+//    iErr = red_mount(pszVolume0);
+//    if (iErr == -1)
+//    {
+//        //fprintf(stderr, "Unexpected error %d from red_mount()\n", (int)red_errno);
+//        gioToggleBit(gioPORTB,6);
+//        exit(red_errno);
+//    }
 
     /*iErr = red_format(pszVolume1);
     if (iErr == -1)
@@ -170,10 +172,10 @@ int main(void)
 
 
     //FileSystem Tasks
-    vStartFSWriteTask(mainCREATOR_TASK_PRIORITY);
-
-
-    vTaskStartScheduler();
+//    vStartFSWriteTask(mainCREATOR_TASK_PRIORITY);
+//
+//
+//    vTaskStartScheduler();
 
 /* USER CODE END */
 

@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include "HL_sys_common.h"
 #include "HL_gio.h"
-#include "HL_spi.h"
+#include "HL_mibspi.h"
 #include "diskio.h"
 #include "mmc-hercules.h"
 #include <assert.h>
@@ -48,10 +48,10 @@
 
 
 gioPORT_t *_spiPORT = 0;
-spiBASE_t *_spiREG = 0;
+mibspiBASE_t *_spiREG = 0;
 
 
-void mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) {
+void mmcSelectSpi(gioPORT_t *port, mibspiBASE_t *reg) {
     _spiPORT = port;
     _spiREG = reg;
 }
@@ -234,7 +234,7 @@ void power_on (void)
     * This doesn't really turn the power on, but initializes the
     * SPI port and pins needed to talk to the card.
     */
-    spiInit();
+    mibspiInit();
 
 
     /* Set DI and CS high and apply more than 74 pulses to SCLK for the card */
