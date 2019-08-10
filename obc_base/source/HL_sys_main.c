@@ -8,7 +8,7 @@
 */
 
 /* 
-* Copyright (C) 2009-2018 Texas Instruments Incorporated - www.ti.com  
+* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -32,20 +32,16 @@
 *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
 *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-*  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+*  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT
 *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-*  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+*  DATA, OR PROFITS; OR BUSINESS INTERRUPTION HOWEVER CAUSED AND ON ANY
 *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-*  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+*  INCLUDING NEGLIGENCE OR OTHERWISE ARISING IN ANY WAY OUT OF THE USE
 *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 */
 
-
 /* USER CODE BEGIN (0) */
-#include "HL_gio.h"
-#include "HL_het.h"
-#include "FreeRTOS.h"
 /* USER CODE END */
 
 /* Include Files */
@@ -53,33 +49,61 @@
 #include "HL_sys_common.h"
 
 /* USER CODE BEGIN (1) */
-extern void main_blinky( void );
+/* Include FreeRTOS scheduler files */
+#include "FreeRTOS.h"
+#include "os_task.h"
+
+/* Include HET header file - types, definitions and function declarations for system driver */
+#include "HL_het.h"
+#include "HL_gio.h"
+
+/* Define Task Handles */
+xTaskHandle xTask1Handle;
+
+/* Task1 */
+void vTask1(void *pvParameters)
+{
+    for(;;)
+    {
+        /* Taggle HET[1] with timer tick */
+        gioSetBit(gioPORTB, 6, gioGetBit(gioPORTB, 6) ^ 1);
+        vTaskDelay(100);
+    }
+}
 /* USER CODE END */
+
 
 /** @fn void main(void)
 *   @brief Application main function
-*   @note This function is empty by default.
 *
-*   This function is called after startup.
-*   The user can use this function to implement the application.
 */
 
 /* USER CODE BEGIN (2) */
 /* USER CODE END */
 
-uint8	emacAddress[6U] = 	{0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
-uint32 	emacPhyAddress	=	1U;
 
-int main(void)
+void main(void)
 {
 /* USER CODE BEGIN (3) */
+
+    /* Set high end timer GIO port hetPort pin direction to all output */
     gioInit();
     gioSetDirection(gioPORTB, 0xFFFFFFFF);
-    main_blinky();
 
+
+    /* Create Task 1 */
+    if (xTaskCreate(vTask1,"Task1", configMINIMAL_STACK_SIZE, NULL, 1, &xTask1Handle) != pdTRUE)
+    {
+        /* Task could not be created */
+        while(1);
+    }
+
+    /* Start Scheduler */
+    vTaskStartScheduler();
+
+    /* Run forever */
+    while(1);
 /* USER CODE END */
-
-    return 0;
 }
 
 
