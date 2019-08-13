@@ -5,6 +5,9 @@
 SHELL = cmd.exe
 
 # Add inputs and outputs from these tool invocations to the build variables 
+CMD_SRCS += \
+../source/HL_sys_link.cmd 
+
 ASM_SRCS += \
 ../source/HL_sys_core.asm \
 ../source/HL_sys_intvecs.asm \
@@ -48,7 +51,6 @@ C_SRCS += \
 ../source/HL_sys_vim.c \
 ../source/HL_system.c \
 ../source/main_blinky.c \
-../source/mmc-hercules.c \
 ../source/os_croutine.c \
 ../source/os_event_groups.c \
 ../source/os_heap.c \
@@ -95,7 +97,6 @@ C_DEPS += \
 ./source/HL_sys_vim.d \
 ./source/HL_system.d \
 ./source/main_blinky.d \
-./source/mmc-hercules.d \
 ./source/os_croutine.d \
 ./source/os_event_groups.d \
 ./source/os_heap.d \
@@ -146,7 +147,6 @@ OBJS += \
 ./source/HL_sys_vim.obj \
 ./source/HL_system.obj \
 ./source/main_blinky.obj \
-./source/mmc-hercules.obj \
 ./source/os_croutine.obj \
 ./source/os_event_groups.obj \
 ./source/os_heap.obj \
@@ -205,7 +205,6 @@ OBJS__QUOTED += \
 "source\HL_sys_vim.obj" \
 "source\HL_system.obj" \
 "source\main_blinky.obj" \
-"source\mmc-hercules.obj" \
 "source\os_croutine.obj" \
 "source\os_event_groups.obj" \
 "source\os_heap.obj" \
@@ -253,7 +252,6 @@ C_DEPS__QUOTED += \
 "source\HL_sys_vim.d" \
 "source\HL_system.d" \
 "source\main_blinky.d" \
-"source\mmc-hercules.d" \
 "source\os_croutine.d" \
 "source\os_event_groups.d" \
 "source\os_heap.d" \
@@ -307,7 +305,6 @@ C_SRCS__QUOTED += \
 "../source/HL_sys_vim.c" \
 "../source/HL_system.c" \
 "../source/main_blinky.c" \
-"../source/mmc-hercules.c" \
 "../source/os_croutine.c" \
 "../source/os_event_groups.c" \
 "../source/os_heap.c" \
