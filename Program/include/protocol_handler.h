@@ -66,7 +66,7 @@ uint8_t build_data_packet(char *packet, uint32_t start, File *file, uint32_t len
 
 //for testing
 uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_number, uint32_t transmission_mode, Pdu_header *pdu_header);
-uint8_t build_ack (char *packet, uint32_t start, uint8_t type, Request *req);
+uint8_t build_ack (char *packet, uint32_t start, uint8_t type);
 int process_file_request_metadata(Request *req);
 int nak_response(char *packet, uint32_t start, Request *req, Response res, Client *client);
 void set_data_length(char*packet, uint16_t data_len);

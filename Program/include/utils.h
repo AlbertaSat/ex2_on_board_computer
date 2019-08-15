@@ -45,7 +45,7 @@ typedef struct List
     int count;
     int (*push)(struct List *list, void *element,  uint32_t id);
     void *(*remove)(struct List *list, uint32_t id, int (*f)(void *element, void *args), void *args);
-    void (*print)(struct List *list, void (*f)(void *element, void *args), void *args);
+    void (*iterate)(struct List *list, void (*f)(void *element, void *args), void *args);
     void (*free)(struct List *list, void (*f)(void *element));
     void *(*pop) (struct List *list);
     int (*insert) (struct List *list, void *element, uint32_t id);

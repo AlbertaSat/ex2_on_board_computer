@@ -202,7 +202,7 @@ static int push(List *list, void *element, uint32_t id)
     to print out an element.
 ------------------------------------------------------------------------------*/
 
-static void printList(List *list, void (*f)(void *element, void *args), void *args)
+static void iterate(List *list, void (*f)(void *element, void *args), void *args)
 {
     NODE *cur = list->head->next;
     NODE *next;
@@ -377,7 +377,7 @@ List *linked_list()
 
     newList->push = push;
     newList->remove = removeElement;
-    newList->print = printList;
+    newList->iterate = iterate;
     newList->free = freeList;
     newList->insert = insert;
     newList->pop = pop;

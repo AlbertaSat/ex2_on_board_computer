@@ -10,7 +10,6 @@ CFILES += server.c  #used for poxix port
 CFILES += protocol_handler.c
 CFILES += mib.c
 CFILES += filesystem_funcs.c
-CFILES += ringbuf.c
 CFILES += requests.c
 CFILES += tasks.c
 CFILES += file_delivery_app.c

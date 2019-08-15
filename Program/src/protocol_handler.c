@@ -260,7 +260,7 @@ uint32_t build_nak_packet(char *packet, uint32_t start, Request *req) {
     holder.offsets = ssp_alloc(count, sizeof(Offset));
     holder.i = 0;
 
-    req->file->missing_offsets->print(req->file->missing_offsets, fill_nak_array, &holder);
+    req->file->missing_offsets->iterate(req->file->missing_offsets, fill_nak_array, &holder);
     
     pdu_nak->start_scope = holder.offsets[0].start;
     pdu_nak->end_scope = holder.offsets[holder.i-1].end;
@@ -280,7 +280,7 @@ uint32_t build_nak_packet(char *packet, uint32_t start, Request *req) {
     return data_len;
 }
 
-uint8_t build_ack(char*packet, uint32_t start, uint8_t type, Request *req) {
+uint8_t build_ack(char*packet, uint32_t start, uint8_t type) {
     packet[start] = ACK_PDU;
     uint32_t packet_index = start + 1;
     Pdu_ack *pdu_ack = (Pdu_ack *) &packet[packet_index];
@@ -643,7 +643,7 @@ void user_request_handler(Response res, Request *req, Client* client) {
         ssp_printf("req->buff is null, couldn't process user request\n");
         return;
     }
-    uint32_t start = build_pdu_header(res.msg, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
+    uint32_t start = build_pdu_header(req->buff, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
 
     check_req_status(req, client);
     switch (req->type)
@@ -651,7 +651,7 @@ void user_request_handler(Response res, Request *req, Client* client) {
         case eof: 
             ssp_printf("sending eof\n");
             req->type = none;
-            build_eof_packet(res.msg, start, req);
+            build_eof_packet(req->buff, start, req);
             ssp_sendto(res);
             break;
 
@@ -659,7 +659,7 @@ void user_request_handler(Response res, Request *req, Client* client) {
             if (req->sent_first_data_round == 1)
                 return;
             
-            if (build_data_packet(res.msg, start, req->file, client->packet_len)) {
+            if (build_data_packet(req->buff, start, req->file, client->packet_len)) {
                 req->type = eof;
                 req->sent_first_data_round = 1;
                 ssp_printf("sending data blast\n");
@@ -676,7 +676,7 @@ void user_request_handler(Response res, Request *req, Client* client) {
 
         case finished:
             ssp_printf("sending finished packet\n");
-            build_ack(res.msg, start, FINISHED_PDU, req);
+            build_ack(req->buff, start, FINISHED_PDU);
             ssp_sendto(res);
             req->resent_finished++;
             break;
@@ -763,7 +763,7 @@ void on_server_time_out(Response res, Request *req) {
     //received EOF, send back 3 eof packets
     if (req->received_eof && req->resent_eof < 3) {
         ssp_printf("sending eof ack\n");
-        build_ack(res.msg, start, EOF_PDU, req);
+        build_ack(res.msg, start, EOF_PDU);
         ssp_sendto(res);
         req->resent_eof++;
     }

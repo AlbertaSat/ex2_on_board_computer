@@ -123,7 +123,7 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
         client
     };
 
-    client->request_list->print(client->request_list, user_request_check, &params);
+    client->request_list->iterate(client->request_list, user_request_check, &params);
     
     
     return 0;
@@ -141,7 +141,7 @@ static int on_time_out_posix(void *other) {
     if(p_state->current_request == NULL)
         return 0;
 
-    p_state->request_list->print(p_state->request_list, timeout_check, p_state->request_list);
+    p_state->request_list->iterate(p_state->request_list, timeout_check, p_state->request_list);
     
     return 0;
 }
