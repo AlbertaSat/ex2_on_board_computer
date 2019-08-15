@@ -2,7 +2,7 @@
 
 This repository contains (or will contain) source code and relevant content for the Open CubeSat Platform (OCP) - an open source platform for Cube Satellites developed at the University of Alberta
 
-## LISCENCE INFORMATION ##
+## LICENSE INFORMATION ##
 
 Copyright (C) 2015  University of Alberta
 
