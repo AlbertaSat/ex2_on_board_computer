@@ -4,6 +4,7 @@
 #include "port.h"
 #include <stddef.h>
 #include "string.h"
+#include "list.h"
 
 MIB *init_mib() {
     MIB *mib = ssp_alloc(1, sizeof(MIB));

@@ -2,7 +2,7 @@
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 
-#include "utils.h"
+#include "list.h"
 #include "packet.h"
 #include "mib.h"
 #include "filesystem_funcs.h"

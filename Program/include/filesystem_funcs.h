@@ -2,7 +2,7 @@
 #ifndef FILESYSTEM_FUNCS_H
 #define FILESYSTEM_FUNCS_H
 #include <stdint.h>
-#include "utils.h"
+#include "list.h"
 
 #define TEMP_FILESIZE 1000
 

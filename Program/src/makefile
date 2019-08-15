@@ -13,7 +13,7 @@ CFILES += filesystem_funcs.c
 CFILES += requests.c
 CFILES += tasks.c
 CFILES += file_delivery_app.c
-
+CFILES += list.c
 #----------------------------test files-------------------------
 
 #entrypoint
