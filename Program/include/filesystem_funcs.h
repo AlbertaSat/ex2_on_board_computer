@@ -3,9 +3,11 @@
 #define FILESYSTEM_FUNCS_H
 #include <stdint.h>
 #include "list.h"
+#include "types.h"
 
 #define TEMP_FILESIZE 1000
 
+/*
 typedef struct offset {
     uint32_t start;
     uint32_t end;
@@ -22,7 +24,7 @@ typedef struct file {
     List *missing_offsets;
 
 } File;
-
+*/
 uint32_t get_file_size(char *source_file_name);
 
 //allocates space for a file pointer

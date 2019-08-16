@@ -4,7 +4,8 @@
 
 #include "stdint.h"
 #include "protocol_handler.h"
-
+#include "types.h"
+/*
 typedef struct response {
     int sfd;
     //this is a pointer to buff in a request
@@ -77,6 +78,7 @@ typedef struct request {
     //handler for sending responses back
     Response res;
 } Request;
+*/
 
 void ssp_cleanup_req(void *request);
 Request *init_request(uint32_t buff_len);

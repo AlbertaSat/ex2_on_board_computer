@@ -1,6 +1,7 @@
 
 
 #include "list.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,9 +14,9 @@
 NODE *createNode(void *element, uint32_t id)
 {
     NODE *newNode = calloc(sizeof(NODE), 1);
-    if(!checkAlloc(newNode, 0))
+    if (newNode == NULL) {
         return NULL;
-
+    }
     newNode->element = element;
     newNode->id = id;
     return newNode;
@@ -262,7 +263,7 @@ static NODE *findNode(List *list, uint32_t id, int (*f)(void *element, void *arg
 List *linked_list()
 {
     List *newList = calloc(sizeof(List), 1);
-    if(!checkAlloc(newList, 0))
+    if (newList == NULL) 
         return NULL;
 
     newList->head = createNode(NULL, 0);

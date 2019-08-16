@@ -1,13 +1,9 @@
 
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
+#include "types.h"
 
-#include "list.h"
-#include "packet.h"
-#include "mib.h"
-#include "filesystem_funcs.h"
-#include "requests.h"
-
+/*
 typedef struct protocol_state {
     uint32_t packet_size;
     char *server_port;
@@ -54,7 +50,7 @@ typedef struct client {
 
 
 } Client;
-
+*/
 
 //for use
 void parse_packet_server(char* buff, uint32_t packet_index, Response res, Request *req, Protocol_state *p_state);

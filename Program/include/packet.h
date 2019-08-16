@@ -3,9 +3,7 @@
 #ifndef PACKET_H
 #define PACKET_H
 #include <stdint.h>
-#include "filesystem_funcs.h"
 #define PACKET_HEADER_LEN 224
-
 // PACKET_HEADER_LEN + data max size = (65536 * 8)
 #define PACKET_MAX_LEN 524512
 #define PACKET_LEN 1024 + 224 // 1248 limiting the data portion to 56 bytes
@@ -301,7 +299,7 @@ typedef struct pdu_nak {
 
     //number of Nak_segments
     uint64_t segment_requests;
-    Offset *segments;
+    void *segments;
 } Pdu_nak;
 
 

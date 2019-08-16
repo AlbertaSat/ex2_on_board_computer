@@ -12,6 +12,9 @@
 #include "utils.h"
 #include <string.h>
 #include "tasks.h"
+#include "types.h"
+#include "filesystem_funcs.h"
+#include "mib.h"
 
 void ssp_cleanup_req(void *request) {
 

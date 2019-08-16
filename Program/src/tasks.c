@@ -9,7 +9,7 @@
 #include "mib.h"
 #include "filesystem_funcs.h"
 #include <stdio.h>
-
+#include "types.h"
 /*------------------------------------------------------------------------------
     
     Callbacks for the tasks bellow

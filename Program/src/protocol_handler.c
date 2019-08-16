@@ -6,7 +6,7 @@
 #include "packet.h"
 #include "filesystem_funcs.h"
 #include "requests.h"
-
+#include "types.h"
 
 //snprintf
 #include <stdio.h>
@@ -704,11 +704,14 @@ static void reset_timeout(Request *req) {
     }
 }
 
+/*
 static void print_offsets(void *element, void *args) {
 
     Offset *off = (Offset *) element;
     ssp_printf("missing offset start: %d end:%d\n", off->start, off->end);
 }
+*/
+
 void on_server_time_out(Response res, Request *req) {
 
     if (req == NULL)
