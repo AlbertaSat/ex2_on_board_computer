@@ -9,7 +9,7 @@
 #include "mib.h"
 #include "filesystem_funcs.h"
 #include <stdio.h>
-
+#include "types.h"
 /*------------------------------------------------------------------------------
     
     Callbacks for the tasks bellow
@@ -42,7 +42,6 @@ static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr
 
 static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
     
-
     Client *client = (Client *) other;
 
     Response res;
@@ -79,7 +78,7 @@ static void remove_request_check(void *request, void *args) {
     Request *req = (Request *) request;
     List *req_list = (List *) args;
 
-    if (req->type == none) {
+    if (req->type == clean_up) {
         Request *remove_this = req_list->remove(req_list, 0, remove_request, req);
         ssp_cleanup_req(remove_this);
     }
@@ -123,7 +122,7 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
         client
     };
 
-    client->request_list->print(client->request_list, user_request_check, &params);
+    client->request_list->iterate(client->request_list, user_request_check, &params);
     
     
     return 0;
@@ -141,7 +140,7 @@ static int on_time_out_posix(void *other) {
     if(p_state->current_request == NULL)
         return 0;
 
-    p_state->request_list->print(p_state->request_list, timeout_check, p_state->request_list);
+    p_state->request_list->iterate(p_state->request_list, timeout_check, p_state->request_list);
     
     return 0;
 }

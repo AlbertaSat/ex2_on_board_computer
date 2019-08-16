@@ -178,7 +178,7 @@ int test_build_ack_eof_pdu(char *packet, uint32_t start) {
     printf("testing eof ack creation\n");
 
     Request *req;
-    uint8_t len =  build_ack (packet, start, EOF_PDU, req);
+    uint8_t len =  build_ack (packet, start, EOF_PDU);
 
     Pdu_directive *pdu_d = &packet[start];
     ASSERT_EQUALS_INT("ACK_PDU directive correct", pdu_d->directive_code, ACK_PDU);

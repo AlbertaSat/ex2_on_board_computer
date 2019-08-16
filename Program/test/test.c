@@ -1,7 +1,5 @@
 
 #include "test.h"
-
-#include "utils.h"
 #include <stdio.h>
 
 int test_num = 0;

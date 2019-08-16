@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "mib.h"
 #include "filesystem_funcs.h"
+#include <fcntl.h>
 
 #ifdef POSIX_PORT
        #include <pthread.h>
@@ -19,7 +20,7 @@
        #include <unistd.h>
 
 #endif
-#include "protocol_handler.h"
+#include "types.h"
 
 
 

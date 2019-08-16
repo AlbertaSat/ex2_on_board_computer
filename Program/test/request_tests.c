@@ -98,7 +98,7 @@ void request_test_list_storage() {
     list->insert(list, req3, 3);
 
     ssp_cleanup_req(list->pop(list));
-    list->print(list, list_print, NULL);  
+    list->iterate(list, list_print, NULL);  
     list->free(list, ssp_cleanup_req);
 
 }

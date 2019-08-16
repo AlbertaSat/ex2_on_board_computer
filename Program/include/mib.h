@@ -1,15 +1,15 @@
 //the management information base (MIB)
 
 //default faul handle
-#include <stdint.h>
-#include <utils.h>
-#include "packet.h"
 
 
 #ifndef MIB_H
 #define MIB_H
-
-
+#include <stdint.h>
+#include <utils.h>
+#include "packet.h"
+#include "types.h"
+/*
 typedef struct local_entity {
     unsigned int EOF_sent_indication : 1;
 
@@ -70,12 +70,12 @@ typedef struct remote_entity {
     //time limit
     unsigned int transaction_inactivity_limit;
 
-    /*
-    Start of transmission opportunity A signal produced by the operating environment.
-    End of transmission opportunity A signal produced by the operating environment.
-    Start of reception opportunity A signal produced by the operating environment.
-    End of reception opportunity A signal produced by the operating environment. 
-    */
+    
+    //Start of transmission opportunity A signal produced by the operating environment.
+    //End of transmission opportunity A signal produced by the operating environment.
+    //Start of reception opportunity A signal produced by the operating environment.
+    //End of reception opportunity A signal produced by the operating environment. 
+    
    
 
 } Remote_entity;
@@ -85,7 +85,7 @@ typedef struct mib {
     List *remote_entities;
 
 } MIB;
-
+*/
 
 MIB *init_mib(void);
 void free_mib(MIB *mib);

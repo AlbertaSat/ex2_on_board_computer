@@ -13,6 +13,8 @@
 #include "utils.h"
 //for put request
 #include "requests.h"
+
+#include "types.h"
 //for main app
 #include "file_delivery_app.h"
 //for signal handler, because its nice

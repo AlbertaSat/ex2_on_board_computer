@@ -17,9 +17,12 @@ CFILES += $(PROJDIR)/test/test.c
 CFILES += $(PROJDIR)/test/request_tests.c
 CFILES += $(PROJDIR)/test/filesystem_tests.c
 CFILES += $(PROJDIR)/test/protocol_handler_tests.c
+
+CFILES += $(PROJDIR)/test/list_tests.c
 CFILES += $(PROJDIR)/src/requests.c
 CFILES += $(PROJDIR)/src/tasks.c
 CFILES += $(PROJDIR)/src/file_delivery_app.c
+CFILES += $(PROJDIR)/src/list.c
 #entrypoint
 MAIN = main
 
@@ -65,7 +68,6 @@ CFLAGS += $(INCLUDE) $(CWARNS)
 OBJS_FILES = $(patsubst %.c, %.o, $(CFILES))
 
 all: $(MAIN)
-	mv *.o ./obj
 
 .PHONY: clean 
 
