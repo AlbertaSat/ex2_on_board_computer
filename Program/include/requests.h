@@ -25,7 +25,8 @@ typedef enum Indication {
     put,
     eof,
     //sending data
-    sending_data
+    sending_data,
+    clean_up
 
 } Indication;
 

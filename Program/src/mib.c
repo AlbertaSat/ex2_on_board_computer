@@ -24,7 +24,7 @@ void free_mib(MIB *mib){
     ssp_free(mib);
 }
 
-//these configure peers for their specific transmission configuration
+//these configure peers for their specific transmission configuration, should be read in on a config file
 int add_new_cfdp_entity(MIB *mib, uint32_t cfdp_id, uint32_t UT_address, uint16_t port){
 
     Remote_entity *remote = ssp_alloc(1, sizeof(Remote_entity));
@@ -81,31 +81,3 @@ void ssp_cleanup_pdu_header(Pdu_header *pdu_header) {
     ssp_free(pdu_header);
 }
 
-/*
-    //building the pdu header here
-    client->pdu_header = ssp_alloc(1, sizeof(Pdu_header));
-    checkAlloc(client->pdu_header, 1);
-
-
-    //these will need to be set with a config file, or dynamically based on the 
-    //packet being sent
-    
-    Pdu_header* header = client->pdu_header;
-    header->reserved_bit_0 = 0;
-    header->reserved_bit_1 = 0;
-    header->reserved_bit_2 = 0;
-    header->CRC_flag = client->mib_info->CRC_required;
-    header->direction = 1;
-    header->PDU_type = 0;
-    header->transaction_seq_num_len = 3;
-    header->length_of_entity_IDs = 1; 
-    header->transmission_mode = remote->default_transmission_mode;
-
-    header->destination_id = ssp_alloc(header->length_of_entity_IDs, sizeof(u_int8_t));
-    checkAlloc(header->destination_id, 1);
-    memcpy(header->destination_id, &remote->cfdp_id, header->length_of_entity_IDs);
-
-    header->source_id = ssp_alloc(header->length_of_entity_IDs, sizeof(u_int8_t));
-    checkAlloc(header->source_id, 1);
-    memcpy(header->source_id, &p_state->my_cfdp_id, header->length_of_entity_IDs);
-    */

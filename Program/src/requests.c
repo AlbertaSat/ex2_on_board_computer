@@ -34,7 +34,6 @@ void ssp_cleanup_req(void *request) {
         ssp_free(req->res.addr);
     if (req != NULL)
         ssp_free(req);
-    request = NULL;
 
 }
 

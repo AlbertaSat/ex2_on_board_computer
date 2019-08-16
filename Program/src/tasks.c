@@ -42,7 +42,6 @@ static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr
 
 static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
     
-
     Client *client = (Client *) other;
 
     Response res;
@@ -79,7 +78,7 @@ static void remove_request_check(void *request, void *args) {
     Request *req = (Request *) request;
     List *req_list = (List *) args;
 
-    if (req->type == none) {
+    if (req->type == clean_up) {
         Request *remove_this = req_list->remove(req_list, 0, remove_request, req);
         ssp_cleanup_req(remove_this);
     }

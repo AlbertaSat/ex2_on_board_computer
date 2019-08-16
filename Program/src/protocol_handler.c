@@ -429,6 +429,7 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
 
     Request *request = *req;
     
+
     //if packet is from the same request, don't' change current request
     if (request != NULL && request->transaction_sequence_number == transaction_sequence_number && request->dest_cfdp_id == source_id){ 
         (*req)->packet_data_len = len;         
@@ -698,8 +699,8 @@ static void reset_timeout(Request *req) {
     //ssp_printf("timeout %u for id: %u sequence: %u\n", time, req->dest_cfdp_id, req->transaction_sequence_number);
     if (time == 20) {
         req->timeout = 0;
-        reset_request(req);
-        ssp_printf("timeout, resetting request\n");
+        req->type = clean_up;
+        ssp_printf("timeout, cleaning up request\n");
     }
 }
 
@@ -715,14 +716,17 @@ void on_server_time_out(Response res, Request *req) {
 
     reset_timeout(req);
 
+    if (req->type == none)
+        return;
+    
     if (req->transmission_mode == 1)
         return; 
 
     uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
 
     if (req->resent_finished == 3) {
-        reset_request(req);
-        ssp_printf("file sent, resetting request\n");
+        req->type = none;
+        ssp_printf("file sent, closing request\n");
         return;
     }
 
