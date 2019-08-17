@@ -41,11 +41,6 @@ void ssp_cleanup_req(void *request) {
 }
 
 
-void reset_request(Request *req){
-    req->type = none;
-}
-
-
 Request *init_request(uint32_t buff_len) {
 
     Request *req = ssp_alloc(1, sizeof(Request));
