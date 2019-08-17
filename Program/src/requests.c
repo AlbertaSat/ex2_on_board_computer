@@ -87,7 +87,7 @@ Request *put_request(char *source_file_name,
 
     //enumeration
     req->type = put;
-    req->dest_cfdp_id = client->cfdp_id;
+    req->dest_cfdp_id = client->remote_entity->cfdp_id;
     req->file_size = file_size;
     
     memcpy(req->source_file_name, source_file_name ,strnlen(source_file_name, MAX_PATH));

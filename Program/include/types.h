@@ -208,12 +208,7 @@ typedef struct client {
     Request *current_request;
     List *request_list;
 
-    //can get rid of these, these are found in mib_info anyway
-    uint32_t cfdp_id;
-    uint32_t unitdata_id;
-    uint32_t unitdata_port;
-    
-    Remote_entity *mib_info;
+    Remote_entity *remote_entity;
     Pdu_header *pdu_header;
     
     Protocol_state *p_state;    
