@@ -68,9 +68,6 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     client->request_list = linked_list();
     client->packet_len = PACKET_LEN;
 
-
-    List *entity_list = p_state->mib->remote_entities;
-    //Remote_entity *remote = entity_list->find(entity_list, cfdp_id, NULL, NULL);
     Remote_entity *remote = get_remote_entity(p_state->mib, cfdp_id);
 
     if (remote == NULL)

@@ -97,7 +97,6 @@ typedef struct remote_entity {
 } Remote_entity;
 
 typedef struct mib {
-    Local_entity server;
     List *remote_entities;
 
 } MIB;
@@ -160,6 +159,9 @@ typedef struct request {
     uint8_t resent_finished;
     //bool for sending first blast of data packets
     uint8_t sent_first_data_round;
+
+    Remote_entity *remote_entity;
+    Local_entity *local_entity;
 
     char* messages_to_user;
     char* filestore_requests;
