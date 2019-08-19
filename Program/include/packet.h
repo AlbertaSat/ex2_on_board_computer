@@ -2,7 +2,6 @@
 
 #ifndef PACKET_H
 #define PACKET_H
-#include <stdint.h>
 #define PACKET_HEADER_LEN 224
 // PACKET_HEADER_LEN + data max size = (65536 * 8)
 #define PACKET_MAX_LEN 524512
@@ -10,9 +9,11 @@
 #define PACKET_STATIC_HEADER_LEN 4 //in bytes
 
 #include "types.h"
+#include <stdint.h>
+
 
 uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_number, uint32_t transmission_mode, Pdu_header *pdu_header);
-uint8_t build_finished_pdu(char *packet, uint32_t start, Request *req);
+uint8_t build_finished_pdu(char *packet, uint32_t start);
 uint8_t build_put_packet_metadata(Response res, uint32_t start, Request *req);
 uint8_t build_nak_response(char *packet, uint32_t start, uint32_t offset, Request *req, Client* client);
 uint8_t build_data_packet(char *packet, uint32_t start, File *file, uint32_t length);

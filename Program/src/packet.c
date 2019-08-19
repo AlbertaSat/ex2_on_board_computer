@@ -46,7 +46,7 @@ uint8_t build_pdu_header(char *packet, uint64_t transaction_sequence_number, uin
     return total_bytes;
 }
 
-uint8_t build_finished_pdu(char *packet, uint32_t start, Request *req) {
+uint8_t build_finished_pdu(char *packet, uint32_t start) {
 
     uint32_t packet_index = start;
     uint32_t data_len = 0;

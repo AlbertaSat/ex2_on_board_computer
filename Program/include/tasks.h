@@ -2,10 +2,7 @@
 #ifndef SSP_TASKS_H
 #define SSP_TASKS_H
 
-
-
-#include "protocol_handler.h"
-
+#include "types.h"
 
 void ssp_cleanup_client(Client *client);
 void ssp_cleanup_req(void *request);

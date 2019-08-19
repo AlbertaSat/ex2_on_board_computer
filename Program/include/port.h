@@ -8,7 +8,7 @@
 
 
 #define MAX_PATH 255
-#include "protocol_handler.h"
+#include "types.h"
 
 
 void ssp_error( char *msg);

@@ -3,55 +3,6 @@
 #define PROTOCOL_H
 #include "types.h"
 
-/*
-typedef struct protocol_state {
-    uint32_t packet_size;
-    char *server_port;
-    void *server_handle;
-    MIB *mib;
-    uint32_t my_cfdp_id;
-    
-    List* request_list; 
-
-    Request *current_request;
-   
-    //lock this
-    uint32_t transaction_sequence_number;
-    
-    uint8_t verbose_level;
-
-    //bool for exiting the server thread
-    uint8_t close;
-
-} Protocol_state;
-
-
-//outgoing requests spin up client threads
-typedef struct client {
-    
-    void *client_handle;
-    uint32_t packet_len;
-    
-    Request *current_request;
-    List *request_list;
-
-    //can get rid of these, these are found in mib_info anyway
-    uint32_t cfdp_id;
-    uint32_t unitdata_id;
-    uint32_t unitdata_port;
-    
-    Remote_entity *mib_info;
-    Pdu_header *pdu_header;
-    
-    Protocol_state *p_state;    
-
-    //bool for exiting the client thread
-    uint8_t close;
-
-
-} Client;
-*/
-
 //for use
 void parse_packet_server(char* buff, uint32_t packet_index, Response res, Request *req, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client);

@@ -8,6 +8,8 @@
 #include "file_delivery_app.h"
 #include "tasks.h"
 #include <stdio.h>
+#include <arpa/inet.h>
+#include "utils.h"
 
 Protocol_state  *init_ftp(uint32_t my_cfdp_address) {
 

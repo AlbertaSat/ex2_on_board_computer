@@ -10,6 +10,7 @@
 #include "filesystem_funcs.h"
 #include <stdio.h>
 #include "types.h"
+#include <arpa/inet.h>
 /*------------------------------------------------------------------------------
     
     Callbacks for the tasks bellow

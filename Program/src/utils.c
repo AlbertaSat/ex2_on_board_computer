@@ -10,7 +10,6 @@ to use for general functionality.
 #include <stdio.h>
 #include "utils.h"
 #include <stdlib.h>
-#include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>

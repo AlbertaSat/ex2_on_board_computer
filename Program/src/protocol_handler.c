@@ -7,6 +7,7 @@
 #include "filesystem_funcs.h"
 #include "requests.h"
 #include "types.h"
+#include "utils.h"
 
 //snprintf
 #include <stdio.h>
@@ -455,7 +456,7 @@ void on_server_time_out(Response res, Request *req) {
 
         if (req->file->eof_checksum == req->file->partial_checksum){
             ssp_printf("sending finsihed pdu\n");
-            build_finished_pdu(res.msg, start, req);
+            build_finished_pdu(res.msg, start);
             ssp_sendto(res);
             req->resent_finished++;   
             return;
