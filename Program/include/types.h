@@ -475,28 +475,28 @@ typedef struct response {
     //this is type (struct sockaddr_in) in posix
     void *addr;
     //getting rid of this soon in favour of client based packet sizes
-
     size_t size_of_addr;
+
     uint32_t packet_len;
     
 } Response;
 
 
-typedef enum Indication {
-    finished, 
+typedef enum procedure {
+    sending_finished,
     none,
-    transaction,
-    put,
-    eof,
+    sending_put_metadata,
+    sending_eof,
     //sending data
     sending_data,
     clean_up
 
-} Indication;
+} Request_procedure;
 
 //incoming requests spin up requests
 typedef struct request {
-    Indication type;
+    Request_procedure procedure;
+
     uint64_t transaction_sequence_number;
     uint32_t dest_cfdp_id;
 

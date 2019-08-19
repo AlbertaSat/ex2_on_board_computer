@@ -79,7 +79,7 @@ static void remove_request_check(void *request, void *args) {
     Request *req = (Request *) request;
     List *req_list = (List *) args;
 
-    if (req->type == clean_up) {
+    if (req->procedure == clean_up) {
         Request *remove_this = req_list->remove(req_list, 0, remove_request, req);
         ssp_cleanup_req(remove_this);
     }
@@ -184,7 +184,7 @@ static int on_stdin(void *other) {
     fgets(input, MAX_PATH, stdin);
     input[strlen(input)-1]='\0';
     
-    if (req->type == none){
+    if (req->procedure == none){
         if (strnlen(req->source_file_name, MAX_PATH) == 0){
             if (get_file_size(input) == -1){
                 ssp_printf("file: %s, we had trouble opening this file, please enter a new file\n", input);

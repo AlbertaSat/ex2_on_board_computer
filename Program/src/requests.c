@@ -7,7 +7,7 @@
 
 ------------------------------------------------------------------------------*/
 #include "stdint.h"
-#include "protocol_handler.h"
+#include "requests.h"
 #include "port.h"
 #include "utils.h"
 #include <string.h>
@@ -57,7 +57,8 @@ Request *init_request(uint32_t buff_len) {
     req->file = NULL;
     req->buff_len = buff_len;
     req->buff = ssp_alloc(buff_len, sizeof(char));
-    req->type = none;
+    req->res.msg = req->buff;
+    req->procedure = none;
     checkAlloc(req->buff,  1);
     return req;
 }
@@ -89,7 +90,7 @@ Request *put_request(char *source_file_name,
     req->transaction_sequence_number = p_state->transaction_sequence_number++;
 
     //enumeration
-    req->type = put;
+    req->procedure = sending_put_metadata;
     req->dest_cfdp_id = client->remote_entity->cfdp_id;
     req->file_size = file_size;
     

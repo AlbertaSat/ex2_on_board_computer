@@ -153,7 +153,7 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
         found_req->dest_cfdp_id = source_id;
         found_req->transaction_sequence_number = transaction_sequence_number;
         found_req->pdu_header = get_header_from_mib(p_state->mib, source_id, p_state->my_cfdp_id);
-        found_req->type = put;
+        found_req->procedure = sending_put_metadata;
         found_req->res.addr = ssp_alloc(res.size_of_addr, 1);
         memcpy(found_req->res.addr, res.addr, res.size_of_addr);
         found_req->res.packet_len = p_state->packet_size;
@@ -285,7 +285,7 @@ void parse_packet_client(char *packet, uint32_t packet_index, Response res, Requ
     switch(directive) {
         case FINISHED_PDU:
             req->local_entity->transaction_finished_indication = 1;
-            req->type = finished;
+            req->procedure = sending_finished;
             ssp_printf("received finished pdu\n");
             break;
         case NAK_PDU:
@@ -304,12 +304,12 @@ void parse_packet_client(char *packet, uint32_t packet_index, Response res, Requ
             {
                 case META_DATA_PDU:
                     ssp_printf("resending metadata\n");
-                    req->type = put;
+                    req->procedure = sending_put_metadata;
                     break;
             
                 case EOF_PDU: 
                     ssp_printf("resending eof\n");
-                    req->type = eof;
+                    req->procedure = sending_eof;
                     break;
                 
                 default:
@@ -323,12 +323,12 @@ void parse_packet_client(char *packet, uint32_t packet_index, Response res, Requ
 }
 static void check_req_status(Request *req, Client *client) {
 
-    if (req->resent_finished >= 3){
-        req->type = none;
+    if (req->resent_finished >= RESEND_FINISHED_TIMES){
+        req->procedure = none;
     }
-    if (req->resent_finished == 3) {
+    if (req->resent_finished == RESEND_FINISHED_TIMES) {
         ssp_printf("file successfully sent\n");
-        req->resent_finished = 4;
+        req->resent_finished = RESEND_FINISHED_TIMES + 1;
     }
 }
 
@@ -345,12 +345,13 @@ void user_request_handler(Response res, Request *req, Client* client) {
     uint32_t start = build_pdu_header(req->buff, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
 
     check_req_status(req, client);
-    switch (req->type)
+    switch (req->procedure)
     {
-        case eof: 
+        case sending_eof: 
             ssp_printf("sending eof\n");
-            req->type = none;
+            req->procedure = none;
             build_eof_packet(req->buff, start, req);
+            req->local_entity->EOF_sent_indication = 1;
             ssp_sendto(res);
             break;
 
@@ -359,21 +360,20 @@ void user_request_handler(Response res, Request *req, Client* client) {
                 return;
             
             if (build_data_packet(req->buff, start, req->file, client->packet_len)) {
-                req->type = eof;
-                req->local_entity->EOF_sent_indication = 1;
+                req->procedure = sending_eof;
                 ssp_printf("sending data blast\n");
             }
             ssp_sendto(res);
             break;
 
-        case put:
+        case sending_put_metadata:
             ssp_printf("sending metadata\n");
             start = build_put_packet_metadata(res, start, req);
             ssp_sendto(res);
-            req->type = sending_data;
+            req->procedure = sending_data;
             break;
 
-        case finished:
+        case sending_finished:
             ssp_printf("sending finished packet\n");
             build_ack(req->buff, start, FINISHED_PDU);
             ssp_sendto(res);
@@ -397,7 +397,7 @@ static void reset_timeout(Request *req) {
     //ssp_printf("timeout %u for id: %u sequence: %u\n", time, req->dest_cfdp_id, req->transaction_sequence_number);
     if (time == 20) {
         req->timeout = 0;
-        req->type = clean_up;
+        req->procedure = clean_up;
         ssp_printf("timeout, cleaning up request\n");
     }
 }
@@ -417,7 +417,7 @@ void on_server_time_out(Response res, Request *req) {
 
     reset_timeout(req);
 
-    if (req->type == none)
+    if (req->procedure == none)
         return;
     
     if (req->transmission_mode == 1)
@@ -425,8 +425,8 @@ void on_server_time_out(Response res, Request *req) {
 
     uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
 
-    if (req->resent_finished == 3) {
-        req->type = none;
+    if (req->resent_finished == RESEND_FINISHED_TIMES) {
+        req->procedure = none;
         ssp_printf("file sent, closing request\n");
         return;
     }
@@ -465,8 +465,8 @@ void on_server_time_out(Response res, Request *req) {
             ssp_printf("checksum have: %u checksum_need: %u\n", req->file->partial_checksum, req->file->eof_checksum);
         }
     }
-    //received EOF, send back 3 eof packets
-    if (req->local_entity->EOF_recv_indication && req->resent_eof < 3) {
+    //received EOF, send back 3 eof ack packets
+    if (req->local_entity->EOF_recv_indication && req->resent_eof < RESEND_EOF_TIMES) {
         ssp_printf("sending eof ack\n");
         build_ack(res.msg, start, EOF_PDU);
         ssp_sendto(res);
@@ -507,7 +507,7 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
             if (req->local_entity->Metadata_recv_indication)
                 break;
 
-            req->type = put;
+            req->procedure = sending_put_metadata;
             ssp_printf("received metadata packet\n");
             fill_request_pdu_metadata(&packet[packet_index], req);
             process_file_request_metadata(req);

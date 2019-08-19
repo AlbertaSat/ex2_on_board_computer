@@ -3,6 +3,9 @@
 #define PROTOCOL_H
 #include "types.h"
 
+#define RESEND_EOF_TIMES 3
+#define RESEND_FINISHED_TIMES 3
+
 //for use
 void parse_packet_server(char* buff, uint32_t packet_index, Response res, Request *req, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client);
