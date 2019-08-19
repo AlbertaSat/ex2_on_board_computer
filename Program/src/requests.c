@@ -35,6 +35,8 @@ void ssp_cleanup_req(void *request) {
         ssp_free(req->buff);
     if (req->res.addr != NULL)
         ssp_free(req->res.addr);
+    if (req->local_entity != NULL)
+        ssp_free(req->local_entity);
     if (req != NULL)
         ssp_free(req);
 
@@ -51,6 +53,7 @@ Request *init_request(uint32_t buff_len) {
     req->destination_file_name = ssp_alloc(MAX_PATH, sizeof(char));
     checkAlloc(req->destination_file_name,  1);
 
+    req->local_entity = ssp_alloc(1, sizeof(Local_entity));
     req->file = NULL;
     req->buff_len = buff_len;
     req->buff = ssp_alloc(buff_len, sizeof(char));

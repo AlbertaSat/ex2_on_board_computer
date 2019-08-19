@@ -342,7 +342,7 @@ static void process_pdu_eof(char *packet, Request *req, Response res) {
 
     Pdu_eof *eof_packet = (Pdu_eof *) packet;
 
-    if (!req->received_metadata) {
+    if (!req->local_entity->Metadata_recv_indication) {
         request_metadata(req, res);
     }
     if (req->file == NULL) {
@@ -351,7 +351,7 @@ static void process_pdu_eof(char *packet, Request *req, Response res) {
     }
 
 
-    req->received_eof = 1;
+    req->local_entity->EOF_recv_indication = 1;
     req->file->eof_checksum = eof_packet->checksum;
     req->file->total_size = ntohl(eof_packet->file_size);
     
@@ -361,7 +361,7 @@ static void process_pdu_eof(char *packet, Request *req, Response res) {
 int process_file_request_metadata(Request *req) {
 
     char temp[75];
-    req->received_metadata = 1;
+    req->local_entity->Metadata_recv_indication = 1;
 
     if (req->file == NULL)
         req->file = create_file(req->destination_file_name, 1);
@@ -586,19 +586,19 @@ void parse_packet_client(char *packet, uint32_t packet_index, Response res, Requ
 
     switch(directive) {
         case FINISHED_PDU:
-            req->received_finished = 1;
+            req->local_entity->transaction_finished_indication = 1;
             req->type = finished;
             ssp_printf("received finished pdu\n");
             break;
         case NAK_PDU:
-            req->received_metadata = 1;
+            req->local_entity->Metadata_recv_indication = 1;
             nak_response(packet, packet_index, req, res, client);
             ssp_printf("received Nak pdu\n");
             break;
         case ACK_PDU:
             if (packet[packet_index] == EOF_PDU) {
                 ssp_printf("received Eof ack\n");
-                req->received_eof = 1;
+                req->local_entity->EOF_recv_indication = 1;
             }
             break;
         case NAK_DIRECTIVE:
@@ -657,12 +657,12 @@ void user_request_handler(Response res, Request *req, Client* client) {
             break;
 
         case sending_data: 
-            if (req->sent_first_data_round == 1)
+            if (req->local_entity->EOF_sent_indication == 1)
                 return;
             
             if (build_data_packet(req->buff, start, req->file, client->packet_len)) {
                 req->type = eof;
-                req->sent_first_data_round = 1;
+                req->local_entity->EOF_sent_indication = 1;
                 ssp_printf("sending data blast\n");
             }
             ssp_sendto(res);
@@ -734,7 +734,7 @@ void on_server_time_out(Response res, Request *req) {
     }
 
     //send request for metadata
-    if (!req->received_metadata) {
+    if (!req->local_entity->Metadata_recv_indication) {
         ssp_printf("sending request for new metadata packet\n");
         build_nak_directive(res.msg, start, META_DATA_PDU);
         ssp_sendto(res);
@@ -742,7 +742,7 @@ void on_server_time_out(Response res, Request *req) {
     }
 
     //send missing eofs
-    if (!req->received_eof) {
+    if (!req->local_entity->EOF_recv_indication) {
         build_nak_directive(res.msg, start, EOF_PDU);
         ssp_sendto(res);
     }
@@ -768,7 +768,7 @@ void on_server_time_out(Response res, Request *req) {
         }
     }
     //received EOF, send back 3 eof packets
-    if (req->received_eof && req->resent_eof < 3) {
+    if (req->local_entity->EOF_recv_indication && req->resent_eof < 3) {
         ssp_printf("sending eof ack\n");
         build_ack(res.msg, start, EOF_PDU);
         ssp_sendto(res);
@@ -788,7 +788,7 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
 
     //process file data
     if (header->PDU_type == 1) {
-        if (!req->received_metadata) {
+        if (!req->local_entity->Metadata_recv_indication) {
             if (req->file == NULL) {
                 snprintf(req->source_file_name, 75, "%s%llu%s", ".temp_", req->transaction_sequence_number, ".jpeg");
                 ssp_printf("haven't received metadata yet, building temperary file %s\n", req->source_file_name);
@@ -806,7 +806,7 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
     switch (directive->directive_code)
     {
         case META_DATA_PDU:
-            if (req->received_metadata)
+            if (req->local_entity->Metadata_recv_indication)
                 break;
 
             req->type = put;
@@ -816,10 +816,10 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
             break;
     
         case EOF_PDU:
-            if (req->received_eof)
+            if (req->local_entity->EOF_recv_indication)
                 break;;
 
-            if (!req->received_metadata)
+            if (!req->local_entity->Metadata_recv_indication)
                 request_metadata(req, res);
             
             ssp_printf("received eof packet\n");
@@ -832,7 +832,7 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
             Pdu_ack* ack_packet = (Pdu_ack *) &packet[packet_index]; 
             if (ack_packet->directive_code == FINISHED_PDU) {
                 ssp_printf("received finished packet\n");
-                req->received_finished = 1;
+                req->local_entity->transaction_finished_indication = 1;
             }
             break;
         default:

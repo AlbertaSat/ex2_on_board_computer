@@ -43,6 +43,7 @@ typedef struct local_entity {
     //required when acting as receiving entity
     unsigned int resumed_indication : 1;
 
+    unsigned int Metadata_recv_indication: 1;
     //function pointer to default handler?
     void *default_fault_handler;
 
@@ -65,6 +66,7 @@ typedef struct remote_entity {
     unsigned int async_report_interval;
     unsigned int immediate_nak_mode_enabled : 1;
     unsigned int prompt_transmission_interval;
+
     //acknowledged or unacknowledged
     unsigned int default_transmission_mode: 1;
 
@@ -85,6 +87,9 @@ typedef struct remote_entity {
 
     //time limit
     unsigned int transaction_inactivity_limit;
+
+
+
 
     /*
     Start of transmission opportunity A signal produced by the operating environment.
@@ -150,15 +155,13 @@ typedef struct request {
     uint8_t flow_lable;
     uint8_t transmission_mode;
 
-    uint8_t received_metadata;
-    uint8_t received_eof;
     //counter for resending eof packets == 3
     uint8_t resent_eof;
-    uint8_t received_finished;
     //counter for resending finished packets == 3
     uint8_t resent_finished;
+
     //bool for sending first blast of data packets
-    uint8_t sent_first_data_round;
+   // uint8_t sent_first_data_round;
 
     Remote_entity *remote_entity;
     Local_entity *local_entity;
