@@ -17,7 +17,7 @@
 
 ------------------------------------------------------------------------------*/
 //this function is a callback when using my posix port
-static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
+static int on_recv_server(int sfd, char *packet,  uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
 
     Protocol_state *p_state = (Protocol_state *) other;
     Response res;
@@ -41,7 +41,7 @@ static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr
 
 }
 
-static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
+static int on_recv_client(int sfd, char *packet, uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
     
     Client *client = (Client *) other;
 
@@ -93,9 +93,9 @@ struct user_request_check_params {
 static void user_request_check(void *request, void *args) {
     Request * req = (Request *) request;
     struct user_request_check_params* params = (struct user_request_check_params *) args;
-
+    
     params->res.msg = req->buff;
-   
+    
     memset(params->res.msg, 0, params->client->packet_len);
     user_request_handler(params->res, req, params->client);
     remove_request_check(request, params->client->request_list);

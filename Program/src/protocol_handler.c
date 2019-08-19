@@ -20,10 +20,9 @@
 
 static void request_metadata(Request *req, Response res) {
 
-    res.msg = req->buff;
     ssp_printf("sending request for new metadata packet\n");
-    uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
-    build_nak_directive(res.msg, start, META_DATA_PDU);
+    uint8_t start = build_pdu_header(req->buff, req->transaction_sequence_number, 1, req->pdu_header);
+    build_nak_directive(req->buff, start, META_DATA_PDU);
     ssp_sendto(res);
     return;
 }
@@ -158,7 +157,6 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
         memcpy(found_req->res.addr, res.addr, res.size_of_addr);
         found_req->res.packet_len = p_state->packet_size;
         found_req->res.sfd = res.sfd;
-        found_req->res.msg = found_req->buff;
         request_list->push(request_list, found_req, transaction_sequence_number);
 
     } 
@@ -338,13 +336,11 @@ void user_request_handler(Response res, Request *req, Client* client) {
     if (req == NULL)
         return;
 
-    if (res.msg == NULL) {
-        ssp_printf("req->buff is null, couldn't process user request\n");
-        return;
-    }
     uint32_t start = build_pdu_header(req->buff, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
 
     check_req_status(req, client);
+    //Response res = req->res;
+
     switch (req->procedure)
     {
         case sending_eof: 
@@ -423,7 +419,7 @@ void on_server_time_out(Response res, Request *req) {
     if (req->transmission_mode == 1)
         return; 
 
-    uint8_t start = build_pdu_header(res.msg, req->transaction_sequence_number, 1, req->pdu_header);
+    uint8_t start = build_pdu_header(req->buff, req->transaction_sequence_number, 1, req->pdu_header);
 
     if (req->resent_finished == RESEND_FINISHED_TIMES) {
         req->procedure = none;
@@ -434,21 +430,21 @@ void on_server_time_out(Response res, Request *req) {
     //send request for metadata
     if (!req->local_entity->Metadata_recv_indication) {
         ssp_printf("sending request for new metadata packet\n");
-        build_nak_directive(res.msg, start, META_DATA_PDU);
+        build_nak_directive(req->buff, start, META_DATA_PDU);
         ssp_sendto(res);
         return;
     }
 
     //send missing eofs
     if (!req->local_entity->EOF_recv_indication) {
-        build_nak_directive(res.msg, start, EOF_PDU);
+        build_nak_directive(req->buff, start, EOF_PDU);
         ssp_sendto(res);
     }
 
     //send missing NAKS
     if (req->file->missing_offsets->count > 0) {
         ssp_printf("sending Nak data\n");
-        build_nak_packet(res.msg, start, req);
+        build_nak_packet(req->buff, start, req);
         ssp_sendto(res);
         return;
 
@@ -456,7 +452,7 @@ void on_server_time_out(Response res, Request *req) {
 
         if (req->file->eof_checksum == req->file->partial_checksum){
             ssp_printf("sending finsihed pdu\n");
-            build_finished_pdu(res.msg, start);
+            build_finished_pdu(req->buff, start);
             ssp_sendto(res);
             req->resent_finished++;   
             return;
@@ -468,7 +464,7 @@ void on_server_time_out(Response res, Request *req) {
     //received EOF, send back 3 eof ack packets
     if (req->local_entity->EOF_recv_indication && req->resent_eof < RESEND_EOF_TIMES) {
         ssp_printf("sending eof ack\n");
-        build_ack(res.msg, start, EOF_PDU);
+        build_ack(req->buff, start, EOF_PDU);
         ssp_sendto(res);
         req->resent_eof++;
     }
