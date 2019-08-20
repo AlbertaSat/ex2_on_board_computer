@@ -143,7 +143,7 @@ static int resizeBuff(char **buffer, uint32_t *newBufferSize, uint32_t *prev_buf
 }
 
 //see header file
-void udpSelectServer(char* port, int packet_len,
+void connectionless_server(char* port, int initial_buff_size,
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
     int (*onTimeOut)(void *other),
     int (*onStdIn)(void *other),
@@ -161,8 +161,7 @@ void udpSelectServer(char* port, int packet_len,
     uint32_t *buff_size = calloc(1, sizeof(uint32_t));
     checkAlloc(buff_size, 1);
 
-
-    *buff_size = packet_len + 10;
+    *buff_size = initial_buff_size + 10;
 
     uint32_t prev_buff_size = *buff_size;
 
@@ -178,7 +177,7 @@ void udpSelectServer(char* port, int packet_len,
     {
         struct timeval timeout = {
             .tv_sec = 0,
-            .tv_usec = 1000e3,
+            .tv_usec = 100e3,
         };
 
         fd_set readFds = masterReadFds;
@@ -212,24 +211,18 @@ void udpSelectServer(char* port, int packet_len,
 
         //http://www.microhowto.info/howto/listen_for_and_receive_udp_datagrams_in_c.html
         // good article!
-        if (FD_ISSET(sfd, &readFds))
-        {
+        if (FD_ISSET(sfd, &readFds)) {
             
             socklen_t client_len = sizeof(*client);
-            int count = recvfrom(sfd, buff, packet_len, 0, (void *) client, &client_len);
+            int count = recvfrom(sfd, buff, *buff_size, 0, (void *) client, &client_len);
             
-
-            if (count == -1)
-            {
+            if (count == -1) {
                 perror("recv failed");
             }
-            else if (count >= *buff_size)
-            {   
+            else if (count >= *buff_size) {   
                 printf("packet too large\n");
-                continue;
             }
-            else
-            {
+            else {
                 if (onRecv(sfd, buff, count, buff_size, (void*) client, sizeof(struct sockaddr), other) == -1)
                     printf("recv failed\n");
             }

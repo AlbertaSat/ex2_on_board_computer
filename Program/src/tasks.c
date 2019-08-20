@@ -28,12 +28,12 @@ static int on_recv_server(int sfd, char *packet,  uint32_t packet_len, uint32_t 
 
     Request **request_container = &p_state->current_request;
 
-    uint32_t packet_index = process_pdu_header(packet, res, request_container, p_state->request_list, p_state);
+    uint32_t packet_index = process_pdu_header(packet, 1, res, request_container, p_state->request_list, p_state);
     p_state->current_request = (*request_container);
 
     if (packet_index == 0)
         return -1;
-
+    
     parse_packet_server(packet, packet_index, res, (*request_container), p_state);
 
     memset(packet, 0, res.packet_len);
@@ -53,7 +53,7 @@ static int on_recv_client(int sfd, char *packet, uint32_t packet_len, uint32_t *
 
     Request **request_container = &client->current_request;
 
-    uint32_t packet_index = process_pdu_header(packet, res, request_container, client->request_list, client->p_state);
+    uint32_t packet_index = process_pdu_header(packet, 0, res, request_container, client->request_list, client->p_state);
     if (packet_index == -1) {
         ssp_printf("error parsing header\n");
         return -1;
@@ -78,10 +78,11 @@ static int remove_request(void *request, void *args) {
 static void remove_request_check(void *request, void *args) {
     Request *req = (Request *) request;
     List *req_list = (List *) args;
-
-    if (req->procedure == clean_up) {
+      if (req->procedure == clean_up) {
+        ssp_printf("CLEANINGUP request count: %d procedure:%d cleanup %d none: %d sending_put_metadata %d\n", req_list->count, req->procedure, clean_up, none, sending_put_metadata);
         Request *remove_this = req_list->remove(req_list, 0, remove_request, req);
         ssp_cleanup_req(remove_this);
+        //ssp_printf("CLEANINGUP request count: %d\n", req_list->count);
     }
 }
 
@@ -224,7 +225,7 @@ void *ssp_connectionless_server_task(void *params) {
     p_state->transaction_sequence_number = 1;
 
     #ifdef POSIX_PORT
-        udpSelectServer(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
+        connectionless_server(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
     #endif
 
     return NULL;

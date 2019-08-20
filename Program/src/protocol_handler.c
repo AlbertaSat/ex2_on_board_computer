@@ -96,10 +96,13 @@ static int find_request(void *element, void *args) {
 }
 
 
+
+
+
 /*creates a request struct if there is none for the incomming request based on transaction sequence number or
 finds the correct request struct and replaces req with the new pointer. Returns the possition in the packet 
 where the data portion is, returns 0 on fail*/
-int process_pdu_header(char*packet, Response res, Request **req, List *request_list, Protocol_state *p_state) {
+int process_pdu_header(char*packet, uint8_t is_server, Response res, Request **req, List *request_list, Protocol_state *p_state) {
 
     uint8_t packet_index = PACKET_STATIC_HEADER_LEN;
     Pdu_header *header = (Pdu_header *) packet;
@@ -141,8 +144,8 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
 
     Request *found_req = (Request *) request_list->find(request_list, 0, find_request, &params);
 
-    //server side, receiving requests
-    if (found_req == NULL) 
+    //server side, receiving requests (this should be its own function)
+    if (found_req == NULL && is_server) 
     {
         found_req = init_request(p_state->packet_size);
         ssp_printf("incoming new request\n");
@@ -158,7 +161,6 @@ int process_pdu_header(char*packet, Response res, Request **req, List *request_l
         found_req->res.packet_len = p_state->packet_size;
         found_req->res.sfd = res.sfd;
         request_list->push(request_list, found_req, transaction_sequence_number);
-
     } 
 
     found_req->packet_data_len = len;
@@ -324,10 +326,6 @@ static void check_req_status(Request *req, Client *client) {
     if (req->resent_finished >= RESEND_FINISHED_TIMES){
         req->procedure = none;
     }
-    if (req->resent_finished == RESEND_FINISHED_TIMES) {
-        ssp_printf("file successfully sent\n");
-        req->resent_finished = RESEND_FINISHED_TIMES + 1;
-    }
 }
 
 //current user request, to send to remote
@@ -339,7 +337,6 @@ void user_request_handler(Response res, Request *req, Client* client) {
     uint32_t start = build_pdu_header(req->buff, req->transaction_sequence_number, req->transmission_mode, client->pdu_header);
 
     check_req_status(req, client);
-    //Response res = req->res;
 
     switch (req->procedure)
     {
@@ -391,10 +388,15 @@ static void reset_timeout(Request *req) {
 
     uint8_t time = req->timeout++;
     //ssp_printf("timeout %u for id: %u sequence: %u\n", time, req->dest_cfdp_id, req->transaction_sequence_number);
-    if (time == 20) {
-        req->timeout = 0;
-        req->procedure = clean_up;
-        ssp_printf("timeout, cleaning up request\n");
+
+    ssp_printf("file sent, no other packets coming in, closing transaction %d\n", req->transaction_sequence_number);
+
+    if (time >= TIMEOUT_BEFORE_CANCEL_REQUEST) {
+        if (req->procedure == none) {
+            req->procedure = clean_up;
+            return;
+        }
+        ssp_printf("timeout, closing up request, request stopped early\n");
     }
 }
 

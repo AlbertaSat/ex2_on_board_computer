@@ -450,8 +450,6 @@ typedef struct remote_entity {
     unsigned int transaction_inactivity_limit;
 
 
-
-
     /*
     Start of transmission opportunity A signal produced by the operating environment.
     End of transmission opportunity A signal produced by the operating environment.

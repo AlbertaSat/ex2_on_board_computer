@@ -5,13 +5,14 @@
 
 #define RESEND_EOF_TIMES 3
 #define RESEND_FINISHED_TIMES 3
+#define TIMEOUT_BEFORE_CANCEL_REQUEST 100
 
 //for use
 void parse_packet_server(char* buff, uint32_t packet_index, Response res, Request *req, Protocol_state *p_state);
 void user_request_handler(Response res, Request *req, Client *client);
 void parse_packet_client(char* buff, uint32_t packet_index, Response res, Request *req, Client *client);
 void on_server_time_out(Response res, Request *current_request);
-int process_pdu_header(char*packet, Response res, Request **req, List *request_list, Protocol_state *p_state);
+int process_pdu_header(char*packet, uint8_t is_server, Response res, Request **req, List *request_list, Protocol_state *p_state);
 uint8_t build_data_packet(char *packet, uint32_t start, File *file, uint32_t length);
 
 //for testing
