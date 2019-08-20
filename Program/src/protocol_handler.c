@@ -408,10 +408,8 @@ static void print_offsets(void *element, void *args) {
 */
 
 void on_server_time_out(Response res, Request *req) {
-
-    if (req == NULL)
-        return;
-
+    
+    
     if (reset_timeout(req))
         return;
 
@@ -442,6 +440,13 @@ void on_server_time_out(Response res, Request *req) {
         build_nak_directive(req->buff, start, EOF_PDU);
         ssp_sendto(res);
     }
+        //received EOF, send back 3 eof ack packets
+    if (req->local_entity->EOF_recv_indication && req->resent_eof < RESEND_EOF_TIMES) {
+        ssp_printf("sending eof ack transaction: %d\n", req->transaction_sequence_number);
+        build_ack(req->buff, start, EOF_PDU);
+        ssp_sendto(res);
+        req->resent_eof++;
+    }
 
     //send missing NAKS
     if (req->file->missing_offsets->count > 0) {
@@ -463,13 +468,7 @@ void on_server_time_out(Response res, Request *req) {
             ssp_printf("checksum have: %u checksum_need: %u\n", req->file->partial_checksum, req->file->eof_checksum);
         }
     }
-    //received EOF, send back 3 eof ack packets
-    if (req->local_entity->EOF_recv_indication && req->resent_eof < RESEND_EOF_TIMES) {
-        ssp_printf("sending eof ack transaction: %d\n", req->transaction_sequence_number);
-        build_ack(req->buff, start, EOF_PDU);
-        ssp_sendto(res);
-        req->resent_eof++;
-    }
+
 }
 
 //fills the current_request struct for the server, incomming requests
@@ -514,7 +513,7 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
     
         case EOF_PDU:
             if (req->local_entity->EOF_recv_indication)
-                break;;
+                break;
 
             if (!req->local_entity->Metadata_recv_indication)
                 request_metadata(req, res);
