@@ -492,7 +492,7 @@ void parse_packet_server(char *packet, uint32_t packet_index, Response res, Requ
             request_metadata(req, res);
         }
         write_packet_data_to_file(&packet[packet_index], req->packet_data_len, req->file);
-        ssp_printf("received data from transaction %d\n", req->transaction_sequence_number);
+        //ssp_printf("received data from transaction %d\n", req->transaction_sequence_number);
         return;
     }
     
