@@ -507,7 +507,7 @@ typedef struct request {
     uint32_t packet_data_len;
 
     //timeout
-    uint8_t timeout;
+    uint32_t timeout;
     
     uint8_t segmentation_control;
     uint8_t fault_handler_overides;

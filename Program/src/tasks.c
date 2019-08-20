@@ -78,11 +78,11 @@ static int remove_request(void *request, void *args) {
 static void remove_request_check(void *request, void *args) {
     Request *req = (Request *) request;
     List *req_list = (List *) args;
-      if (req->procedure == clean_up) {
-        ssp_printf("CLEANINGUP request count: %d procedure:%d cleanup %d none: %d sending_put_metadata %d\n", req_list->count, req->procedure, clean_up, none, sending_put_metadata);
+    //ssp_printf("CLEANINGUP request count: %d procedure:%d cleanup %d none: %d sending_put_metadata %d\n", req_list->count, req->procedure, clean_up, none, sending_put_metadata);
+      
+    if (req->procedure == clean_up) {
         Request *remove_this = req_list->remove(req_list, 0, remove_request, req);
         ssp_cleanup_req(remove_this);
-        //ssp_printf("CLEANINGUP request count: %d\n", req_list->count);
     }
 }
 
