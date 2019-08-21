@@ -57,6 +57,10 @@
 /* Include HET header file - types, definitions and function declarations for system driver */
 #include "HL_het.h"
 #include "HL_gio.h"
+#include "HL_mibspi.h"
+#include "HL_esm.h"
+#include "HL_sys_core.h"
+#include "HL_system.h"
 
 #include <redfs.h>
 #include <redposix.h>
@@ -99,6 +103,13 @@ void vTask1(void *pvParameters)
             exit(red_errno);
         }
 }
+
+void vTask2(void *pvParameters)
+{
+
+
+}
+
 /* USER CODE END */
 
 /** @fn void main(void)
@@ -110,6 +121,21 @@ void vTask1(void *pvParameters)
 */
 
 /* USER CODE BEGIN (2) */
+#define D_COUNT  8
+
+uint32 cnt=0, error =0, tx_done =0;
+uint16 tx_data1[D_COUNT] = {1,2,3,4,5,6,7,8};
+uint16 tx_data2[D_COUNT] = {11,12,13,14,15,16,17,18};
+uint16 tx_data3[D_COUNT] = {21,22,23,24,25,26,27,28};
+uint16 tx_data4[D_COUNT] = {31,32,33,34,35,36,37,38};
+uint16 tx_data5[D_COUNT] = {41,42,43,44,45,46,47,48};
+
+
+uint16 rx_data1[D_COUNT] = {0};
+uint16 rx_data2[D_COUNT] = {0};
+uint16 rx_data3[D_COUNT] = {0};
+uint16 rx_data4[D_COUNT] = {0};
+uint16 rx_data5[D_COUNT] = {0};
 /* USER CODE END */
 
 uint8	emacAddress[6U] = 	{0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
@@ -120,8 +146,72 @@ int main(void)
 /* USER CODE BEGIN (3) */
 
     /* Set high end timer GIO port hetPort pin direction to all output */
-    gioInit();
-    gioSetDirection(gioPORTB, 0xFFFFFFFF);
+    //gioInit();
+    //gioSetDirection(gioPORTB, 0xFFFFFFFF);
+
+
+
+    //Loopback Tests
+    //
+    //
+    /* enable irq interrupt in */
+    _enable_IRQ_interrupt_();
+
+    /** Initialize MIBSPI */
+    mibspiInit();
+
+    mibspiEnableLoopback(mibspiREG1, Digital_Lbk);
+    mibspiEnableLoopback(mibspiREG2, Digital_Lbk);
+    mibspiEnableLoopback(mibspiREG3, Digital_Lbk);
+    mibspiEnableLoopback(mibspiREG4, Digital_Lbk);
+    mibspiEnableLoopback(mibspiREG5, Digital_Lbk);
+
+    mibspiEnableGroupNotification(mibspiREG1, 0, 1);
+    mibspiEnableGroupNotification(mibspiREG2, 0, 1);
+    mibspiEnableGroupNotification(mibspiREG3, 0, 1);
+    mibspiEnableGroupNotification(mibspiREG4, 0, 1);
+    mibspiEnableGroupNotification(mibspiREG5, 0, 1);
+
+    mibspiSetData(mibspiREG1, 0, &tx_data1[0]);
+    mibspiSetData(mibspiREG2, 0, &tx_data2[0]);
+    mibspiSetData(mibspiREG3, 0, &tx_data3[0]);
+    mibspiSetData(mibspiREG4, 0, &tx_data4[0]);
+    mibspiSetData(mibspiREG5, 0, &tx_data5[0]);
+
+    mibspiTransfer(mibspiREG1, 0);
+    mibspiTransfer(mibspiREG2, 0);
+    mibspiTransfer(mibspiREG3, 0);
+    mibspiTransfer(mibspiREG4, 0);
+    mibspiTransfer(mibspiREG5, 0);
+
+    int i;
+    for(i = 0; i <8; i++){
+        if(tx_data1[i] != rx_data1[i]){
+            fprintf(stderr,"Mibspi 1, index = %d error\n", i);
+            fprintf(stderr, "tx = %d, rx = %d\n", tx_data1[i], rx_data1[i]);
+        }
+        else if(tx_data2[i] != rx_data2[i]){
+            fprintf(stderr,"Mibspi 2, index = %d error\n", i);
+        }
+        else if(tx_data3[i] != rx_data3[i]){
+            fprintf(stderr,"Mibspi 3, index = %d error\n", i);
+        }
+        else if(tx_data4[i] != rx_data4[i]){
+            fprintf(stderr,"Mibspi 4, index = %d error\n", i);
+        }
+        else if(tx_data5[i] != rx_data5[i]){
+            fprintf(stderr,"Mibspi 5, index = %d error\n", i);
+            fprintf(stderr, "tx = %d, rx = %d\n", tx_data5[i], rx_data5[i]);
+        }
+        else if(i == 7){
+            fprintf(stderr,"Checking tx and rx complete");
+        }
+    }
+
+    while(1){};
+
+    //fprintf(stderr, "Transferred data: %x\n", TG3_TX_DATA[3]);
+    //fprintf(stderr, "Recieved data: %x\n", TG3_RX_DATA[3]);
 
 
     /* Create Task 1 */
@@ -143,4 +233,58 @@ int main(void)
 
 
 /* USER CODE BEGIN (4) */
+/* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an
+implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
+used by the Idle task. */
+void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
+                                    StackType_t **ppxIdleTaskStackBuffer,
+                                    uint32_t *pulIdleTaskStackSize )
+{
+/* If the buffers to be provided to the Idle task are declared inside this
+function then they must be declared static – otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+    static StaticTask_t xIdleTaskTCB;
+    static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+    /* Pass out a pointer to the StaticTask_t structure in which the Idle task’s
+    state will be stored. */
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+    /* Pass out the array that will be used as the Idle task’s stack. */
+    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+    /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
+
+
+/* can interrupt notification */
+void mibspiGroupNotification(mibspiBASE_t *mibspi, uint32 group)
+{
+
+    uint16 * data;
+
+    /* node 1 - transfer request */
+     if(mibspi==mibspiREG1)
+     {
+         data = &rx_data1[0];
+     }
+     if(mibspi==mibspiREG2)
+     {
+         data = &rx_data2[0];
+     }
+     if(mibspi==mibspiREG3)
+     {
+         data = &rx_data3[0];
+     }
+     if(mibspi==mibspiREG4)
+     {
+         data = &rx_data4[0];
+     }
+     if(mibspi==mibspiREG5)
+     {
+         data = &rx_data5[0];
+     }
+
+     mibspiGetData(mibspi, group, data);
+}
 /* USER CODE END */

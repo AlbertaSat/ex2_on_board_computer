@@ -3110,13 +3110,324 @@ void mibspi5GetConfigValue(mibspi_config_reg_t *config_reg, config_value_type_t 
     }
 }
 
+/* USER CODE BEGIN (28) */
+/* USER CODE END */
 
+/* SourceId : MIBSPI_SourceId_020 */
+/* DesignId : MIBSPI_DesignId_013 */
+/* Requirements : HL_CONQ_MIBSPI_SR19, HL_CONQ_MIBSPI_SR20, HL_CONQ_MIBSPI_SR27 */
+/** @fn void mibspi1HighLevelInterrupt(void)
+*   @brief Level 0 Interrupt for MIBSPI1
+*/
+#pragma CODE_STATE(mibspi1HighLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi1HighLevelInterrupt, IRQ)
 
+void mibspi1HighLevelInterrupt(void)
+{
+    uint32 mibspiFlags = (mibspiREG1->FLG & 0x0000FFFFU) & (~mibspiREG1->LVL & 0x035FU);
+    uint32 vec = mibspiREG1->INTVECT0;
 
+/* USER CODE BEGIN (29) */
+/* USER CODE END */
 
+    if (vec > 0x21U)
+    {
+        mibspiREG1->FLG = (mibspiREG1->FLG & 0xFFFF0000U) | mibspiFlags;
+        mibspiNotification(mibspiREG1, mibspiFlags & 0xFFU);
+    }
+    else
+    {
+        mibspiGroupNotification(mibspiREG1, ((vec & 0x3FU) >> 1U) - 1U);
+    }
+/* USER CODE BEGIN (30) */
+/* USER CODE END */
+}
 
+/* USER CODE BEGIN (31) */
+/* USER CODE END */
 
+/* SourceId : MIBSPI_SourceId_021 */
+/* DesignId : MIBSPI_DesignId_013 */
+/* Requirements : HL_CONQ_MIBSPI_SR19, HL_CONQ_MIBSPI_SR20, HL_CONQ_MIBSPI_SR28 */
+/** @fn void mibspi1LowLevelInterrupt(void)
+*   @brief Level 1 Interrupt for MIBSPI1
+*/
+#pragma CODE_STATE(mibspi1LowLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi1LowLevelInterrupt, IRQ)
 
+void mibspi1LowLevelInterrupt(void)
+{
+    uint32 mibspiFlags = (mibspiREG1->FLG & 0x0000FFFFU) & (mibspiREG1->LVL & 0x035FU);
+    uint32 vec = mibspiREG1->INTVECT1;
 
+/* USER CODE BEGIN (32) */
+/* USER CODE END */
 
+    if (vec > 0x21U)
+    {
+        mibspiREG1->FLG = (mibspiREG1->FLG & 0xFFFF0000U) | mibspiFlags;
+        mibspiNotification(mibspiREG1, mibspiFlags & 0xFFU);
+    }
+    else
+    {
+        mibspiGroupNotification(mibspiREG1, ((vec & 0x3FU) >> 1U) - 1U);
+    }
+
+/* USER CODE BEGIN (33) */
+/* USER CODE END */
+}
+
+/* SourceId : MIBSPI_SourceId_022 */
+/* DesignId : MIBSPI_DesignId_013 */
+/* Requirements : HL_CONQ_MIBSPI_SR19, HL_CONQ_MIBSPI_SR20, HL_CONQ_MIBSPI_SR29 */
+/** @fn void spi2HighLevelInterrupt(void)
+*   @brief Level 0 Interrupt for MIBSPI2
+*/
+#pragma CODE_STATE(spi2HighLevelInterrupt, 32)
+#pragma INTERRUPT(spi2HighLevelInterrupt, IRQ)
+
+void spi2HighLevelInterrupt(void)
+{
+    uint32 mibspiFlags = (mibspiREG2->FLG & 0x0000FFFFU) & (~mibspiREG2->LVL & 0x035FU);
+    uint32 vec = mibspiREG2->INTVECT0;
+
+/* USER CODE BEGIN (34) */
+/* USER CODE END */
+
+    if (vec > 0x21U)
+    {
+        mibspiREG2->FLG = (mibspiREG2->FLG & 0xFFFF0000U) | mibspiFlags;
+        mibspiNotification(mibspiREG2, mibspiFlags & 0xFFU);
+    }
+    else
+    {
+        mibspiGroupNotification(mibspiREG2, ((vec & 0x3FU) >> 1U) - 1U);
+    }
+/* USER CODE BEGIN (35) */
+/* USER CODE END */
+}
+
+/* SourceId : MIBSPI_SourceId_023 */
+/* DesignId : MIBSPI_DesignId_013 */
+/* Requirements : HL_CONQ_MIBSPI_SR19, HL_CONQ_MIBSPI_SR20, HL_CONQ_MIBSPI_SR30 */
+/** @fn void mibspi2LowLevelInterrupt(void)
+*   @brief Level 1 Interrupt for MIBSPI2
+*/
+#pragma CODE_STATE(mibspi2LowLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi2LowLevelInterrupt, IRQ)
+
+void mibspi2LowLevelInterrupt(void)
+{
+    uint32 mibspiFlags = (mibspiREG2->FLG & 0x0000FFFFU) & (mibspiREG2->LVL & 0x035FU);
+    uint32 vec = mibspiREG2->INTVECT1;
+
+/* USER CODE BEGIN (36) */
+/* USER CODE END */
+
+    if (vec > 0x21U)
+    {
+        mibspiREG2->FLG = (mibspiREG2->FLG & 0xFFFF0000U) | mibspiFlags;
+        mibspiNotification(mibspiREG2, mibspiFlags & 0xFFU);
+    }
+    else
+    {
+        mibspiGroupNotification(mibspiREG2, ((vec & 0x3FU) >> 1U) - 1U);
+    }
+
+/* USER CODE BEGIN (37) */
+/* USER CODE END */
+}
+
+/* USER CODE BEGIN (38) */
+/* USER CODE END */
+
+/* SourceId : MIBSPI_SourceId_024 */
+/* DesignId : MIBSPI_DesignId_013 */
+/* Requirements : HL_CONQ_MIBSPI_SR19, HL_CONQ_MIBSPI_SR20, HL_CONQ_MIBSPI_SR31 */
+/** @fn void mibspi3HighInterruptLevel(void)
+*   @brief Level 0 Interrupt for MIBSPI3
+*/
+#pragma CODE_STATE(mibspi3HighInterruptLevel, 32)
+#pragma INTERRUPT(mibspi3HighInterruptLevel, IRQ)
+
+void mibspi3HighInterruptLevel(void)
+{
+    uint32 mibspiFlags = (mibspiREG3->FLG & 0x0000FFFFU) & (~mibspiREG3->LVL & 0x035FU);
+    uint32 vec = mibspiREG3->INTVECT0;
+
+/* USER CODE BEGIN (39) */
+/* USER CODE END */
+
+    if (vec > 0x21U)
+    {
+        mibspiREG3->FLG = (mibspiREG3->FLG & 0xFFFF0000U) | mibspiFlags;
+        mibspiNotification(mibspiREG3, mibspiFlags & 0xFFU);
+    }
+    else
+    {
+        mibspiGroupNotification(mibspiREG3, ((vec & 0x3FU) >> 1U) - 1U);
+    }
+/* USER CODE BEGIN (40) */
+/* USER CODE END */
+}
+
+/* USER CODE BEGIN (41) */
+/* USER CODE END */
+
+/* SourceId : MIBSPI_SourceId_025 */
+/* DesignId : MIBSPI_DesignId_013 */
+/* Requirements : HL_CONQ_MIBSPI_SR19, HL_CONQ_MIBSPI_SR20, HL_CONQ_MIBSPI_SR32 */
+/** @fn void mibspi3LowLevelInterrupt(void)
+*   @brief Level 1 Interrupt for MIBSPI3
+*/
+#pragma CODE_STATE(mibspi3LowLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi3LowLevelInterrupt, IRQ)
+
+void mibspi3LowLevelInterrupt(void)
+{
+    uint32 mibspiFlags = (mibspiREG3->FLG & 0x0000FFFFU) & (mibspiREG3->LVL & 0x035FU);
+    uint32 vec = mibspiREG3->INTVECT1;
+
+/* USER CODE BEGIN (42) */
+/* USER CODE END */
+
+    if (vec > 0x21U)
+    {
+        mibspiREG3->FLG = (mibspiREG3->FLG & 0xFFFF0000U) | mibspiFlags;
+        mibspiNotification(mibspiREG3, mibspiFlags & 0xFFU);
+    }
+    else
+    {
+        mibspiGroupNotification(mibspiREG3, ((vec & 0x3FU) >> 1U) - 1U);
+    }
+/* USER CODE BEGIN (43) */
+/* USER CODE END */
+}
+
+/* SourceId : MIBSPI_SourceId_026 */
+/* DesignId : MIBSPI_DesignId_013 */
+/* Requirements : HL_CONQ_MIBSPI_SR19, HL_CONQ_MIBSPI_SR20, HL_CONQ_MIBSPI_SR33 */
+/** @fn void mibspi4HighLevelInterrupt(void)
+*   @brief Level 0 Interrupt for MIBSPI4
+*/
+#pragma CODE_STATE(mibspi4HighLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi4HighLevelInterrupt, IRQ)
+
+void mibspi4HighLevelInterrupt(void)
+{
+    uint32 mibspiFlags = (mibspiREG4->FLG & 0x0000FFFFU) & (~mibspiREG4->LVL & 0x035FU);
+    uint32 vec = mibspiREG4->INTVECT0;
+
+/* USER CODE BEGIN (44) */
+/* USER CODE END */
+
+    if (vec > 0x21U)
+    {
+        mibspiREG4->FLG = (mibspiREG4->FLG & 0xFFFF0000U) | mibspiFlags;
+        mibspiNotification(mibspiREG4, mibspiFlags & 0xFFU);
+    }
+    else
+    {
+        mibspiGroupNotification(mibspiREG4, ((vec & 0x3FU) >> 1U) - 1U);
+    }
+/* USER CODE BEGIN (45) */
+/* USER CODE END */
+}
+
+/* SourceId : MIBSPI_SourceId_027 */
+/* DesignId : MIBSPI_DesignId_013 */
+/* Requirements : HL_CONQ_MIBSPI_SR19, HL_CONQ_MIBSPI_SR20, HL_CONQ_MIBSPI_SR34 */
+/** @fn void mibspi4LowLevelInterrupt(void)
+*   @brief Level 1 Interrupt for MIBSPI4
+*/
+#pragma CODE_STATE(mibspi4LowLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi4LowLevelInterrupt, IRQ)
+
+void mibspi4LowLevelInterrupt(void)
+{
+    uint32 mibspiFlags = (mibspiREG4->FLG & 0x0000FFFFU) & (mibspiREG4->LVL & 0x035FU);
+    uint32 vec = mibspiREG4->INTVECT1;
+
+/* USER CODE BEGIN (46) */
+/* USER CODE END */
+
+    if (vec > 0x21U)
+    {
+        mibspiREG4->FLG = (mibspiREG4->FLG & 0xFFFF0000U) | mibspiFlags;
+        mibspiNotification(mibspiREG4, mibspiFlags & 0xFFU);
+    }
+    else
+    {
+        mibspiGroupNotification(mibspiREG4, ((vec & 0x3FU) >> 1U) - 1U);
+    }
+
+/* USER CODE BEGIN (47) */
+/* USER CODE END */
+}
+
+/* USER CODE BEGIN (48) */
+/* USER CODE END */
+
+/* SourceId : MIBSPI_SourceId_028 */
+/* DesignId : MIBSPI_DesignId_013 */
+/* Requirements : HL_CONQ_MIBSPI_SR19, HL_CONQ_MIBSPI_SR20, HL_CONQ_MIBSPI_SR35 */
+/** @fn void mibspi5HighLevelInterrupt(void)
+*   @brief Level 0 Interrupt for MIBSPI5
+*/
+#pragma CODE_STATE(mibspi5HighLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi5HighLevelInterrupt, IRQ)
+
+void mibspi5HighLevelInterrupt(void)
+{
+    uint32 mibspiFlags = (mibspiREG5->FLG & 0x0000FFFFU) & (~mibspiREG5->LVL & 0x035FU);
+    uint32 vec = mibspiREG5->INTVECT0;
+
+/* USER CODE BEGIN (49) */
+/* USER CODE END */
+
+    if (vec > 0x21U)
+    {
+        mibspiREG5->FLG = (mibspiREG5->FLG & 0xFFFF0000U) | mibspiFlags;
+        mibspiNotification(mibspiREG5, mibspiFlags & 0xFFU);
+    }
+    else
+    {
+        mibspiGroupNotification(mibspiREG5, ((vec & 0x3FU) >> 1U) - 1U);
+    }
+/* USER CODE BEGIN (50) */
+/* USER CODE END */
+}
+
+/* USER CODE BEGIN (51) */
+/* USER CODE END */
+
+/* SourceId : MIBSPI_SourceId_029 */
+/* DesignId : MIBSPI_DesignId_013 */
+/* Requirements : HL_CONQ_MIBSPI_SR19, HL_CONQ_MIBSPI_SR20, HL_CONQ_MIBSPI_SR36 */
+/** @fn void mibspi5LowLevelInterrupt(void)
+*   @brief Level 1 Interrupt for MIBSPI5
+*/
+#pragma CODE_STATE(mibspi5LowLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi5LowLevelInterrupt, IRQ)
+
+void mibspi5LowLevelInterrupt(void)
+{
+    uint32 mibspiFlags = (mibspiREG5->FLG & 0x0000FFFFU) & (mibspiREG5->LVL & 0x035FU);
+    uint32 vec = mibspiREG5->INTVECT1;
+
+/* USER CODE BEGIN (52) */
+/* USER CODE END */
+
+    if (vec > 0x21U)
+    {
+        mibspiREG5->FLG = (mibspiREG5->FLG & 0xFFFF0000U) | mibspiFlags;
+        mibspiNotification(mibspiREG5, mibspiFlags & 0xFFU);
+    }
+    else
+    {
+        mibspiGroupNotification(mibspiREG5, ((vec & 0x3FU) >> 1U) - 1U);
+    }
+/* USER CODE BEGIN (53) */
+/* USER CODE END */
+}
 
