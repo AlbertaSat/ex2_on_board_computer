@@ -55,6 +55,7 @@
 #include "HL_lin.h"
 #include "HL_mibspi.h"
 #include "HL_sci.h"
+#include "HL_spi.h"
 #include "HL_het.h"
 #include "HL_dcc.h"
 #include "HL_i2c.h"
@@ -225,6 +226,26 @@ void sciNotification(sciBASE_t *sci, uint32 flags)
 }
 
 /* USER CODE BEGIN (33) */
+/* USER CODE END */
+#pragma WEAK(spiNotification)
+void spiNotification(spiBASE_t *spi, uint32 flags)
+{
+/*  enter user code between the USER CODE BEGIN and USER CODE END. */
+/* USER CODE BEGIN (34) */
+/* USER CODE END */
+}
+
+/* USER CODE BEGIN (35) */
+/* USER CODE END */
+#pragma WEAK(spiEndNotification)
+void spiEndNotification(spiBASE_t *spi)
+{
+/*  enter user code between the USER CODE BEGIN and USER CODE END. */
+/* USER CODE BEGIN (36) */
+/* USER CODE END */
+}
+
+/* USER CODE BEGIN (37) */
 /* USER CODE END */
 
 #pragma WEAK(pwmNotification)

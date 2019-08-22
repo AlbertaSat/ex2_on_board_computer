@@ -145,73 +145,7 @@ int main(void)
 {
 /* USER CODE BEGIN (3) */
 
-    /* Set high end timer GIO port hetPort pin direction to all output */
-    //gioInit();
-    //gioSetDirection(gioPORTB, 0xFFFFFFFF);
 
-
-
-    //Loopback Tests
-    //
-    //
-    /* enable irq interrupt in */
-    _enable_IRQ_interrupt_();
-
-    /** Initialize MIBSPI */
-    mibspiInit();
-
-    mibspiEnableLoopback(mibspiREG1, Digital_Lbk);
-    mibspiEnableLoopback(mibspiREG2, Digital_Lbk);
-    mibspiEnableLoopback(mibspiREG3, Digital_Lbk);
-    mibspiEnableLoopback(mibspiREG4, Digital_Lbk);
-    mibspiEnableLoopback(mibspiREG5, Digital_Lbk);
-
-    mibspiEnableGroupNotification(mibspiREG1, 0, 1);
-    mibspiEnableGroupNotification(mibspiREG2, 0, 1);
-    mibspiEnableGroupNotification(mibspiREG3, 0, 1);
-    mibspiEnableGroupNotification(mibspiREG4, 0, 1);
-    mibspiEnableGroupNotification(mibspiREG5, 0, 1);
-
-    mibspiSetData(mibspiREG1, 0, &tx_data1[0]);
-    mibspiSetData(mibspiREG2, 0, &tx_data2[0]);
-    mibspiSetData(mibspiREG3, 0, &tx_data3[0]);
-    mibspiSetData(mibspiREG4, 0, &tx_data4[0]);
-    mibspiSetData(mibspiREG5, 0, &tx_data5[0]);
-
-    mibspiTransfer(mibspiREG1, 0);
-    mibspiTransfer(mibspiREG2, 0);
-    mibspiTransfer(mibspiREG3, 0);
-    mibspiTransfer(mibspiREG4, 0);
-    mibspiTransfer(mibspiREG5, 0);
-
-    int i;
-    for(i = 0; i <8; i++){
-        if(tx_data1[i] != rx_data1[i]){
-            fprintf(stderr,"Mibspi 1, index = %d error\n", i);
-            fprintf(stderr, "tx = %d, rx = %d\n", tx_data1[i], rx_data1[i]);
-        }
-        else if(tx_data2[i] != rx_data2[i]){
-            fprintf(stderr,"Mibspi 2, index = %d error\n", i);
-        }
-        else if(tx_data3[i] != rx_data3[i]){
-            fprintf(stderr,"Mibspi 3, index = %d error\n", i);
-        }
-        else if(tx_data4[i] != rx_data4[i]){
-            fprintf(stderr,"Mibspi 4, index = %d error\n", i);
-        }
-        else if(tx_data5[i] != rx_data5[i]){
-            fprintf(stderr,"Mibspi 5, index = %d error\n", i);
-            fprintf(stderr, "tx = %d, rx = %d\n", tx_data5[i], rx_data5[i]);
-        }
-        else if(i == 7){
-            fprintf(stderr,"Checking tx and rx complete");
-        }
-    }
-
-    while(1){};
-
-    //fprintf(stderr, "Transferred data: %x\n", TG3_TX_DATA[3]);
-    //fprintf(stderr, "Recieved data: %x\n", TG3_RX_DATA[3]);
 
 
     /* Create Task 1 */

@@ -10,7 +10,7 @@
 #define FATFS_PORT_MMC_HERCULES_H_
 
 
-void mmcSelectSpi(gioPORT_t *port, mibspiBASE_t *reg);
+void mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg);
 
 
 #endif /* FATFS_PORT_MMC_HERCULES_H_ */

@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include "HL_sys_common.h"
 #include "HL_gio.h"
-#include "HL_mibspi.h"
+#include "HL_spi.h"
 #include "diskio.h"
 #include "mmc-hercules.h"
 #include <assert.h>
@@ -47,13 +47,13 @@
 
 
 
-gioPORT_t *_spiPORT = 0;
-mibspiBASE_t *_spiREG = 0;
+//gioPORT_t *_spiPORT = 0;
+//spiBASE_t *_spiREG = 0;
 
 
-void mmcSelectSpi(gioPORT_t *port, mibspiBASE_t *reg) {
-    _spiPORT = port;
-    _spiREG = reg;
+void mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) {
+    //spiPORT3 = port;
+    //spiREG3 = reg;
 }
 
 
@@ -65,7 +65,7 @@ void mmcSelectSpi(gioPORT_t *port, mibspiBASE_t *reg) {
 static
 void DESELECT (void)
 {
-    _spiPORT->DSET = 0x01;        // SCS[0] = high
+    spiPORT3->DSET = 0x01;        // SCS[0] = high
 }
 
 
@@ -73,9 +73,9 @@ void DESELECT (void)
 static
 void SELECT (void)
 {
-    assert(_spiPORT); // call mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) first
-    assert(_spiREG); // call mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) first
-    _spiPORT-> DCLR = 0x01;        // SCS[0] = low
+    assert(spiPORT3); // call mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) first
+    assert(spiREG3); // call mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) first
+    spiPORT3-> DCLR = 0x01;        // SCS[0] = low
 }
 
 
@@ -84,15 +84,15 @@ void SELECT (void)
 /*------------------------------------------------------------------------------
   Write and Read a byte on SPI interface
 *------------------------------------------------------------------------------*/
-unsigned char SPI_send (unsigned char outb) {
+void SPI_send (unsigned char outb) {
 
 
-  while ((_spiREG->FLG & 0x0200) == 0); // Wait until TXINTFLG is set for previous transmission
-  _spiREG->DAT1 = outb | 0x100D0000;    // transmit register address
+  while ((spiREG3->FLG & 0x000000FFU) != 0U); // Wait until TXINTFLG is set for previous transmission
+  spiREG3->DAT1 = outb | 0x100D0000;    // transmit register address
 
 
-  while ((_spiREG->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
-  return((unsigned char)_spiREG->BUF);  // Return received value
+  //while ((spiREG3->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
+  //return((unsigned char)spiREG3->BUF);  // Return received value
 }
 
 
@@ -129,15 +129,14 @@ BYTE PowerFlag = 0;    /* indicates if "power" is on */
 static
 void xmit_spi(BYTE dat)
 {
-    unsigned int ui32RcvDat;
 
 
-    while ((_spiREG->FLG & 0x0200) == 0); // Wait until TXINTFLG is set for previous transmission
-    _spiREG->DAT1 = dat | 0x100D0000;    // transmit register address
+    while ((spiREG3->FLG & 0x000000FFU) !=0U); // Wait until TXINTFLG is set for previous transmission
+    spiREG3->DAT1 = dat | 0x100D0000;    // transmit register address
 
 
-    while ((_spiREG->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
-    ui32RcvDat = _spiREG->BUF;  // to get received value
+    while ((spiREG3->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
+    //return = spiREG3->FLG;  // to get received value
 }
 
 
@@ -153,12 +152,12 @@ BYTE rcvr_spi (void)
 {
 
 
-    while ((_spiREG->FLG & 0x0200) == 0); // Wait until TXINTFLG is set for previous transmission
-    _spiREG->DAT1 = 0xFF | 0x100D0000;    // transmit register address
+    while ((spiREG3->FLG & 0x0200) == 0); // Wait until TXINTFLG is set for previous transmission
+    spiREG3->DAT1 = 0xFF | 0x100D0000;    // transmit register address
 
 
-    while ((_spiREG->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
-    return((unsigned char)_spiREG->BUF);  // Return received value
+    while ((spiREG3->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
+    return((unsigned char)spiREG3->BUF);  // Return received value
 }
 
 
@@ -211,11 +210,18 @@ void send_initial_clock_train(void)
 
     /* Send 10 bytes over the SSI. This causes the clock to wiggle the */
     /* required number of times. */
-    for(i = 0 ; i < 10 ; i++)
+    for(i = 0 ; i < 5 ; i++)
     {
         /* Write DUMMY data */
         /* FIFO. */
-        SPI_send (0xFF);
+        uint16 dummydata = 0xFFFF;
+        spiDAT1_t dat1;
+        dat1.CSNR = 1U;
+        dat1.CS_HOLD = 1U;
+        dat1.WDEL = 0U;
+        dat1.DFSEL = SPI_FMT_0;
+
+        spiTransmitData(spiREG3, &dat1, 1 , &dummydata);
     }
 }
 
@@ -234,7 +240,7 @@ void power_on (void)
     * This doesn't really turn the power on, but initializes the
     * SPI port and pins needed to talk to the card.
     */
-    mibspiInit();
+    spiInit();
 
 
     /* Set DI and CS high and apply more than 74 pulses to SCLK for the card */
@@ -251,9 +257,9 @@ static
 void set_max_speed(void)
 {
     // todo jc 20151004 - check if this is portable between hercules controllers/clock speeds
-      _spiREG->FMT0 &= 0xFFFF00FF;  // mask out baudrate prescaler
+      spiREG3->FMT0 &= 0xFFFF00FF;  // mask out baudrate prescaler
                                     // Max. 5 MBit used for Data Transfer.
-      _spiREG->FMT0 |= 5 << 8;    // baudrate prescale 10MHz / (1+1) = 5MBit
+      spiREG3->FMT0 |= 5 << 8;    // baudrate prescale 10MHz / (1+1) = 5MBit
 }
 
 
