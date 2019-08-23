@@ -94,10 +94,10 @@ void linInit(void)
 				 | (uint32)((uint32)1U << 5U);
 					
     /** - Setup maximum baud rate prescaler */
-    linREG1->MBRSR = (uint32)3370U;
+    linREG1->MBRSR = (uint32)2246U;
 
     /** - Setup baud rate prescaler */
-    linREG1->BRS = (uint32)233U;
+    linREG1->BRS = (uint32)155U;
 
     /** - Setup RX and TX reception masks */
     linREG1->MASK = ((uint32)((uint32)0xFFU << 16U) | (uint32)0xFFU);
@@ -259,10 +259,10 @@ void linInit(void)
 				 | (uint32)((uint32)1U << 5U);
 					
     /** - Setup maximum baud rate prescaler */
-    linREG2->MBRSR = (uint32)3370U;
+    linREG2->MBRSR = (uint32)2246U;
 
     /** - Setup baud rate prescaler */
-    linREG2->BRS = (uint32)233U;
+    linREG2->BRS = (uint32)155U;
 
     /** - Setup RX and TX reception masks */
     linREG2->MASK = ((uint32)((uint32)0xFFU << 16U) | (uint32)0xFFU);

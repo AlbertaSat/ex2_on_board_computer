@@ -14,7 +14,6 @@
 *
 * jc 20151004 added option to change what SPI is used
 */
-//#include "HL_spi.h"
 
 
 #include <stdint.h>
@@ -47,13 +46,13 @@
 
 
 
-//gioPORT_t *_spiPORT = 0;
-//spiBASE_t *_spiREG = 0;
+gioPORT_t *_spiPORT = 0;
+spiBASE_t *_spiREG = 0;
 
 
 void mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) {
-    //spiPORT3 = port;
-    //spiREG3 = reg;
+    _spiPORT = port;
+    _spiREG = reg;
 }
 
 
@@ -65,7 +64,7 @@ void mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) {
 static
 void DESELECT (void)
 {
-    spiPORT3->DSET = 0x01;        // SCS[0] = high
+    _spiPORT->DSET = 0x01;        // SCS[0] = high
 }
 
 
@@ -73,9 +72,9 @@ void DESELECT (void)
 static
 void SELECT (void)
 {
-    assert(spiPORT3); // call mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) first
-    assert(spiREG3); // call mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) first
-    spiPORT3-> DCLR = 0x01;        // SCS[0] = low
+    assert(_spiPORT); // call mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) first
+    assert(_spiREG); // call mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) first
+    _spiPORT-> DCLR = 0x01;        // SCS[0] = low
 }
 
 
@@ -84,15 +83,15 @@ void SELECT (void)
 /*------------------------------------------------------------------------------
   Write and Read a byte on SPI interface
 *------------------------------------------------------------------------------*/
-void SPI_send (unsigned char outb) {
+unsigned char SPI_send (unsigned char outb) {
 
 
-  while ((spiREG3->FLG & 0x000000FFU) != 0U); // Wait until TXINTFLG is set for previous transmission
-  spiREG3->DAT1 = outb | 0x100D0000;    // transmit register address
+  while ((_spiREG->FLG & 0x000000FFU) !=0U); // Wait until TXINTFLG is set for previous transmission
+  _spiREG->DAT1 = outb | 0x100D0000;    // transmit register address
 
 
-  //while ((spiREG3->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
-  //return((unsigned char)spiREG3->BUF);  // Return received value
+  while ((_spiREG->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
+  return((unsigned char)_spiREG->BUF);  // Return received value
 }
 
 
@@ -129,14 +128,15 @@ BYTE PowerFlag = 0;    /* indicates if "power" is on */
 static
 void xmit_spi(BYTE dat)
 {
+    unsigned int ui32RcvDat;
 
 
-    while ((spiREG3->FLG & 0x000000FFU) !=0U); // Wait until TXINTFLG is set for previous transmission
-    spiREG3->DAT1 = dat | 0x100D0000;    // transmit register address
+    while ((_spiREG->FLG & 0x000000FFU) !=0U); // Wait until TXINTFLG is set for previous transmission
+    _spiREG->DAT1 = dat | 0x100D0000;    // transmit register address
 
 
-    while ((spiREG3->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
-    //return = spiREG3->FLG;  // to get received value
+    while ((_spiREG->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
+    ui32RcvDat = _spiREG->BUF;  // to get received value
 }
 
 
@@ -152,12 +152,12 @@ BYTE rcvr_spi (void)
 {
 
 
-    while ((spiREG3->FLG & 0x0200) == 0); // Wait until TXINTFLG is set for previous transmission
-    spiREG3->DAT1 = 0xFF | 0x100D0000;    // transmit register address
+    while ((_spiREG->FLG & 0x000000FFU) !=0U); // Wait until TXINTFLG is set for previous transmission
+    _spiREG->DAT1 = 0xFF | 0x100D0000;    // transmit register address
 
 
-    while ((spiREG3->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
-    return((unsigned char)spiREG3->BUF);  // Return received value
+    while ((_spiREG->FLG & 0x0100) == 0); // Wait until RXINTFLG is set when new value is received
+    return((unsigned char)_spiREG->BUF);  // Return received value
 }
 
 
@@ -207,21 +207,13 @@ void send_initial_clock_train(void)
     /* Ensure CS is held high. */
     DESELECT();
 
-
     /* Send 10 bytes over the SSI. This causes the clock to wiggle the */
     /* required number of times. */
-    for(i = 0 ; i < 5 ; i++)
+    for(i = 0 ; i < 10 ; i++)
     {
         /* Write DUMMY data */
         /* FIFO. */
-        uint16 dummydata = 0xFFFF;
-        spiDAT1_t dat1;
-        dat1.CSNR = 1U;
-        dat1.CS_HOLD = 1U;
-        dat1.WDEL = 0U;
-        dat1.DFSEL = SPI_FMT_0;
-
-        spiTransmitData(spiREG3, &dat1, 1 , &dummydata);
+        SPI_send (0xFF);
     }
 }
 
@@ -240,12 +232,15 @@ void power_on (void)
     * This doesn't really turn the power on, but initializes the
     * SPI port and pins needed to talk to the card.
     */
-    spiInit();
+    //spiInit();
+    //gioInit();
+    //gioToggleBit(gioPORTA, 0U);
 
+    mmcSelectSpi(gioPORTA, spiREG3);
 
     /* Set DI and CS high and apply more than 74 pulses to SCLK for the card */
     /* to be able to accept a native command. */
-    send_initial_clock_train();
+    //send_initial_clock_train();
 
 
     PowerFlag = 1;
@@ -257,9 +252,9 @@ static
 void set_max_speed(void)
 {
     // todo jc 20151004 - check if this is portable between hercules controllers/clock speeds
-      spiREG3->FMT0 &= 0xFFFF00FF;  // mask out baudrate prescaler
+      _spiREG->FMT0 &= 0xFFFF00FF;  // mask out baudrate prescaler
                                     // Max. 5 MBit used for Data Transfer.
-      spiREG3->FMT0 |= 5 << 8;    // baudrate prescale 10MHz / (1+1) = 5MBit
+      _spiREG->FMT0 |= 5 << 8;    // baudrate prescale 10MHz / (1+1) = 5MBit
 }
 
 
@@ -380,7 +375,7 @@ BYTE send_cmd (
 
 
 
-    if (wait_ready() != 0xFF) return 0xFF;
+    //if (wait_ready() != 0xFF) return 0xFF;
 
 
     /* Send command packet */
@@ -550,7 +545,7 @@ DSTATUS disk_status (
     BYTE drv        /* Physical drive nmuber (0) */
 )
 {
-    if (drv) return STA_NOINIT;        /* Supports only single drive */
+    //if (drv) return STA_NOINIT;        /* Supports only single drive */
     return Stat;
 }
 
@@ -572,7 +567,6 @@ DRESULT disk_read (
 )
 {
     //if (drv || !count) return RES_PARERR;
-    if (!count) return RES_PARERR;
     if (Stat & STA_NOINIT) return RES_NOTRDY;
 
 
@@ -624,7 +618,6 @@ DRESULT disk_write (
 )
 {
     //if (drv || !count) return RES_PARERR;
-    if (!count) return RES_PARERR;
     if (Stat & STA_NOINIT) return RES_NOTRDY;
     if (Stat & STA_PROTECT) return RES_WRPRT;
 
@@ -686,7 +679,7 @@ DRESULT disk_ioctl (
 
 
 
-    if (drv) return RES_PARERR;
+    //if (drv) return RES_PARERR;
 
 
     res = RES_ERROR;

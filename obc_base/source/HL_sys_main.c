@@ -57,7 +57,7 @@
 /* Include HET header file - types, definitions and function declarations for system driver */
 #include "HL_het.h"
 #include "HL_gio.h"
-#include "HL_mibspi.h"
+#include "HL_spi.h"
 #include "HL_esm.h"
 #include "HL_sys_core.h"
 #include "HL_system.h"
@@ -121,21 +121,6 @@ void vTask2(void *pvParameters)
 */
 
 /* USER CODE BEGIN (2) */
-#define D_COUNT  8
-
-uint32 cnt=0, error =0, tx_done =0;
-uint16 tx_data1[D_COUNT] = {1,2,3,4,5,6,7,8};
-uint16 tx_data2[D_COUNT] = {11,12,13,14,15,16,17,18};
-uint16 tx_data3[D_COUNT] = {21,22,23,24,25,26,27,28};
-uint16 tx_data4[D_COUNT] = {31,32,33,34,35,36,37,38};
-uint16 tx_data5[D_COUNT] = {41,42,43,44,45,46,47,48};
-
-
-uint16 rx_data1[D_COUNT] = {0};
-uint16 rx_data2[D_COUNT] = {0};
-uint16 rx_data3[D_COUNT] = {0};
-uint16 rx_data4[D_COUNT] = {0};
-uint16 rx_data5[D_COUNT] = {0};
 /* USER CODE END */
 
 uint8	emacAddress[6U] = 	{0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
@@ -145,8 +130,30 @@ int main(void)
 {
 /* USER CODE BEGIN (3) */
 
+    /*
+    spiDAT1_t dat1 = {0U, 0U, SPI_FMT_0, SPI_CS_1};
+    spiInit();
+    gioInit();
+    //gioToggleBit(gioPORTA, 0U);
+    //gioPORTA->DSET = 0x01;
+    //gioPORTA-> DCLR = 0x01;
+    uint16 nextword = 0b1101011;
 
-
+    for(;;){
+        spiTransmitData(spiREG3, &dat1, 1, &nextword);
+        gioPORTA->DSET = 0x01;
+        spiTransmitData(spiREG3, &dat1, 1, &nextword);
+        gioPORTA-> DCLR = 0x01;
+        spiTransmitData(spiREG3, &dat1, 1, &nextword);
+    }
+    uint16 receivedword;
+    receivedword = spiREG3->BUF;
+    uint32 flagregister = spiREG3->FLG;
+    */
+    spiInit();
+    gioInit();
+    //gioPORTA->DSET = 0x01;
+    //gioPORTA-> DCLR = 0x01;
 
     /* Create Task 1 */
     if (xTaskCreate(vTask1,"Task1", 1024, NULL, 1, &xTask1Handle) != pdTRUE)
@@ -191,34 +198,5 @@ the stack and so not exists after this function exits. */
 }
 
 
-/* can interrupt notification */
-void mibspiGroupNotification(mibspiBASE_t *mibspi, uint32 group)
-{
 
-    uint16 * data;
-
-    /* node 1 - transfer request */
-     if(mibspi==mibspiREG1)
-     {
-         data = &rx_data1[0];
-     }
-     if(mibspi==mibspiREG2)
-     {
-         data = &rx_data2[0];
-     }
-     if(mibspi==mibspiREG3)
-     {
-         data = &rx_data3[0];
-     }
-     if(mibspi==mibspiREG4)
-     {
-         data = &rx_data4[0];
-     }
-     if(mibspi==mibspiREG5)
-     {
-         data = &rx_data5[0];
-     }
-
-     mibspiGetData(mibspi, group, data);
-}
 /* USER CODE END */

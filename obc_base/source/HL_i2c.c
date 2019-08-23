@@ -110,7 +110,7 @@ void i2cInit(void)
     i2cREG1->IMR = 0x00U;
 
     /** - set prescale */
-    i2cREG1->PSC = 8U;
+    i2cREG1->PSC = 5U;
 
     /** - set clock rate */
     i2cREG1->CKH = 37U;
@@ -189,7 +189,7 @@ void i2cInit(void)
     i2cREG2->IMR = 0x00U;
 
     /** - set prescale */
-    i2cREG2->PSC = 8U;
+    i2cREG2->PSC = 5U;
 
     /** - set clock rate */
     i2cREG2->CKH = 37U;
@@ -280,7 +280,7 @@ void i2cSetBaudrate(i2cBASE_t *i2c, uint32 baud)
     uint32 prescale;
     uint32 d;
     uint32 ck;
-    float64 vclk = 75.000F * 1000000.0F;
+    float64 vclk = 50.000F * 1000000.0F;
     float64 divider= 0.0F;
     uint32 temp = 0U;
 

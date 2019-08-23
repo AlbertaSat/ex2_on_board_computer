@@ -184,7 +184,7 @@ typedef struct i2c_config_reg
 
 #define I2C1_EMDR_CONFIGVALUE      ((uint32)((uint32)0U << 1U) \
                                 |  (uint32)((uint32)0U))
-#define I2C1_PSC_CONFIGVALUE       8U
+#define I2C1_PSC_CONFIGVALUE       5U
 #define I2C1_DMAC_CONFIGVALUE      0x00000000U
 #define I2C1_FUN_CONFIGVALUE       0U
 #define I2C1_DIR_CONFIGVALUE       ((uint32)((uint32)0U << 1U) \
@@ -225,7 +225,7 @@ typedef struct i2c_config_reg
 
 #define I2C2_EMDR_CONFIGVALUE      ((uint32)((uint32)0U << 1U) \
                                  | (uint32)((uint32)0U))
-#define I2C2_PSC_CONFIGVALUE       8U
+#define I2C2_PSC_CONFIGVALUE       5U
 #define I2C2_DMAC_CONFIGVALUE      0x00000000U
 #define I2C2_FUN_CONFIGVALUE       0U
 #define I2C2_DIR_CONFIGVALUE       ((uint32)((uint32)0U << 1U) \

@@ -210,10 +210,10 @@ void canInit(void)
     *     - Setup baud rate prescaler
     */
     canREG1->BTR = (uint32)((uint32)0U << 16U) |
-                   (uint32)((uint32)(4U - 1U) << 12U) |
-                   (uint32)((uint32)((6U + 4U) - 1U) << 8U) |
+                   (uint32)((uint32)(6U - 1U) << 12U) |
+                   (uint32)((uint32)((7U + 6U) - 1U) << 8U) |
                    (uint32)((uint32)(4U - 1U) << 6U) |
-                   (uint32)9U;
+                   (uint32)4U;
 
 
 
@@ -363,10 +363,10 @@ void canInit(void)
     *     - Setup baud rate prescaler
     */
     canREG2->BTR = (uint32)((uint32)0U << 16U) |
-                   (uint32)((uint32)(4U - 1U) << 12U) |
-                   (uint32)((uint32)((6U + 4U) - 1U) << 8U) |
+                   (uint32)((uint32)(6U - 1U) << 12U) |
+                   (uint32)((uint32)((7U + 6U) - 1U) << 8U) |
                    (uint32)((uint32)(4U - 1U) << 6U) |
-                   (uint32)9U;		
+                   (uint32)4U;		
 
 
    /** - CAN2 Port output values */
@@ -511,10 +511,10 @@ void canInit(void)
     *     - Setup baud rate prescaler
     */
     canREG3->BTR = (uint32)((uint32)0U << 16U) |
-                   (uint32)((uint32)(4U - 1U) << 12U) |
-                   (uint32)((uint32)((6U + 4U) - 1U) << 8U) |
+                   (uint32)((uint32)(6U - 1U) << 12U) |
+                   (uint32)((uint32)((7U + 6U) - 1U) << 8U) |
                    (uint32)((uint32)(4U - 1U) << 6U) |
-                   (uint32)(uint32)9U;
+                   (uint32)(uint32)4U;
 
 
     /** - CAN3 Port output values */
@@ -660,10 +660,10 @@ void canInit(void)
     *     - Setup baud rate prescaler
     */
     canREG4->BTR = ((uint32)0U << 16U) |
-                   (((uint32)4U - 1U) << 12U) |
-                   ((((uint32)6U + (uint32)4U) - 1U) << 8U) |
+                   (((uint32)6U - 1U) << 12U) |
+                   ((((uint32)7U + (uint32)6U) - 1U) << 8U) |
                    (((uint32)4U - 1U) << 6U) |
-                   (uint32)9U;
+                   (uint32)4U;
 
 
 
