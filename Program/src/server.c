@@ -32,6 +32,9 @@ This is my file for server.c. It develops a udp server for select.
 #include <netinet/in.h>
 #include <netdb.h> 
 
+
+#include "port.h"
+
 static int exit_now;
 
 
@@ -173,8 +176,6 @@ void connectionless_server(char* port, int initial_buff_size,
     checkAlloc(client, 1);
 
     size_t size_of_addr = sizeof(struct sockaddr);
-    socklen_t client_len = sizeof(*client);
-
 
     for (;;)
     {
@@ -216,8 +217,9 @@ void connectionless_server(char* port, int initial_buff_size,
         // good article!
         if (FD_ISSET(sfd, &readFds)) {
 
-            int count = recvfrom(sfd, buff, *buff_size, 0, (void *) client, &client_len);
-            
+            //int count = recvfrom(sfd, buff, *buff_size, 0, (void *) client, &size_of_addr);
+            int count = ssp_recvfrom(sfd, buff, *buff_size, 0, (void *) client, size_of_addr);
+
             if (count == -1) {
                 perror("recv failed server");
             }
@@ -299,9 +301,8 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
         if (onSend(sfd, serveraddr, onSendParams)) 
             printf("send failed\n");
 
-
-        count = recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, (struct sockaddr*)&serveraddr, &serverlen);
-
+        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, &serveraddr, serverlen);
+       
         if (count == -1){
             //perror("recv failed client");
         }

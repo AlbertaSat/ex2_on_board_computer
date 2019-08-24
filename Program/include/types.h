@@ -472,6 +472,7 @@ typedef struct response {
     char *msg;
     //this is type (struct sockaddr_in) in posix
     void *addr;
+    
     //getting rid of this soon in favour of client based packet sizes
     size_t size_of_addr;
 

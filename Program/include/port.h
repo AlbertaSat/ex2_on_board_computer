@@ -18,6 +18,9 @@ void ssp_printf(char *stuff, ...);
 Request *init_request(uint32_t buff_len);
 void *ssp_alloc(uint32_t u_memb, size_t size);
 void ssp_sendto(Response res);
+
+int ssp_recvfrom(int sfd, void *buff, size_t packet_len, int flags, void *server_addr, uint32_t server_addr_len);
+
 void *ssp_thread_create(int stack_size, void * (thread_func)(void *params), void *params);
 
 int ssp_open(char *pathname, int flags);

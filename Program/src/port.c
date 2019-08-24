@@ -84,6 +84,17 @@ void ssp_sendto(Response res) {
     #endif
 }
 
+
+int ssp_recvfrom(int sfd, void *buff, size_t packet_len, int flags, void *server_addr, uint32_t server_addr_len) {
+    int count = 0;
+    #ifdef POSIX_PORT
+        count = recvfrom(sfd, buff, packet_len, flags, (struct sockaddr*)server_addr, (socklen_t*)&server_addr_len);
+    #endif
+
+    return count;
+}
+
+
 /*------------------------------------------------------------------------------
     Std lib functions, for custom memory allocation, and stdio
 ------------------------------------------------------------------------------*/
