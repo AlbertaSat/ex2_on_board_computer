@@ -245,7 +245,7 @@ void *ssp_connectionless_client_task(void* params){
     inet_ntop(AF_INET, &client->remote_entity->UT_address, host_name, INET_ADDRSTRLEN);
     
     #ifdef POSIX_PORT
-        udpClient(host_name, port, PACKET_LEN, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
+        connectionless_client(host_name, port, PACKET_LEN, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
     #endif
     return NULL;
 }

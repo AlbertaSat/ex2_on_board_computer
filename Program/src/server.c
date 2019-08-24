@@ -172,6 +172,9 @@ void connectionless_server(char* port, int initial_buff_size,
     client = calloc(sizeof(struct sockaddr_storage), 1);
     checkAlloc(client, 1);
 
+    size_t size_of_addr = sizeof(struct sockaddr);
+    socklen_t client_len = sizeof(*client);
+
 
     for (;;)
     {
@@ -212,18 +215,17 @@ void connectionless_server(char* port, int initial_buff_size,
         //http://www.microhowto.info/howto/listen_for_and_receive_udp_datagrams_in_c.html
         // good article!
         if (FD_ISSET(sfd, &readFds)) {
-            
-            socklen_t client_len = sizeof(*client);
+
             int count = recvfrom(sfd, buff, *buff_size, 0, (void *) client, &client_len);
             
             if (count == -1) {
-                perror("recv failed");
+                perror("recv failed server");
             }
             else if (count >= *buff_size) {   
                 printf("packet too large\n");
             }
             else {
-                if (onRecv(sfd, buff, count, buff_size, (void*) client, sizeof(struct sockaddr), other) == -1)
+                if (onRecv(sfd, buff, count, buff_size, (void*) client, size_of_addr, other) == -1)
                     printf("recv failed\n");
             }
         }
@@ -239,7 +241,7 @@ void connectionless_server(char* port, int initial_buff_size,
 
 
 //https://www.cs.cmu.edu/afs/cs/academic/class/15213-f99/www/class26/udpclient.c
-void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
+void connectionless_client(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *onRecvParams) ,
     int (*checkExit)(void *checkExitParams),
@@ -282,6 +284,9 @@ void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, vo
     serveraddr.sin_port = htons(port_val);
     serverlen = sizeof(serveraddr);
         
+    
+    size_t size_of_addr = sizeof(struct sockaddr);
+
     for (;;) {
 
         if (exit_now || checkExit(checkExitParams))
@@ -297,18 +302,15 @@ void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, vo
 
         count = recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, (struct sockaddr*)&serveraddr, &serverlen);
 
-        if (count == -1)
-        {
-            //perror("recv failed");
+        if (count == -1){
+            //perror("recv failed client");
         }
-        else if (count >= *buff_size)
-        {   
+        else if (count >= *buff_size){   
             printf("packet too large\n");
             continue;
         }
-        else
-        {
-            if (onRecv(sfd, buff, count, buff_size, (void *)&serveraddr, sizeof(struct sockaddr), onRecvParams) == -1)
+        else{
+            if (onRecv(sfd, buff, count, buff_size, (void *)&serveraddr, size_of_addr, onRecvParams) == -1)
                 printf("recv failed\n");
         }
         
