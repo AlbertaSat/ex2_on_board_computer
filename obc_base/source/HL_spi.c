@@ -224,7 +224,7 @@ void spiInit(void)
                     | (uint32)((uint32)0U << 8U)  /* ENA */
                     | (uint32)((uint32)0U << 9U)  /* CLK */
                     | (uint32)((uint32)0U << 10U)  /* SIMO */
-                    | (uint32)((uint32)0U << 11U); /* SOMI */
+                    | (uint32)((uint32)1U << 11U); /* SOMI */
 
     /* SPI3 set all pins to functional */
     spiREG3->PC0  =   (uint32)((uint32)0U << 0U)  /* SCS[0] */

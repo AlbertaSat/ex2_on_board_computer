@@ -130,8 +130,7 @@ void xmit_spi(BYTE dat)
 {
     unsigned int ui32RcvDat;
 
-
-    while ((_spiREG->FLG & 0x000000FFU) !=0U); // Wait until TXINTFLG is set for previous transmission
+    while ((_spiREG->FLG & 0x0200) == 0); // Wait until TXINTFLG is set for previous transmission
     _spiREG->DAT1 = dat | 0x100D0000;    // transmit register address
 
 
@@ -152,7 +151,7 @@ BYTE rcvr_spi (void)
 {
 
 
-    while ((_spiREG->FLG & 0x000000FFU) !=0U); // Wait until TXINTFLG is set for previous transmission
+    while ((_spiREG->FLG & 0x0200) == 0); // Wait until TXINTFLG is set for previous transmission
     _spiREG->DAT1 = 0xFF | 0x100D0000;    // transmit register address
 
 
@@ -386,6 +385,7 @@ BYTE send_cmd (
     xmit_spi((BYTE)arg);                /* Argument[7..0] */
     n = 0xff;
     if (cmd == CMD0) n = 0x95;            /* CRC for CMD0(0) */
+    if (cmd == CMD41) n = 0x95;
     if (cmd == CMD8) n = 0x87;            /* CRC for CMD8(0x1AA) */
     xmit_spi(n);
 
@@ -495,7 +495,7 @@ DSTATUS disk_initialize (
             for (n = 0; n < 4; n++) ocr[n] = rcvr_spi();
             if (ocr[2] == 0x01 && ocr[3] == 0xAA) {    /* The card can work at vdd range of 2.7-3.6V */
                 do {
-                    if (send_cmd(CMD55, 0) <= 1 && send_cmd(CMD41, 1UL << 30) == 0)    break;    /* ACMD41 with HCS bit */
+                    if (send_cmd(CMD55, 0) <= 1 && send_cmd(CMD41, 0x40000000) == 0)    break;    /* ACMD41 with HCS bit */
                 } while (Timer1);
                 if (Timer1 && send_cmd(CMD58, 0) == 0) {    /* Check CCS bit */
                     for (n = 0; n < 4; n++) ocr[n] = rcvr_spi();

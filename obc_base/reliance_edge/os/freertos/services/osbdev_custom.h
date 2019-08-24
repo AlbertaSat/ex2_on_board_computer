@@ -80,8 +80,9 @@ static REDSTATUS DiskOpen(
     //  Insert code here to open/initialize the block device.
     disk_initialize();//what to use as argument? Physical drive number?
     //
-    REDERROR();
-    ret = -RED_ENOSYS;
+    //REDERROR();
+    //ret = -RED_ENOSYS;
+    ret = 0;
 
     return ret;
 }
@@ -110,8 +111,8 @@ static REDSTATUS DiskClose(
      *  *None seems to be needed based off of the stm32sdio example
      *
     */
-    REDERROR();
-    ret = -RED_ENOSYS;
+    //REDERROR();
+    ret = 0;
 
     return ret;
 }
@@ -148,8 +149,8 @@ static REDSTATUS DiskRead(
     /*  Insert code here to read sectors from the block device.*/
     disk_read(pBuffer,ullSectorStart,ulSectorCount);
     //
-    REDERROR();
-    ret = -RED_ENOSYS;
+    //REDERROR();
+    ret = 0;
 
     return ret;
 }
@@ -188,8 +189,8 @@ static REDSTATUS DiskWrite(
     /*  Insert code here to write sectors to the block device.*/
     disk_write(pBuffer,ullSectorStart,ulSectorCount);
     //
-    REDERROR();
-    ret = -RED_ENOSYS;
+    //REDERROR();
+    ret = 0;
 
     return ret;
 }
@@ -218,8 +219,8 @@ static REDSTATUS DiskFlush(
         device is inherently synchronous (no hardware or software cache), then
         this can do nothing and return success.
     */
-    REDERROR();
-    ret = -RED_ENOSYS;
+    //REDERROR();
+    ret = 0;
 
     return ret;
 }
