@@ -32,6 +32,14 @@ int ssp_close(int fd);
 void ssp_free(void *pointer);
 void ssp_thread_join(void *thread_handle);
 
+
+//network stuff
+void ssp_fd_zero(void *socket_set);
+void ssp_fd_set(int sfd, void *socket_set);
+int ssp_fd_is_set(int sfd, void *socket_set);
+void *ssp_init_socket_set();
+
+
 int ssp_rename(const char *old, const char *new);
 void reset_request(Request *req);
 

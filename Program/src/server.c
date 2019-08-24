@@ -156,10 +156,17 @@ void connectionless_server(char* port, int initial_buff_size,
 {
     int sfd = prepareUdpHost(port);
 
-    fd_set masterReadFds;
-    FD_ZERO(&masterReadFds);
-    FD_SET(STDIN_FILENO, &masterReadFds);
-    FD_SET(sfd, &masterReadFds);
+    //fd_set masterReadFds;
+
+    void *socket_set = ssp_init_socket_set();
+
+    ssp_fd_zero(socket_set);
+    ssp_fd_set(sfd, socket_set);
+    ssp_fd_set(STDIN_FILENO, socket_set);
+
+    //FD_ZERO(&masterReadFds);
+    //FD_SET(STDIN_FILENO, &masterReadFds);
+    //FD_SET(sfd, &masterReadFds);
 
     uint32_t *buff_size = calloc(1, sizeof(uint32_t));
     checkAlloc(buff_size, 1);
@@ -184,8 +191,10 @@ void connectionless_server(char* port, int initial_buff_size,
             .tv_usec = 100e3,
         };
 
-        fd_set readFds = masterReadFds;
-        int nrdy = select(sfd + 1, &readFds, NULL, NULL, &timeout);
+        fd_set readFds = *((fd_set*) socket_set);
+
+        //int nrdy = select(sfd + 1, &readFds, NULL, NULL, &timeout);
+        int nrdy = select(sfd + 1, (fd_set*)socket_set, NULL, NULL, &timeout);
 
 
         if (exit_now || checkExit(other)){
@@ -208,14 +217,14 @@ void connectionless_server(char* port, int initial_buff_size,
             continue;
         }
         
-        if (FD_ISSET(STDIN_FILENO, &readFds)) {
+        if (ssp_fd_is_set(STDIN_FILENO, &readFds)) {
             onStdIn(other);
             continue;
         }
 
         //http://www.microhowto.info/howto/listen_for_and_receive_udp_datagrams_in_c.html
         // good article!
-        if (FD_ISSET(sfd, &readFds)) {
+        if (ssp_fd_is_set(sfd, &readFds)) {
 
             //int count = recvfrom(sfd, buff, *buff_size, 0, (void *) client, &size_of_addr);
             int count = ssp_recvfrom(sfd, buff, *buff_size, 0, (void *) client, size_of_addr);
@@ -232,6 +241,7 @@ void connectionless_server(char* port, int initial_buff_size,
             }
         }
     }
+    ssp_free(socket_set);
     free(buff_size);
     free(client);
     free(buff);

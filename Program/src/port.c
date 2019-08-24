@@ -18,6 +18,7 @@
        #include <stdio.h>
        #include <stdarg.h>
        #include <unistd.h>
+       #include <sys/select.h>
 
 #endif
 #include "types.h"
@@ -84,7 +85,6 @@ void ssp_sendto(Response res) {
     #endif
 }
 
-
 int ssp_recvfrom(int sfd, void *buff, size_t packet_len, int flags, void *server_addr, uint32_t server_addr_len) {
     int count = 0;
     #ifdef POSIX_PORT
@@ -94,6 +94,37 @@ int ssp_recvfrom(int sfd, void *buff, size_t packet_len, int flags, void *server
     return count;
 }
 
+
+void *ssp_init_socket_set() {
+
+    #ifdef POSIX_PORT
+        fd_set *socket_set = ssp_alloc(1, sizeof(fd_set));
+    #endif
+    return (void *)socket_set;
+}
+
+
+
+void ssp_fd_zero(void *socket_set){
+    #ifdef POSIX_PORT
+        FD_ZERO((fd_set*) socket_set);
+    #endif
+}
+
+void ssp_fd_set(int sfd, void *socket_set) {
+    #ifdef POSIX_PORT
+        FD_SET(sfd, (fd_set*) socket_set);
+    #endif
+}
+
+int ssp_fd_is_set(int sfd, void *socket_set){
+    int is_set = 0;
+    #ifdef POSIX_PORT
+        is_set = FD_ISSET(sfd, (fd_set*) socket_set);
+        
+    #endif
+    return is_set;
+}
 
 /*------------------------------------------------------------------------------
     Std lib functions, for custom memory allocation, and stdio
