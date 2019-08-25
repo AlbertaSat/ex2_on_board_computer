@@ -156,7 +156,6 @@ void connectionless_server(char* port, int initial_buff_size,
 {
     int sfd = prepareUdpHost(port);
 
-    //fd_set masterReadFds;
     size_t size_of_socket_struct[1];
     *size_of_socket_struct = 0;
 
@@ -167,12 +166,6 @@ void connectionless_server(char* port, int initial_buff_size,
     ssp_fd_set(sfd, socket_set);
     ssp_fd_set(STDIN_FILENO, socket_set);
 
-    
-
-    //FD_ZERO(&masterReadFds);
-    //FD_SET(STDIN_FILENO, &masterReadFds);
-    //FD_SET(sfd, &masterReadFds);
-
     uint32_t *buff_size = calloc(1, sizeof(uint32_t));
     checkAlloc(buff_size, 1);
 
@@ -182,28 +175,16 @@ void connectionless_server(char* port, int initial_buff_size,
     char *buff = calloc(sizeof(char), *buff_size);
     checkAlloc(buff, 1);
 
-    struct sockaddr_storage *client;
-    client = calloc(sizeof(struct sockaddr_storage), 1);
-    checkAlloc(client, 1);
+    size_t size_of_addr[1];
+    *size_of_addr = 0;
+    void *addr = ssp_init_sockaddr_struct(size_of_addr);
 
-    size_t size_of_addr = sizeof(struct sockaddr);
 
     for (;;)
     {
-        /*
-        struct timeval timeout = {
-            .tv_sec = 0,
-            .tv_usec = 100e3,
-        };
-        */
 
-        fd_set readFds = *((fd_set*) socket_set);
-
-        //memset(read_socket_set, 0, *size_of_socket_struct);
-        memcpy(read_socket_set, socket_set, *size_of_socket_struct);
-
-        //int nrdy = select(sfd + 1, &readFds, NULL, NULL, &timeout);
-        int nrdy = ssp_select(sfd, &readFds, NULL,  NULL, 100e3);
+        memcpy(read_socket_set, socket_set, size_of_socket_struct[0]);
+        int nrdy = ssp_select(sfd, read_socket_set, NULL,  NULL, 100e3);
 
         if (exit_now || checkExit(other)){
             printf("exiting server thread\n");
@@ -225,17 +206,16 @@ void connectionless_server(char* port, int initial_buff_size,
             continue;
         }
         
-        if (ssp_fd_is_set(STDIN_FILENO, &readFds)) {
+        if (ssp_fd_is_set(STDIN_FILENO, read_socket_set)) {
             onStdIn(other);
             continue;
         }
 
         //http://www.microhowto.info/howto/listen_for_and_receive_udp_datagrams_in_c.html
         // good article!
-        if (ssp_fd_is_set(sfd, &readFds)) {
+        if (ssp_fd_is_set(sfd, read_socket_set)) {
 
-            //int count = recvfrom(sfd, buff, *buff_size, 0, (void *) client, &size_of_addr);
-            int count = ssp_recvfrom(sfd, buff, *buff_size, 0, (void *) client, size_of_addr);
+            int count = ssp_recvfrom(sfd, buff, *buff_size, 0, addr, size_of_addr[0]);
 
             if (count == -1) {
                 perror("recv failed server");
@@ -244,16 +224,16 @@ void connectionless_server(char* port, int initial_buff_size,
                 printf("packet too large\n");
             }
             else {
-                if (onRecv(sfd, buff, count, buff_size, (void*) client, size_of_addr, other) == -1)
+                if (onRecv(sfd, buff, count, buff_size, addr, size_of_addr[0], other) == -1)
                     printf("recv failed\n");
             }
         }
     }
+    ssp_free(addr);
     ssp_free(read_socket_set);
     ssp_free(socket_set);
-    free(buff_size);
-    free(client);
-    free(buff);
+    ssp_free(buff_size);
+    ssp_free(buff);
     close(sfd);
     onExit(other);
 }

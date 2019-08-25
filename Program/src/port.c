@@ -94,7 +94,6 @@ int ssp_recvfrom(int sfd, void *buff, size_t packet_len, int flags, void *server
     return count;
 }
 
-
 void *ssp_init_socket_set(size_t *size) {
 
     #ifdef POSIX_PORT
@@ -142,6 +141,16 @@ int ssp_select(int sfd, void *read_socket_set, void *write_socket_set, void *res
     return nrdy;
 }
 
+void *ssp_init_sockaddr_struct(size_t *size_of_addr) {
+
+    #ifdef POSIX_PORT
+        *size_of_addr = sizeof(struct sockaddr_storage);
+        void *addr = calloc(sizeof(struct sockaddr_storage), 1);
+        checkAlloc(addr, 1);
+
+    #endif
+    return addr;
+}
 
 /*------------------------------------------------------------------------------
     Std lib functions, for custom memory allocation, and stdio
