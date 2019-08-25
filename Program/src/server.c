@@ -157,12 +157,17 @@ void connectionless_server(char* port, int initial_buff_size,
     int sfd = prepareUdpHost(port);
 
     //fd_set masterReadFds;
+    size_t size_of_socket_struct[1];
+    *size_of_socket_struct = 0;
 
-    void *socket_set = ssp_init_socket_set();
+    void *socket_set = ssp_init_socket_set(size_of_socket_struct);
+    void *read_socket_set = ssp_init_socket_set(size_of_socket_struct);
 
     ssp_fd_zero(socket_set);
     ssp_fd_set(sfd, socket_set);
     ssp_fd_set(STDIN_FILENO, socket_set);
+
+    
 
     //FD_ZERO(&masterReadFds);
     //FD_SET(STDIN_FILENO, &masterReadFds);
@@ -172,7 +177,6 @@ void connectionless_server(char* port, int initial_buff_size,
     checkAlloc(buff_size, 1);
 
     *buff_size = initial_buff_size + 10;
-
     uint32_t prev_buff_size = *buff_size;
 
     char *buff = calloc(sizeof(char), *buff_size);
@@ -186,16 +190,20 @@ void connectionless_server(char* port, int initial_buff_size,
 
     for (;;)
     {
+        /*
         struct timeval timeout = {
             .tv_sec = 0,
             .tv_usec = 100e3,
         };
+        */
 
         fd_set readFds = *((fd_set*) socket_set);
 
-        //int nrdy = select(sfd + 1, &readFds, NULL, NULL, &timeout);
-        int nrdy = select(sfd + 1, (fd_set*)socket_set, NULL, NULL, &timeout);
+        //memset(read_socket_set, 0, *size_of_socket_struct);
+        memcpy(read_socket_set, socket_set, *size_of_socket_struct);
 
+        //int nrdy = select(sfd + 1, &readFds, NULL, NULL, &timeout);
+        int nrdy = ssp_select(sfd, &readFds, NULL,  NULL, 100e3);
 
         if (exit_now || checkExit(other)){
             printf("exiting server thread\n");
@@ -241,6 +249,7 @@ void connectionless_server(char* port, int initial_buff_size,
             }
         }
     }
+    ssp_free(read_socket_set);
     ssp_free(socket_set);
     free(buff_size);
     free(client);

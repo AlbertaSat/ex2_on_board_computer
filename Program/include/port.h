@@ -37,8 +37,8 @@ void ssp_thread_join(void *thread_handle);
 void ssp_fd_zero(void *socket_set);
 void ssp_fd_set(int sfd, void *socket_set);
 int ssp_fd_is_set(int sfd, void *socket_set);
-void *ssp_init_socket_set();
-
+void *ssp_init_socket_set(size_t *size);
+int ssp_select(int sfd, void *read_socket_set, void *write_socket_set, void *restrict_socket_set, uint32_t timeout_in_usec);
 
 int ssp_rename(const char *old, const char *new);
 void reset_request(Request *req);

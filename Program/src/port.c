@@ -95,14 +95,14 @@ int ssp_recvfrom(int sfd, void *buff, size_t packet_len, int flags, void *server
 }
 
 
-void *ssp_init_socket_set() {
+void *ssp_init_socket_set(size_t *size) {
 
     #ifdef POSIX_PORT
         fd_set *socket_set = ssp_alloc(1, sizeof(fd_set));
+        *size = sizeof(fd_set);
     #endif
     return (void *)socket_set;
 }
-
 
 
 void ssp_fd_zero(void *socket_set){
@@ -125,6 +125,23 @@ int ssp_fd_is_set(int sfd, void *socket_set){
     #endif
     return is_set;
 }
+
+int ssp_select(int sfd, void *read_socket_set, void *write_socket_set, void *restrict_socket_set, uint32_t timeout_in_usec) {
+
+    #ifdef POSIX_PORT
+
+    struct timeval timeout = {
+        .tv_sec = 0,
+        //.tv_usec = 100e3,
+        .tv_usec = timeout_in_usec
+    };
+
+    int nrdy = select(sfd + 1, read_socket_set, write_socket_set, restrict_socket_set, &timeout);
+    #endif
+
+    return nrdy;
+}
+
 
 /*------------------------------------------------------------------------------
     Std lib functions, for custom memory allocation, and stdio
