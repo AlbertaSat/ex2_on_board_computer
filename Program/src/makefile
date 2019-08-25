@@ -14,6 +14,7 @@ CFILES += requests.c
 CFILES += tasks.c
 CFILES += file_delivery_app.c
 CFILES += list.c
+CFILES += packet.c
 #----------------------------test files-------------------------
 
 #entrypoint

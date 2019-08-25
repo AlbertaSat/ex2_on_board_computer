@@ -7,7 +7,7 @@
 
 ------------------------------------------------------------------------------*/
 #include "stdint.h"
-#include "protocol_handler.h"
+#include "requests.h"
 #include "port.h"
 #include "utils.h"
 #include <string.h>
@@ -35,14 +35,11 @@ void ssp_cleanup_req(void *request) {
         ssp_free(req->buff);
     if (req->res.addr != NULL)
         ssp_free(req->res.addr);
+    if (req->local_entity != NULL)
+        ssp_free(req->local_entity);
     if (req != NULL)
         ssp_free(req);
 
-}
-
-
-void reset_request(Request *req){
-    req->type = none;
 }
 
 
@@ -56,10 +53,12 @@ Request *init_request(uint32_t buff_len) {
     req->destination_file_name = ssp_alloc(MAX_PATH, sizeof(char));
     checkAlloc(req->destination_file_name,  1);
 
+    req->local_entity = ssp_alloc(1, sizeof(Local_entity));
     req->file = NULL;
     req->buff_len = buff_len;
     req->buff = ssp_alloc(buff_len, sizeof(char));
-    req->type = none;
+    req->res.msg = req->buff;
+    req->procedure = none;
     checkAlloc(req->buff,  1);
     return req;
 }
@@ -91,8 +90,8 @@ Request *put_request(char *source_file_name,
     req->transaction_sequence_number = p_state->transaction_sequence_number++;
 
     //enumeration
-    req->type = put;
-    req->dest_cfdp_id = client->cfdp_id;
+    req->procedure = sending_put_metadata;
+    req->dest_cfdp_id = client->remote_entity->cfdp_id;
     req->file_size = file_size;
     
     memcpy(req->source_file_name, source_file_name ,strnlen(source_file_name, MAX_PATH));

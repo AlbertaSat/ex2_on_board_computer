@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 //Have to include these files
 
@@ -50,7 +51,7 @@ int main(int argc, char** argv) {
     
         //send via acknoleged mode //0 acknowledged, 1 unacknowledged
         if (conf->my_cfdp_id == 2) {
-            put_request("pic.jpeg", "remote_pic1.jpeg", 0, 0, 0, 1, NULL, NULL, new_client, p_state);
+            put_request("pic.jpeg", "remote_pic1.jpeg", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
             put_request("pic.jpeg", "remote_pic2.jpeg", 0, 0, 0, 0, NULL, NULL, new_client, p_state);
         }
         if (conf->my_cfdp_id == 3)

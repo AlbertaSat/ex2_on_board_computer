@@ -8,6 +8,8 @@
 #include "file_delivery_app.h"
 #include "tasks.h"
 #include <stdio.h>
+#include <arpa/inet.h>
+#include "utils.h"
 
 Protocol_state  *init_ftp(uint32_t my_cfdp_address) {
 
@@ -67,20 +69,14 @@ Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
     client->current_request = NULL;
     client->request_list = linked_list();
     client->packet_len = PACKET_LEN;
-    client->cfdp_id = cfdp_id;
 
-
-    List *entity_list = p_state->mib->remote_entities;
-    Remote_entity *remote = entity_list->find(entity_list, cfdp_id, NULL, NULL);
+    Remote_entity *remote = get_remote_entity(p_state->mib, cfdp_id);
 
     if (remote == NULL)
         ssp_printf("couldn't find entity in Remote_entity list\n");
 
     //TODO clean this up, we don't need multiple instances of UT_ports etc
-    client->unitdata_port = remote->UT_port;
-    client->unitdata_id = remote->UT_address;
-    client->mib_info = remote;
-
+    client->remote_entity = remote;
     client->pdu_header = get_header_from_mib(p_state->mib, cfdp_id, p_state->my_cfdp_id);
     client->p_state = p_state;
 

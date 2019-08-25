@@ -10,13 +10,14 @@
 #include "filesystem_funcs.h"
 #include <stdio.h>
 #include "types.h"
+#include <arpa/inet.h>
 /*------------------------------------------------------------------------------
     
     Callbacks for the tasks bellow
 
 ------------------------------------------------------------------------------*/
 //this function is a callback when using my posix port
-static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
+static int on_recv_server(int sfd, char *packet,  uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
 
     Protocol_state *p_state = (Protocol_state *) other;
     Response res;
@@ -27,12 +28,12 @@ static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr
 
     Request **request_container = &p_state->current_request;
 
-    uint32_t packet_index = process_pdu_header(packet, res, request_container, p_state->request_list, p_state);
+    uint32_t packet_index = process_pdu_header(packet, 1, res, request_container, p_state->request_list, p_state);
     p_state->current_request = (*request_container);
 
     if (packet_index == 0)
         return -1;
-
+    
     parse_packet_server(packet, packet_index, res, (*request_container), p_state);
 
     memset(packet, 0, res.packet_len);
@@ -40,7 +41,7 @@ static int on_recv_server(int sfd, char *packet, uint32_t *buff_size, void *addr
 
 }
 
-static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
+static int on_recv_client(int sfd, char *packet, uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other) {
     
     Client *client = (Client *) other;
 
@@ -52,7 +53,7 @@ static int on_recv_client(int sfd, char *packet, uint32_t *buff_size, void *addr
 
     Request **request_container = &client->current_request;
 
-    uint32_t packet_index = process_pdu_header(packet, res, request_container, client->request_list, client->p_state);
+    uint32_t packet_index = process_pdu_header(packet, 0, res, request_container, client->request_list, client->p_state);
     if (packet_index == -1) {
         ssp_printf("error parsing header\n");
         return -1;
@@ -77,8 +78,9 @@ static int remove_request(void *request, void *args) {
 static void remove_request_check(void *request, void *args) {
     Request *req = (Request *) request;
     List *req_list = (List *) args;
-
-    if (req->type == clean_up) {
+    //ssp_printf("CLEANINGUP request count: %d procedure:%d cleanup %d none: %d sending_put_metadata %d\n", req_list->count, req->procedure, clean_up, none, sending_put_metadata);
+      
+    if (req->procedure == clean_up) {
         Request *remove_this = req_list->remove(req_list, 0, remove_request, req);
         ssp_cleanup_req(remove_this);
     }
@@ -92,9 +94,9 @@ struct user_request_check_params {
 static void user_request_check(void *request, void *args) {
     Request * req = (Request *) request;
     struct user_request_check_params* params = (struct user_request_check_params *) args;
-
+    
     params->res.msg = req->buff;
-   
+    
     memset(params->res.msg, 0, params->client->packet_len);
     user_request_handler(params->res, req, params->client);
     remove_request_check(request, params->client->request_list);
@@ -183,7 +185,7 @@ static int on_stdin(void *other) {
     fgets(input, MAX_PATH, stdin);
     input[strlen(input)-1]='\0';
     
-    if (req->type == none){
+    if (req->procedure == none){
         if (strnlen(req->source_file_name, MAX_PATH) == 0){
             if (get_file_size(input) == -1){
                 ssp_printf("file: %s, we had trouble opening this file, please enter a new file\n", input);
@@ -223,7 +225,7 @@ void *ssp_connectionless_server_task(void *params) {
     p_state->transaction_sequence_number = 1;
 
     #ifdef POSIX_PORT
-        udpSelectServer(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
+        connectionless_server(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
     #endif
 
     return NULL;
@@ -237,13 +239,13 @@ void *ssp_connectionless_client_task(void* params){
     char host_name[INET_ADDRSTRLEN];
     char port[10];
     //convert int to char *
-    snprintf(port, 10, "%d", client->unitdata_port);
+    snprintf(port, 10, "%d", client->remote_entity->UT_port);
 
     //convert uint id to char *
-    inet_ntop(AF_INET, &client->unitdata_id, host_name, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &client->remote_entity->UT_address, host_name, INET_ADDRSTRLEN);
     
     #ifdef POSIX_PORT
-        udpClient(host_name, port, PACKET_LEN, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
+        connectionless_client(host_name, port, PACKET_LEN, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
     #endif
     return NULL;
 }

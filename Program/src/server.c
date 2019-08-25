@@ -32,6 +32,9 @@ This is my file for server.c. It develops a udp server for select.
 #include <netinet/in.h>
 #include <netdb.h> 
 
+
+#include "port.h"
+
 static int exit_now;
 
 
@@ -143,8 +146,8 @@ static int resizeBuff(char **buffer, uint32_t *newBufferSize, uint32_t *prev_buf
 }
 
 //see header file
-void udpSelectServer(char* port, int packet_len,
-    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
+void connectionless_server(char* port, int initial_buff_size,
+    int (*onRecv)(int sfd, char *packet, uint32_t packet_len,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
     int (*onTimeOut)(void *other),
     int (*onStdIn)(void *other),
     int (*checkExit)(void *other),
@@ -153,37 +156,35 @@ void udpSelectServer(char* port, int packet_len,
 {
     int sfd = prepareUdpHost(port);
 
-    fd_set masterReadFds;
-    FD_ZERO(&masterReadFds);
-    FD_SET(STDIN_FILENO, &masterReadFds);
-    FD_SET(sfd, &masterReadFds);
+    size_t size_of_socket_struct[1];
+    *size_of_socket_struct = 0;
+
+    void *socket_set = ssp_init_socket_set(size_of_socket_struct);
+    void *read_socket_set = ssp_init_socket_set(size_of_socket_struct);
+
+    ssp_fd_zero(socket_set);
+    ssp_fd_set(sfd, socket_set);
+    ssp_fd_set(STDIN_FILENO, socket_set);
 
     uint32_t *buff_size = calloc(1, sizeof(uint32_t));
     checkAlloc(buff_size, 1);
 
-
-    *buff_size = packet_len + 10;
-
+    *buff_size = initial_buff_size + 10;
     uint32_t prev_buff_size = *buff_size;
 
     char *buff = calloc(sizeof(char), *buff_size);
     checkAlloc(buff, 1);
 
-    struct sockaddr_storage *client;
-    client = calloc(sizeof(struct sockaddr_storage), 1);
-    checkAlloc(client, 1);
+    size_t size_of_addr[1];
+    *size_of_addr = 0;
+    void *addr = ssp_init_sockaddr_struct(size_of_addr);
 
 
     for (;;)
     {
-        struct timeval timeout = {
-            .tv_sec = 0,
-            .tv_usec = 1000e3,
-        };
 
-        fd_set readFds = masterReadFds;
-        int nrdy = select(sfd + 1, &readFds, NULL, NULL, &timeout);
-
+        memcpy(read_socket_set, socket_set, size_of_socket_struct[0]);
+        int nrdy = ssp_select(sfd, read_socket_set, NULL,  NULL, 100e3);
 
         if (exit_now || checkExit(other)){
             printf("exiting server thread\n");
@@ -205,39 +206,34 @@ void udpSelectServer(char* port, int packet_len,
             continue;
         }
         
-        if (FD_ISSET(STDIN_FILENO, &readFds)) {
+        if (ssp_fd_is_set(STDIN_FILENO, read_socket_set)) {
             onStdIn(other);
             continue;
         }
 
         //http://www.microhowto.info/howto/listen_for_and_receive_udp_datagrams_in_c.html
         // good article!
-        if (FD_ISSET(sfd, &readFds))
-        {
-            
-            socklen_t client_len = sizeof(*client);
-            int count = recvfrom(sfd, buff, packet_len, 0, (void *) client, &client_len);
-            
+        if (ssp_fd_is_set(sfd, read_socket_set)) {
 
-            if (count == -1)
-            {
-                perror("recv failed");
+            int count = ssp_recvfrom(sfd, buff, *buff_size, 0, addr, size_of_addr[0]);
+
+            if (count == -1) {
+                perror("recv failed server");
             }
-            else if (count >= *buff_size)
-            {   
+            else if (count >= *buff_size) {   
                 printf("packet too large\n");
-                continue;
             }
-            else
-            {
-                if (onRecv(sfd, buff, buff_size, (void*) client, sizeof(struct sockaddr), other) == -1)
+            else {
+                if (onRecv(sfd, buff, count, buff_size, addr, size_of_addr[0], other) == -1)
                     printf("recv failed\n");
             }
         }
     }
-    free(buff_size);
-    free(client);
-    free(buff);
+    ssp_free(addr);
+    ssp_free(read_socket_set);
+    ssp_free(socket_set);
+    ssp_free(buff_size);
+    ssp_free(buff);
     close(sfd);
     onExit(other);
 }
@@ -246,9 +242,9 @@ void udpSelectServer(char* port, int packet_len,
 
 
 //https://www.cs.cmu.edu/afs/cs/academic/class/15213-f99/www/class26/udpclient.c
-void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
+void connectionless_client(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
-    int (*onRecv)(int sfd, char *packet,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *onRecvParams) ,
+    int (*onRecv)(int sfd, char *packet, uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *onRecvParams) ,
     int (*checkExit)(void *checkExitParams),
     void (*onExit)(void *params))
 {
@@ -289,6 +285,9 @@ void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, vo
     serveraddr.sin_port = htons(port_val);
     serverlen = sizeof(serveraddr);
         
+    
+    size_t size_of_addr = sizeof(struct sockaddr);
+
     for (;;) {
 
         if (exit_now || checkExit(checkExitParams))
@@ -301,21 +300,17 @@ void udpClient(char *hostname, char*port, int packet_len, void *onSendParams, vo
         if (onSend(sfd, serveraddr, onSendParams)) 
             printf("send failed\n");
 
-
-        count = recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, (struct sockaddr*)&serveraddr, &serverlen);
-
-        if (count == -1)
-        {
-            //perror("recv failed");
+        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, &serveraddr, serverlen);
+       
+        if (count == -1){
+            //perror("recv failed client");
         }
-        else if (count >= *buff_size)
-        {   
+        else if (count >= *buff_size){   
             printf("packet too large\n");
             continue;
         }
-        else
-        {
-            if (onRecv(sfd, buff, buff_size, (void *)&serveraddr, sizeof(struct sockaddr), onRecvParams) == -1)
+        else{
+            if (onRecv(sfd, buff, count, buff_size, (void *)&serveraddr, size_of_addr, onRecvParams) == -1)
                 printf("recv failed\n");
         }
         

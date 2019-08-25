@@ -7,24 +7,7 @@
 
 #define TEMP_FILESIZE 1000
 
-/*
-typedef struct offset {
-    uint32_t start;
-    uint32_t end;
-} Offset;
 
-
-typedef struct file {
-    int fd;
-    uint8_t is_temp;
-    uint32_t next_offset_to_send;
-    uint32_t total_size;
-    uint32_t partial_checksum;
-    uint32_t eof_checksum;
-    List *missing_offsets;
-
-} File;
-*/
 uint32_t get_file_size(char *source_file_name);
 
 //allocates space for a file pointer
