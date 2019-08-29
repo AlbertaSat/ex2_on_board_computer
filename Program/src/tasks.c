@@ -223,10 +223,7 @@ void *ssp_connectionless_server_task(void *params) {
     
     Protocol_state* p_state = (Protocol_state*) params;
     p_state->transaction_sequence_number = 1;
-
-    #ifdef POSIX_PORT
-        connectionless_server(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
-    #endif
+    connectionless_server(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
 
     return NULL;
 }
@@ -238,18 +235,28 @@ void *ssp_connectionless_client_task(void* params){
 
     char host_name[INET_ADDRSTRLEN];
     char port[10];
+
     //convert int to char *
     snprintf(port, 10, "%d", client->remote_entity->UT_port);
 
     //convert uint id to char *
     inet_ntop(AF_INET, &client->remote_entity->UT_address, host_name, INET_ADDRSTRLEN);
     
-    #ifdef POSIX_PORT
-        connectionless_client(host_name, port, PACKET_LEN, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
-    #endif
+    connectionless_client(host_name, port, PACKET_LEN, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
+    
     return NULL;
 }
 
+void *ssp_connection_server_task(void *params) {
+    Protocol_state* p_state = (Protocol_state*) params;
+    connection_server("1111");
+}
+
+
+void *ssp_connection_client_task(void *params) {
+    Client *client = (Client *) params;
+    connection_client(1111);
+}
 
 
 /*------------------------------------------------------------------------------
@@ -259,16 +266,12 @@ void *ssp_connectionless_client_task(void* params){
 ------------------------------------------------------------------------------*/
 
 
-
-
 void ssp_cleanup_p_state(Protocol_state *p_state) {
     p_state->request_list->free(p_state->request_list, ssp_cleanup_req);
     free_mib(p_state->mib);
     ssp_free(p_state->server_port);
     ssp_free(p_state);
-
 }
-
 
 void ssp_cleanup_client(Client *client) {
     client->request_list->free(client->request_list, ssp_cleanup_req);

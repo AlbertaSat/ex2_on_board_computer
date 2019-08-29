@@ -7,25 +7,26 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
-#include "filesystem_funcs.h"
-#include "port.h"
-#include "test.h"
-#include "mib.h"
+
+/*
 #include "packet_tests.h"
 #include "filesystem_tests.h"
 #include "file_delivery_app.h"
 #include "protocol_handler_tests.h"
 #include "list_tests.h"
+*/
+#include "server_tests.h"
 
+/*
 Protocol_state *init_test() {
 
     Protocol_state *p_state = init_ftp(1);
     ssp_connectionless_server(p_state);
     ssp_cleanup_p_state(p_state);
-
 }
+*/
 
-int main () {
+int main (int argc, char **argv) {
     
     //init_test();
 
@@ -40,8 +41,13 @@ int main () {
     //error = request_tests();
     //error = protocol_handler_test();
     //error = packet_tests();
-    error = list_tests();
+    //error = list_tests();
     //error = file_system_tests();
 
-   return 0;
+
+    if (strcmp(argv[1], "1") == 0)
+        error = server_tests(0);
+    else 
+        error = server_tests(1);
+   return error;
 }

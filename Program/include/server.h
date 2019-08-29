@@ -14,10 +14,12 @@ This file is the header file for server.c
 /*------------------------------------------------------------------------------
     Purpose: This function creates a host server on the specified port
              on localhost
-    Perameters: char *port is the port number you want to run the host on
+    Perameters: char *port is the port number you want to run the host on, conn_type
+                is either 0 for udp, or 1 for tcp
     Return: It returns a socket descriptor to a UDP ready port
 ------------------------------------------------------------------------------*/
-int prepareUdpHost(char *port);
+int prepareHost(char *port, int conn_typ);
+
 
 /*------------------------------------------------------------------------------
     Purpose:    This function creates a udp select server on the socket sfd.
@@ -50,6 +52,8 @@ void connectionless_server(char* port, int initial_buff_size,
     void (*onExit)(void *other),
     void *other);
 
+void connection_server(char *port);
+void connection_client(uint16_t port);
 /*-----------------------------CALLBACK onTimeOut-------------------------------
     Purpose:    This is a simple udp client 
     Perameters: hostname is the name of an address eg, 127.0.0.1, port is the por

@@ -4,7 +4,7 @@
 #include "stdlib.h"
 #include "mib.h"
 #include "test.h"
-
+#include "file_delivery_app.h"
 static char *build_mock_packet(Protocol_state *p_state, uint32_t id) {
 
     char *packet = calloc(sizeof(char*), 2000);
@@ -29,13 +29,13 @@ static int test_process_pdu_header() {
 
     //test 1
     char *packet = build_mock_packet(p_state, 2);
-    process_pdu_header(packet, res, req_container, p_state->request_list, p_state);
+    process_pdu_header(packet, 1, res, req_container, p_state->request_list, p_state);
     ASSERT_EQUALS_INT("request transaction number should equal", (*req_container)->transaction_sequence_number, 1);
     ASSERT_EQUALS_INT("souce id should equal", (*req_container)->dest_cfdp_id, 2);
 
     //test 2
     char *packet2 = build_mock_packet(p_state, 3);
-    process_pdu_header(packet2, res, req_container, p_state->request_list, p_state);
+    process_pdu_header(packet2, 1, res, req_container, p_state->request_list, p_state);
     ASSERT_EQUALS_INT("request transaction number should equal", (*req_container)->transaction_sequence_number, 1);
     ASSERT_NOT_EQUALS_INT("souce id should not equal", (*req_container)->dest_cfdp_id, 2);
     ASSERT_EQUALS_INT("souce id should equal", (*req_container)->dest_cfdp_id, 3);

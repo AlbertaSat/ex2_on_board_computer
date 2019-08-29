@@ -31,24 +31,24 @@ This is my file for server.c. It develops a udp server for select.
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
-
-
+#include <time.h>
 #include "port.h"
 
 static int exit_now;
-
-
-//this code is reused from assignment 1, with small changes
-//see header file
-int prepareUdpHost(char *port)
+ 
+//if conn_typ == 1, tcp, if 0 udp
+int prepareHost(char *port, int conn_typ)
 {
 
     struct addrinfo hints, *res;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_flags = AI_V4MAPPED;
-    hints.ai_socktype = SOCK_DGRAM;
-
+    if (conn_typ == 0)
+        hints.ai_socktype = SOCK_DGRAM;
+    else 
+        hints.ai_socktype = SOCK_STREAM;
+    
     int err = getaddrinfo(NULL, port, &hints, &res);
 
     if (err != 0)
@@ -71,18 +71,18 @@ int prepareUdpHost(char *port)
 
         int val = 1;
         err = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
-        err = bind(sfd, cur->ai_addr, cur->ai_addrlen);
 
         if (err == -1)
         {
-            perror("bind");
+            perror("set sock opt");
             close(sfd);
             continue;
         }
 
+        err = bind(sfd, cur->ai_addr, cur->ai_addrlen);
         if (err == -1)
         {
-            perror("listen");
+            perror("bind");
             close(sfd);
             continue;
         }
@@ -145,6 +145,89 @@ static int resizeBuff(char **buffer, uint32_t *newBufferSize, uint32_t *prev_buf
     return 1;
 }
 
+void connection_client(uint16_t port) {
+ 
+    int sockfd, connfd; 
+    struct sockaddr_in servaddr, cli; 
+  
+    // socket create and varification 
+    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+    if (sockfd == -1) { 
+        printf("socket creation failed...\n"); 
+        exit(0); 
+    } 
+    else
+        printf("Socket successfully created..\n"); 
+    bzero(&servaddr, sizeof(servaddr)); 
+  
+    // assign IP, PORT 
+    servaddr.sin_family = AF_INET; 
+    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+    servaddr.sin_port = htons(port); 
+  
+    // connect the client socket to server socket 
+    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) { 
+        printf("connection with the server failed...\n"); 
+        exit(0); 
+    } 
+    else
+        printf("connected to the server..\n"); 
+  
+    // function for chat 
+    char buff[1000]; 
+    int n; 
+
+    for (;;) { 
+        bzero(buff, sizeof(buff)); 
+        printf("Enter the string : "); 
+        n = 0; 
+        while ((buff[n++] = getchar()) != '\n'); 
+        write(sockfd, buff, sizeof(buff)); 
+        bzero(buff, sizeof(buff));
+
+        read(sockfd, buff, sizeof(buff));
+
+
+        printf("From Server : %s", buff); 
+        if ((strncmp(buff, "exit", 4)) == 0) { 
+            printf("Client Exit...\n"); 
+            break; 
+        } 
+    } 
+    // close the socket 
+    close(sockfd); 
+
+}
+
+void connection_server(char *port) {
+
+    int listenfd = 0, connfd = 0;
+    struct sockaddr_in serv_addr; 
+
+
+    char sendBuff[1025];
+    time_t ticks; 
+
+    listenfd = prepareHost("1111", 1);
+
+    listen(listenfd, 10); 
+
+    while(1)
+    {
+        connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
+
+        ticks = time(NULL);
+        snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
+        write(connfd, sendBuff, strlen(sendBuff)); 
+
+        close(connfd);
+        sleep(1);
+     }
+
+}
+
+
+
 //see header file
 void connectionless_server(char* port, int initial_buff_size,
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
@@ -154,7 +237,7 @@ void connectionless_server(char* port, int initial_buff_size,
     void (*onExit)(void *other),
     void *other)
 {
-    int sfd = prepareUdpHost(port);
+    int sfd = prepareHost(port, 0);
 
     size_t size_of_socket_struct[1];
     *size_of_socket_struct = 0;
@@ -166,13 +249,13 @@ void connectionless_server(char* port, int initial_buff_size,
     ssp_fd_set(sfd, socket_set);
     ssp_fd_set(STDIN_FILENO, socket_set);
 
-    uint32_t *buff_size = calloc(1, sizeof(uint32_t));
+    uint32_t *buff_size = ssp_alloc(1, sizeof(uint32_t));
     checkAlloc(buff_size, 1);
 
     *buff_size = initial_buff_size + 10;
     uint32_t prev_buff_size = *buff_size;
 
-    char *buff = calloc(sizeof(char), *buff_size);
+    char *buff = ssp_alloc(sizeof(char), *buff_size);
     checkAlloc(buff, 1);
 
     size_t size_of_addr[1];
@@ -254,18 +337,17 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
     struct sockaddr_in serveraddr;
     struct hostent *server;
 
-    uint32_t *buff_size = malloc(sizeof(uint32_t));
+    uint32_t *buff_size = ssp_alloc(1, sizeof(uint32_t));
     checkAlloc(buff_size, 1);
 
     *buff_size = packet_len + 10;
 
     uint32_t prev_buff_size = *buff_size;
 
-    char *buff = calloc(sizeof(char), prev_buff_size);
+    char *buff = ssp_alloc(sizeof(char), prev_buff_size);
     checkAlloc(buff, 1);
 
-    prepareSignalHandler();
-
+//--------------------------------------------------------------
     sfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sfd < 0) 
         perror("ERROR opening socket");
@@ -284,9 +366,10 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
     bcopy((char *)server->h_addr_list[0], (char *)&serveraddr.sin_addr.s_addr, server->h_length);
     serveraddr.sin_port = htons(port_val);
     serverlen = sizeof(serveraddr);
-        
-    
+
     size_t size_of_addr = sizeof(struct sockaddr);
+
+//--------------------------------------------------------------
 
     for (;;) {
 
