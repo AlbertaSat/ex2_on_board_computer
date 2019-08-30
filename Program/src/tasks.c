@@ -249,13 +249,15 @@ void *ssp_connectionless_client_task(void* params){
 
 void *ssp_connection_server_task(void *params) {
     Protocol_state* p_state = (Protocol_state*) params;
-    connection_server("1111");
+    connection_server(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
+    return NULL;
 }
 
 
 void *ssp_connection_client_task(void *params) {
-    Client *client = (Client *) params;
+    //Client *client = (Client *) params;
     connection_client(1111);
+    return NULL;
 }
 
 

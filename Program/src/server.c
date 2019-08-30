@@ -37,17 +37,22 @@ This is my file for server.c. It develops a udp server for select.
 static int exit_now;
  
 //if conn_typ == 1, tcp, if 0 udp
-int prepareHost(char *port, int conn_typ)
+int prepareHost(char *port, int conn_type)
 {
 
     struct addrinfo hints, *res;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_flags = AI_V4MAPPED;
-    if (conn_typ == 0)
-        hints.ai_socktype = SOCK_DGRAM;
-    else 
-        hints.ai_socktype = SOCK_STREAM;
+
+    switch (conn_type) {
+
+        case 0:
+            hints.ai_socktype = SOCK_DGRAM;
+            break;
+        case 1:
+            hints.ai_socktype = SOCK_STREAM;
+    }
     
     int err = getaddrinfo(NULL, port, &hints, &res);
 
@@ -199,6 +204,7 @@ void connection_client(uint16_t port) {
 
 }
 
+/*
 void connection_server(char *port) {
 
     int listenfd = 0, connfd = 0;
@@ -211,10 +217,11 @@ void connection_server(char *port) {
     listenfd = prepareHost("1111", 1);
 
     listen(listenfd, 10); 
+    char buff[10000];
 
     while(1)
     {
-        connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
+        sfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
 
         ticks = time(NULL);
         snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
@@ -225,6 +232,112 @@ void connection_server(char *port) {
      }
 
 }
+*/
+
+//see header file
+void connection_server(char* port, int initial_buff_size,
+    int (*onRecv)(int sfd, char *packet, uint32_t packet_len,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
+    int (*onTimeOut)(void *other),
+    int (*onStdIn)(void *other),
+    int (*checkExit)(void *other),
+    void (*onExit)(void *other),
+    void *other)
+{
+    int sfd = prepareHost(port, 1);
+    //-----------------------------------------------------------------------
+    int err = listen(sfd, 10);
+
+    if (err == -1)
+        ssp_error("listen failed\n");
+    
+
+    //-----------------------------------------------------------------------
+
+    size_t size_of_socket_struct[1];
+    *size_of_socket_struct = 0;
+
+    void *socket_set = ssp_init_socket_set(size_of_socket_struct);
+    void *read_socket_set = ssp_init_socket_set(size_of_socket_struct);
+
+    ssp_fd_zero(socket_set);
+    ssp_fd_set(sfd, socket_set);
+    ssp_fd_set(STDIN_FILENO, socket_set);
+
+    uint32_t *buff_size = ssp_alloc(1, sizeof(uint32_t));
+    checkAlloc(buff_size, 1);
+
+    *buff_size = initial_buff_size + 10;
+    uint32_t prev_buff_size = *buff_size;
+
+    char *buff = ssp_alloc(sizeof(char), *buff_size);
+    checkAlloc(buff, 1);
+
+    size_t size_of_addr[1];
+    *size_of_addr = 0;
+    void *addr = ssp_init_sockaddr_struct(size_of_addr);
+
+
+    for (;;)
+    {
+
+        memcpy(read_socket_set, socket_set, size_of_socket_struct[0]);
+        int nrdy = ssp_select(sfd, read_socket_set, NULL,  NULL, 100e3);
+
+        if (exit_now || checkExit(other)){
+            printf("exiting server thread\n");
+            break;
+        }
+    
+        if(!resizeBuff(&buff, buff_size, &prev_buff_size)){
+            printf("packet too large, cannot resize buffer\n");
+        }
+
+        if (nrdy == -1) {
+            perror("select");
+            continue;
+        }
+        //timeout
+        if (nrdy == 0) {
+            if (onTimeOut(other) == -1)
+                printf("timeout failed\n");
+            continue;
+        }
+        
+        if (ssp_fd_is_set(STDIN_FILENO, read_socket_set)) {
+            onStdIn(other);
+            continue;
+        }
+
+        //http://www.microhowto.info/howto/listen_for_and_receive_udp_datagrams_in_c.html
+        // good article!
+        if (ssp_fd_is_set(sfd, read_socket_set)) {
+
+            int count = ssp_recvfrom(sfd, buff, *buff_size, 0, addr, size_of_addr[0]);
+            
+            if (count == -1) {
+                perror("recv failed server");
+            }
+            else if (count >= *buff_size) {   
+                printf("packet too large\n");
+            }
+            else {
+                if (onRecv(sfd, buff, count, buff_size, addr, size_of_addr[0], other) == -1)
+                    printf("recv failed\n");
+            }
+        }
+    }
+    ssp_free(addr);
+    ssp_free(read_socket_set);
+    ssp_free(socket_set);
+    ssp_free(buff_size);
+    ssp_free(buff);
+    close(sfd);
+    onExit(other);
+}
+
+
+
+
 
 
 
@@ -298,7 +411,7 @@ void connectionless_server(char* port, int initial_buff_size,
         // good article!
         if (ssp_fd_is_set(sfd, read_socket_set)) {
 
-            int count = ssp_recvfrom(sfd, buff, *buff_size, 0, addr, size_of_addr[0]);
+            int count = ssp_recvfrom(sfd, buff, *buff_size, MSG_TRUNC, addr, size_of_addr[0]);
 
             if (count == -1) {
                 perror("recv failed server");
