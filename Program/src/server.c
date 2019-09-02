@@ -204,36 +204,6 @@ void connection_client(uint16_t port) {
 
 }
 
-/*
-void connection_server(char *port) {
-
-    int listenfd = 0, connfd = 0;
-    struct sockaddr_in serv_addr; 
-
-
-    char sendBuff[1025];
-    time_t ticks; 
-
-    listenfd = prepareHost("1111", 1);
-
-    listen(listenfd, 10); 
-    char buff[10000];
-
-    while(1)
-    {
-        sfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
-
-        ticks = time(NULL);
-        snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
-        write(connfd, sendBuff, strlen(sendBuff)); 
-
-        close(connfd);
-        sleep(1);
-     }
-
-}
-*/
-
 //see header file
 void connection_server(char* port, int initial_buff_size,
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
@@ -299,7 +269,7 @@ void connection_server(char* port, int initial_buff_size,
         }
 
         for(int i = 0; i < FD_SETSIZE; i++) {
-            //printf("looping?\n");
+
             if (ssp_fd_is_set(i, read_socket_set)) {
                 printf("receiving from socket %d!\n", i);
 
@@ -323,7 +293,7 @@ void connection_server(char* port, int initial_buff_size,
                 if (count < 0) {
                     perror("recv failed server");
                     close(i);
-                    FD_CLR(i,  (fd_set*) socket_set);
+                    ssp_fd_clr(i, socket_set);
                 }
                 else if (count >= *buff_size) {   
                     printf("packet too large %d\n", count);
@@ -344,9 +314,6 @@ void connection_server(char* port, int initial_buff_size,
     close(sfd);
     onExit(other);
 }
-
-
-
 
 
 

@@ -125,6 +125,14 @@ int ssp_fd_is_set(int sfd, void *socket_set){
     return is_set;
 }
 
+void ssp_fd_clr(int sfd, void *socket_set) {
+
+    #ifdef POSIX_PORT
+        FD_CLR(sfd, (fd_et *) socket_set);
+
+    #endif 
+}
+
 int ssp_select(int sfd, void *read_socket_set, void *write_socket_set, void *restrict_socket_set, uint32_t timeout_in_usec) {
 
     #ifdef POSIX_PORT
