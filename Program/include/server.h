@@ -60,7 +60,12 @@ void connection_server(char* port, int initial_buff_size,
     void (*onExit)(void *other),
     void *other);
 
-    
+void connectioned_client(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
+    int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
+    int (*onRecv)(int sfd, char *packet, uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *onRecvParams) ,
+    int (*checkExit)(void *checkExitParams),
+    void (*onExit)(void *params));
+
 void connection_client(uint16_t port);
 /*-----------------------------CALLBACK onTimeOut-------------------------------
     Purpose:    This is a simple udp client 

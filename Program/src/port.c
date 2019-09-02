@@ -128,7 +128,7 @@ int ssp_fd_is_set(int sfd, void *socket_set){
 void ssp_fd_clr(int sfd, void *socket_set) {
 
     #ifdef POSIX_PORT
-        FD_CLR(sfd, (fd_et *) socket_set);
+        FD_CLR(sfd, (fd_set *) socket_set);
 
     #endif 
 }

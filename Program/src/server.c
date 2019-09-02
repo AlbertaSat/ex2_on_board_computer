@@ -149,61 +149,6 @@ static int resizeBuff(char **buffer, uint32_t *newBufferSize, uint32_t *prev_buf
     }
     return 1;
 }
-
-void connection_client(uint16_t port) {
- 
-    int sockfd, connfd; 
-    struct sockaddr_in servaddr, cli; 
-  
-    // socket create and varification 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-    if (sockfd == -1) { 
-        printf("socket creation failed...\n"); 
-        exit(0); 
-    } 
-    else
-        printf("Socket successfully created..\n"); 
-    bzero(&servaddr, sizeof(servaddr)); 
-  
-    // assign IP, PORT 
-    servaddr.sin_family = AF_INET; 
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
-    servaddr.sin_port = htons(port); 
-  
-    // connect the client socket to server socket 
-    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) { 
-        printf("connection with the server failed...\n"); 
-        exit(0); 
-    } 
-    else
-        printf("connected to the server..\n"); 
-  
-    // function for chat 
-    char buff[1000]; 
-    int n; 
-
-    for (;;) { 
-        bzero(buff, sizeof(buff)); 
-        printf("sending Hello server? \n"); 
-        strncpy(buff, "Hello server?", 15);
-        n = 0;
-
-        sendto(sockfd, buff, 600, 0, (struct sockaddr *)&servaddr, sizeof(servaddr) ); 
-        bzero(buff, 1000);
-
-        read(sockfd, buff, sizeof(buff));
-
-        printf("From Server : %s", buff); 
-        if ((strncmp(buff, "exit", 4)) == 0) { 
-            printf("Client Exit...\n"); 
-            break; 
-        } 
-    } 
-    // close the socket 
-    close(sockfd); 
-
-}
-
 //see header file
 void connection_server(char* port, int initial_buff_size,
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
@@ -465,11 +410,11 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
              break;
         
         if(!resizeBuff(&buff, buff_size, &prev_buff_size)){
-            printf("packet too large, cannot resize buffer\n");
+            ssp_error("packet too large, cannot resize buffer\n");
         }
 
         if (onSend(sfd, serveraddr, onSendParams)) 
-            printf("send failed\n");
+            ssp_error("send failed\n");
 
         count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, &serveraddr, serverlen);
        
@@ -477,12 +422,12 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
             //perror("recv failed client");
         }
         else if (count >= *buff_size){   
-            printf("packet too large\n");
+            ssp_error("packet too large\n");
             continue;
         }
         else{
             if (onRecv(sfd, buff, count, buff_size, (void *)&serveraddr, size_of_addr, onRecvParams) == -1)
-                printf("recv failed\n");
+                ssp_error("recv failed\n");
         }
         
     }
@@ -494,3 +439,142 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
 }
 
 
+
+void connection_client(uint16_t port) {
+ 
+    int sockfd, connfd; 
+    struct sockaddr_in servaddr, cli; 
+  
+    // socket create and varification 
+    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
+    if (sockfd == -1) { 
+        printf("socket creation failed...\n"); 
+        exit(0); 
+    } 
+    else
+        printf("Socket successfully created..\n"); 
+    bzero(&servaddr, sizeof(servaddr)); 
+  
+    // assign IP, PORT 
+    servaddr.sin_family = AF_INET; 
+    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+    servaddr.sin_port = htons(port); 
+  
+    // connect the client socket to server socket 
+    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) { 
+        printf("connection with the server failed...\n"); 
+        exit(0); 
+    } 
+    else
+        printf("connected to the server..\n"); 
+  
+    // function for chat 
+    char buff[1000]; 
+    int n; 
+
+    for (;;) { 
+        bzero(buff, sizeof(buff)); 
+        printf("sending Hello server? \n"); 
+        strncpy(buff, "Hello server?", 15);
+        n = 0;
+
+        sendto(sockfd, buff, 600, 0, (struct sockaddr *)&servaddr, sizeof(servaddr) ); 
+        bzero(buff, 1000);
+
+        read(sockfd, buff, sizeof(buff));
+
+        printf("From Server : %s", buff); 
+        if ((strncmp(buff, "exit", 4)) == 0) { 
+            printf("Client Exit...\n"); 
+            break; 
+        } 
+    } 
+    // close the socket 
+    close(sockfd); 
+
+}
+
+//https://www.cs.cmu.edu/afs/cs/academic/class/15213-f99/www/class26/udpclient.c
+void connectioned_client(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
+    int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
+    int (*onRecv)(int sfd, char *packet, uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *onRecvParams) ,
+    int (*checkExit)(void *checkExitParams),
+    void (*onExit)(void *params))
+{
+
+    int sfd, count, port_val;
+    socklen_t serverlen;
+    struct sockaddr_in serveraddr;
+    struct hostent *server;
+
+    uint32_t *buff_size = ssp_alloc(1, sizeof(uint32_t));
+    checkAlloc(buff_size, 1);
+
+    *buff_size = packet_len + 10;
+
+    uint32_t prev_buff_size = *buff_size;
+
+    char *buff = ssp_alloc(sizeof(char), prev_buff_size);
+    checkAlloc(buff, 1);
+
+    sfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sfd < 0) 
+        perror("ERROR opening socket");
+
+    port_val = atoi(port);
+
+    server = gethostbyname(hostname);
+    if (server == NULL) {
+        fprintf(stderr,"ERROR, no such host as %s\n", hostname);
+        exit(0);
+    }
+
+    bzero((char *) &serveraddr, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+
+    bcopy((char *)server->h_addr_list[0], (char *)&serveraddr.sin_addr.s_addr, server->h_length);
+    serveraddr.sin_port = htons(port_val);
+    serverlen = sizeof(serveraddr);
+
+    size_t size_of_addr = sizeof(struct sockaddr);
+    
+    if (connect(sfd, (struct sockaddr *)&serveraddr, size_of_addr) != 0) { 
+        ssp_error("connection with the server failed...\n"); 
+        exit_now = 1;
+    }
+
+    
+    for (;;) {
+        
+        if (exit_now || checkExit(checkExitParams))
+             break;
+        
+        if(!resizeBuff(&buff, buff_size, &prev_buff_size)){
+            printf("packet too large, cannot resize buffer\n");
+        }
+
+        if (onSend(sfd, serveraddr, onSendParams)) 
+            ssp_error("send failed here\n");
+
+        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, NULL, NULL);
+       
+        if (count == -1){
+            //ssp_error("recv failed client");
+        }
+        else if (count >= *buff_size){   
+            ssp_error("packet too large\n");
+            continue;
+        }
+        else{
+            if (onRecv(sfd, buff, count, buff_size, (void *)&serveraddr, size_of_addr, onRecvParams) == -1)
+                ssp_error("recv failed\n");
+        }
+        
+    }
+
+    printf("exiting loop\n");
+    free(buff_size);
+    free(buff);
+    close(sfd);
+    onExit(onExitParams);
+}
