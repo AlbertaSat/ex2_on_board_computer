@@ -149,16 +149,22 @@ int ssp_select(int sfd, void *read_socket_set, void *write_socket_set, void *res
     return nrdy;
 }
 
-void *ssp_init_sockaddr_struct(size_t *size_of_addr) {
+void *ssp_init_sockaddr_struct(char *host_name, char port, size_t *size_of_addr) {
 
     #ifdef POSIX_PORT
-        *size_of_addr = sizeof(struct sockaddr_storage);
-        void *addr = calloc(sizeof(struct sockaddr_storage), 1);
+    //if (strncmp(host_name, "", 1) == 0)
+
+
+
+        *size_of_addr = sizeof(struct sockaddr);
+        void *addr = calloc(sizeof(struct sockaddr), 1);
         checkAlloc(addr, 1);
 
     #endif
     return addr;
 }
+
+
 
 /*------------------------------------------------------------------------------
     Std lib functions, for custom memory allocation, and stdio

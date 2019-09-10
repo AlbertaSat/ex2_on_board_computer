@@ -36,6 +36,7 @@ This is my file for server.c. It develops a udp server for select.
 
 static int exit_now;
  
+ 
 //if conn_typ == 1, tcp, if 0 udp
 int prepareHost(char *port, int conn_type)
 {
@@ -80,7 +81,7 @@ int prepareHost(char *port, int conn_type)
         if (err == -1)
         {
             perror("set sock opt");
-            close(sfd);
+            ssp_close(sfd);
             continue;
         }
 
@@ -88,7 +89,7 @@ int prepareHost(char *port, int conn_type)
         if (err == -1)
         {
             perror("bind");
-            close(sfd);
+            ssp_close(sfd);
             continue;
         }
 
@@ -185,7 +186,7 @@ void connection_server(char* port, int initial_buff_size,
 
     size_t size_of_addr[1];
     *size_of_addr = 0;
-    void *addr = ssp_init_sockaddr_struct(size_of_addr);
+    void *addr = ssp_init_sockaddr_struct("", port, size_of_addr);
 
     for (;;)
     {
@@ -194,29 +195,29 @@ void connection_server(char* port, int initial_buff_size,
         int nrdy = ssp_select(sfd, read_socket_set, NULL,  NULL, 100e3);
 
         if (exit_now || checkExit(other)){
-            printf("exiting server thread\n");
+            ssp_printf("exiting server thread\n");
             break;
         }
     
         if(!resizeBuff(&buff, buff_size, &prev_buff_size)){
-            printf("packet too large, cannot resize buffer\n");
+            ssp_printf("packet too large, cannot resize buffer\n");
         }
 
         if (nrdy == -1) {
-            perror("select");
+            ssp_error("select");
             continue;
         }
         //timeout
         if (nrdy == 0) {
             if (onTimeOut(other) == -1)
-                printf("timeout failed\n");
+                ssp_printf("timeout failed\n");
             continue;
         }
 
         for(int i = 0; i < FD_SETSIZE; i++) {
 
             if (ssp_fd_is_set(i, read_socket_set)) {
-                printf("receiving from socket %d!\n", i);
+                ssp_printf("receiving from socket %d!\n", i);
 
                 if (i == STDIN_FILENO) {
                     onStdIn(other);
@@ -233,20 +234,20 @@ void connection_server(char* port, int initial_buff_size,
                     continue;
                 }
 
-                int count = ssp_recvfrom(i, buff, *buff_size, MSG_TRUNC, NULL, NULL);
+                int count = ssp_recvfrom(i, buff, *buff_size, 0, NULL, NULL);
                 
                 if (count < 0) {
-                    perror("recv failed server");
-                    close(i);
+                    ssp_error("recv failed server");
+                    ssp_close(i);
                     ssp_fd_clr(i, socket_set);
                 }
                 else if (count >= *buff_size) {   
-                    printf("packet too large %d\n", count);
+                    ssp_printf("packet too large %d\n", count);
                 }
                 else {
-                    printf("reading\n");
+                    ssp_printf("reading\n");
                     if (onRecv(i, buff, count, buff_size, addr, size_of_addr[0], other) == -1)
-                        printf("recv failed\n");
+                        ssp_printf("recv failed\n");
                 }
             }
         }
@@ -256,7 +257,7 @@ void connection_server(char* port, int initial_buff_size,
     ssp_free(socket_set);
     ssp_free(buff_size);
     ssp_free(buff);
-    close(sfd);
+    ssp_close(sfd);
     onExit(other);
 }
 
@@ -295,7 +296,7 @@ void connectionless_server(char* port, int initial_buff_size,
 
     size_t size_of_addr[1];
     *size_of_addr = 0;
-    void *addr = ssp_init_sockaddr_struct(size_of_addr);
+    void *addr = ssp_init_sockaddr_struct("", port, size_of_addr);
 
 
     for (;;)
@@ -305,22 +306,22 @@ void connectionless_server(char* port, int initial_buff_size,
         int nrdy = ssp_select(FD_SETSIZE, read_socket_set, NULL,  NULL, 100e3);
 
         if (exit_now || checkExit(other)){
-            printf("exiting server thread\n");
+            ssp_printf("exiting server thread\n");
             break;
         }
     
         if(!resizeBuff(&buff, buff_size, &prev_buff_size)){
-            printf("packet too large, cannot resize buffer\n");
+            ssp_printf("packet too large, cannot resize buffer\n");
         }
 
         if (nrdy == -1) {
-            perror("select");
+            ssp_error("select");
             continue;
         }
         
         if (nrdy == 0) {
             if (onTimeOut(other) == -1)
-                printf("timeout failed\n");
+                ssp_printf("timeout failed\n");
             continue;
         }
         
@@ -334,14 +335,14 @@ void connectionless_server(char* port, int initial_buff_size,
             int count = ssp_recvfrom(sfd, buff, *buff_size, MSG_TRUNC, addr, size_of_addr[0]);
 
             if (count == -1) {
-                perror("recv failed server");
+                ssp_error("recv failed server");
             }
             else if (count >= *buff_size) {   
-                printf("packet too large\n");
+                ssp_printf("packet too large\n");
             }
             else {
                 if (onRecv(sfd, buff, count, buff_size, addr, size_of_addr[0], other) == -1)
-                    printf("recv failed\n");
+                    ssp_printf("recv failed\n");
             }
         }
     }
@@ -350,7 +351,7 @@ void connectionless_server(char* port, int initial_buff_size,
     ssp_free(socket_set);
     ssp_free(buff_size);
     ssp_free(buff);
-    close(sfd);
+    ssp_close(sfd);
     onExit(other);
 }
 
@@ -388,6 +389,7 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
     port_val = atoi(port);
 
     server = gethostbyname(hostname);
+
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host as %s\n", hostname);
         exit(0);
@@ -398,9 +400,10 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
 
     bcopy((char *)server->h_addr_list[0], (char *)&serveraddr.sin_addr.s_addr, server->h_length);
     serveraddr.sin_port = htons(port_val);
-    serverlen = sizeof(serveraddr);
-
-    size_t size_of_addr = sizeof(struct sockaddr);
+    
+    size_t size_of_addr[1];
+    *size_of_addr = 0;
+    void *addr = ssp_init_sockaddr_struct(hostname, port, size_of_addr);
 
 //--------------------------------------------------------------
 
@@ -416,17 +419,17 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
         if (onSend(sfd, serveraddr, onSendParams)) 
             ssp_error("send failed\n");
 
-        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, &serveraddr, serverlen);
+        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, &serveraddr,  size_of_addr[0]);
        
-        if (count == -1){
-            //perror("recv failed client");
-        }
+        if (count == -1)
+            continue;
+
         else if (count >= *buff_size){   
             ssp_error("packet too large\n");
             continue;
         }
         else{
-            if (onRecv(sfd, buff, count, buff_size, (void *)&serveraddr, size_of_addr, onRecvParams) == -1)
+            if (onRecv(sfd, buff, count, buff_size, (void *)&serveraddr, size_of_addr[0], onRecvParams) == -1)
                 ssp_error("recv failed\n");
         }
         
@@ -434,68 +437,13 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
 
     free(buff_size);
     free(buff);
-    close(sfd);
+    ssp_close(sfd);
     onExit(onExitParams);
 }
 
 
-
-void connection_client(uint16_t port) {
- 
-    int sockfd, connfd; 
-    struct sockaddr_in servaddr, cli; 
-  
-    // socket create and varification 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-    if (sockfd == -1) { 
-        printf("socket creation failed...\n"); 
-        exit(0); 
-    } 
-    else
-        printf("Socket successfully created..\n"); 
-    bzero(&servaddr, sizeof(servaddr)); 
-  
-    // assign IP, PORT 
-    servaddr.sin_family = AF_INET; 
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
-    servaddr.sin_port = htons(port); 
-  
-    // connect the client socket to server socket 
-    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) { 
-        printf("connection with the server failed...\n"); 
-        exit(0); 
-    } 
-    else
-        printf("connected to the server..\n"); 
-  
-    // function for chat 
-    char buff[1000]; 
-    int n; 
-
-    for (;;) { 
-        bzero(buff, sizeof(buff)); 
-        printf("sending Hello server? \n"); 
-        strncpy(buff, "Hello server?", 15);
-        n = 0;
-
-        sendto(sockfd, buff, 600, 0, (struct sockaddr *)&servaddr, sizeof(servaddr) ); 
-        bzero(buff, 1000);
-
-        read(sockfd, buff, sizeof(buff));
-
-        printf("From Server : %s", buff); 
-        if ((strncmp(buff, "exit", 4)) == 0) { 
-            printf("Client Exit...\n"); 
-            break; 
-        } 
-    } 
-    // close the socket 
-    close(sockfd); 
-
-}
-
 //https://www.cs.cmu.edu/afs/cs/academic/class/15213-f99/www/class26/udpclient.c
-void connectioned_client(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
+void connection_client(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
     int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *onRecvParams) ,
     int (*checkExit)(void *checkExitParams),
@@ -536,21 +484,25 @@ void connectioned_client(char *hostname, char*port, int packet_len, void *onSend
     serveraddr.sin_port = htons(port_val);
     serverlen = sizeof(serveraddr);
 
-    size_t size_of_addr = sizeof(struct sockaddr);
+    //size_t size_of_addr = sizeof(struct sockaddr);
+
+    size_t size_of_addr[1];
+    *size_of_addr = 0;
+    void *addr = ssp_init_sockaddr_struct(hostname, port, size_of_addr);
+
     
-    if (connect(sfd, (struct sockaddr *)&serveraddr, size_of_addr) != 0) { 
+    if (connect(sfd, (struct sockaddr *)&serveraddr, size_of_addr[0]) != 0) { 
         ssp_error("connection with the server failed...\n"); 
         exit_now = 1;
     }
 
-    
     for (;;) {
         
         if (exit_now || checkExit(checkExitParams))
              break;
         
         if(!resizeBuff(&buff, buff_size, &prev_buff_size)){
-            printf("packet too large, cannot resize buffer\n");
+            ssp_printf("packet too large, cannot resize buffer\n");
         }
 
         if (onSend(sfd, serveraddr, onSendParams)) 
@@ -558,15 +510,15 @@ void connectioned_client(char *hostname, char*port, int packet_len, void *onSend
 
         count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, NULL, NULL);
        
-        if (count == -1){
-            //ssp_error("recv failed client");
-        }
+        if (count == -1)
+            continue;
+
         else if (count >= *buff_size){   
             ssp_error("packet too large\n");
             continue;
         }
         else{
-            if (onRecv(sfd, buff, count, buff_size, (void *)&serveraddr, size_of_addr, onRecvParams) == -1)
+            if (onRecv(sfd, buff, count, buff_size, (void *)&serveraddr, size_of_addr[0], onRecvParams) == -1)
                 ssp_error("recv failed\n");
         }
         
@@ -575,6 +527,6 @@ void connectioned_client(char *hostname, char*port, int packet_len, void *onSend
     printf("exiting loop\n");
     free(buff_size);
     free(buff);
-    close(sfd);
+    ssp_close(sfd);
     onExit(onExitParams);
 }
