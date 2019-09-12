@@ -10,15 +10,21 @@
 #include <fcntl.h>
 
 #ifdef POSIX_PORT
-       #include <pthread.h>
-       #include <sys/socket.h>
-       #include <stdio.h>
-       #include <errno.h>
-       #include <limits.h>
-       #include <stdio.h>
-       #include <stdarg.h>
-       #include <unistd.h>
-       #include <sys/select.h>
+        #include <pthread.h>
+        #include <sys/socket.h>
+        #include <stdio.h>
+        #include <errno.h>
+        #include <limits.h>
+        #include <stdarg.h>
+        #include <unistd.h>
+        #include <sys/select.h>
+
+        #include <netinet/in.h>
+        #include <signal.h>
+        #include <sys/wait.h>
+        #include <arpa/inet.h>
+        #include <libgen.h>
+        #include <netdb.h> 
 
 #endif
 #include "types.h"
@@ -143,22 +149,20 @@ int ssp_select(int sfd, void *read_socket_set, void *write_socket_set, void *res
         .tv_usec = timeout_in_usec
     };
 
-    int nrdy = select(sfd + 1, read_socket_set, write_socket_set, restrict_socket_set, &timeout);
+    int nrdy = select(sfd + 1, (fd_set *) read_socket_set, (fd_set *) write_socket_set, (fd_set *) restrict_socket_set, &timeout);
     #endif
 
     return nrdy;
 }
 
-void *ssp_init_sockaddr_struct(char *host_name, char port, size_t *size_of_addr) {
+void *ssp_init_sockaddr_struct(size_t *size_of_addr) {
 
     #ifdef POSIX_PORT
-    //if (strncmp(host_name, "", 1) == 0)
-
-
 
         *size_of_addr = sizeof(struct sockaddr);
         void *addr = calloc(sizeof(struct sockaddr), 1);
         checkAlloc(addr, 1);
+
 
     #endif
     return addr;

@@ -102,12 +102,8 @@ static void user_request_check(void *request, void *args) {
     remove_request_check(request, params->client->request_list);
 }
 
-static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
+static int on_send_client(int sfd, void *addr, void *other) {
 
-
-    #ifdef POSIX_PORT
-    struct sockaddr_in* client_addr = (struct sockaddr_in*) &addr;
-    #endif
 
     Response res;    
     Client *client = (Client *) other;
@@ -117,7 +113,7 @@ static int on_send_client(int sfd, struct sockaddr_in addr, void *other) {
         
     res.sfd = sfd;
     res.packet_len = client->packet_len;
-    res.addr = client_addr;
+    res.addr = addr;
     
     struct user_request_check_params params = {
         res,
@@ -256,7 +252,7 @@ void *ssp_connection_server_task(void *params) {
 
 void *ssp_connection_client_task(void *params) {
     //Client *client = (Client *) params;
-    connection_client(1111);
+    //connection_client(1111);
     return NULL;
 }
 

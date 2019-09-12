@@ -18,7 +18,7 @@ This file is the header file for server.c
                 is either 0 for udp, or 1 for tcp
     Return: It returns a socket descriptor to a UDP ready port
 ------------------------------------------------------------------------------*/
-int prepareHost(char *port, int conn_typ);
+int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host, void *addr);
 
 
 /*------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ void connection_server(char* port, int initial_buff_size,
     void *other);
 
 void connection_client(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
-    int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
+    int (*onSend)(int sfd, void *addr, void *onSendParams),
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *onRecvParams) ,
     int (*checkExit)(void *checkExitParams),
     void (*onExit)(void *params));
@@ -78,7 +78,7 @@ void connection_client(char *hostname, char*port, int packet_len, void *onSendPa
 int *prepareSignalHandler(void);
 
 void connectionless_client(char *hostname, char*port, int packet_len, void *onSendParams, void *onRecvParams, void *checkExitParams, void *onExitParams,
-    int (*onSend)(int sfd, struct sockaddr_in client, void *onSendParams),
+    int (*onSend)(int sfd, void *addr, void *onSendParams),
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *onRecvParams) ,
     int (*checkExit)(void *checkExitParams),
     void (*onExit)(void *params));

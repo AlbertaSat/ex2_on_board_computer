@@ -59,12 +59,12 @@ void ssp_connectionless_server(Protocol_state *p_state) {
 }
 
 void ssp_connection_server(Protocol_state *p_state) {
-    p_state->server_handle = ssp_thread_create(STACK_ALLOCATION, ssp_connection_server, p_state);
+    p_state->server_handle = ssp_thread_create(STACK_ALLOCATION, ssp_connection_server_task, p_state);
 }
 
 
-void ssp_connection_client() {
-    ssp_thread_create(STACK_ALLOCATION, ssp_connection_client, NULL);
+void ssp_connection_client(Protocol_state *p_state) {
+    ssp_thread_create(STACK_ALLOCATION, ssp_connection_client_task, p_state);
 }
 
 Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
