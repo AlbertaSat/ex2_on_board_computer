@@ -84,17 +84,21 @@ int ssp_close(int fd) {
 void ssp_sendto(Response res) {
     
     #ifdef POSIX_PORT
-        struct sockaddr* addr = (struct sockaddr*) res.addr;
-        int n = sendto(res.sfd, res.msg, res.packet_len, 0, addr, sizeof(*addr));
+        //struct sockaddr* addr = (struct sockaddr*) res.addr;
+        //int n = sendto(res.sfd, res.msg, res.packet_len, 0, addr, sizeof(*addr));
+        //if (n < 0) 
+        //    ssp_error("ERROR in ssp_sendto");
+
+        int n = write(res.sfd, res.msg, res.packet_len);
         if (n < 0) 
-            ssp_error("ERROR in ssp_sendto");
+            ssp_error("ERROR in write");
     #endif
 }
 
-int ssp_recvfrom(int sfd, void *buff, size_t packet_len, int flags, void *server_addr, uint32_t server_addr_len) {
+int ssp_recvfrom(int sfd, void *buff, size_t packet_len, int flags, void *server_addr, uint32_t *server_addr_len) {
     int count = 0;
     #ifdef POSIX_PORT
-        count = recvfrom(sfd, buff, packet_len, flags, (struct sockaddr*)server_addr, (socklen_t*)&server_addr_len);
+        count = recvfrom(sfd, buff, packet_len, flags, (struct sockaddr*)server_addr, (socklen_t*)server_addr_len);
     #endif
 
     return count;
@@ -159,8 +163,8 @@ void *ssp_init_sockaddr_struct(size_t *size_of_addr) {
 
     #ifdef POSIX_PORT
 
-        *size_of_addr = sizeof(struct sockaddr);
-        void *addr = calloc(sizeof(struct sockaddr), 1);
+        *size_of_addr = sizeof(struct sockaddr_storage);
+        void *addr = ssp_alloc(1, sizeof(struct sockaddr_storage));
         checkAlloc(addr, 1);
 
 
@@ -207,10 +211,10 @@ void *ssp_thread_create(int stack_size, void * (thread_func)(void *params), void
 
 
     #ifdef POSIX_PORT
-    pthread_t *handler = ssp_alloc(sizeof(pthread_t), 1);
+    pthread_t *handler = ssp_alloc(1,  sizeof(pthread_t));
     checkAlloc(handler, 1);
 
-    pthread_attr_t *attr = ssp_alloc(sizeof(pthread_attr_t), 1); 
+    pthread_attr_t *attr = ssp_alloc(1, sizeof(pthread_attr_t)); 
     checkAlloc(attr, 1);
 
     int err = pthread_attr_init(attr);

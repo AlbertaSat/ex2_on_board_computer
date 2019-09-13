@@ -38,7 +38,7 @@ static int exit_now;
  
  
 //if conn_typ == 1, tcp/ bind_to_host == 1 for binding local, 2 for connect
-int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host, void *addr)
+int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host)
 {
 
     struct addrinfo hints, *res;
@@ -70,15 +70,13 @@ int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host, vo
         }
 
         int val = 1;
-        if (bind_to_host != 0) {
-            err = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
-            if (err == -1) {
-                ssp_error("set sock opt");
-                ssp_close(sfd);
-                continue;
-            }
+        err = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+        if (err == -1) {
+            ssp_error("set sock opt");
+            ssp_close(sfd);
+            continue;
         }
-
+        
         if (bind_to_host == 1) {
             err = bind(sfd, cur->ai_addr, cur->ai_addrlen);
             if (err == -1) {
@@ -86,20 +84,14 @@ int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host, vo
                 ssp_close(sfd);
                 continue;
             }
-        } 
-        else if (bind_to_host == 2) {
+        } else {
             err = connect(sfd, cur->ai_addr, cur->ai_addrlen);
             if (err == -1) { 
                 ssp_error("connection with the server failed...\n"); 
                 ssp_close(sfd);
                 continue;
             }
-
         }
-
-        struct sockaddr *a = (struct sockaddr* ) addr;
-        a->sa_family = cur->ai_family;
-        memcpy(a->sa_data, cur->ai_addr, sizeof(a->sa_data));
 
         freeaddrinfo(cur);
         break;
@@ -173,7 +165,7 @@ void connection_server(char* port, int initial_buff_size,
     *size_of_addr = 0;
     void *addr = ssp_init_sockaddr_struct(size_of_addr);
 
-    int sfd = prepareHost(NULL, port, SOCK_STREAM, 1, addr);
+    int sfd = prepareHost(NULL, port, SOCK_STREAM, 1);
 
     int err = listen(sfd, 10);
 
@@ -246,7 +238,7 @@ void connection_server(char* port, int initial_buff_size,
                     continue;
                 }
 
-                int count = ssp_recvfrom(i, buff, *buff_size, 0, NULL, size_of_addr[0]);
+                int count = ssp_recvfrom(i, buff, *buff_size, 0, NULL, size_of_addr);
                 
                 if (count < 0) {
                     ssp_error("recv failed server");
@@ -258,7 +250,7 @@ void connection_server(char* port, int initial_buff_size,
                 }
                 else {
                     ssp_printf("reading\n");
-                    if (onRecv(i, buff, count, buff_size, addr, size_of_addr[0], other) == -1)
+                    if (onRecv(i, buff, count, buff_size, addr, *size_of_addr, other) == -1)
                         ssp_printf("recv failed\n");
                 }
             }
@@ -290,8 +282,7 @@ void connectionless_server(char* port, int initial_buff_size,
     size_t size_of_addr[1];
     *size_of_addr = 0;
 
-    void *addr = ssp_init_sockaddr_struct(size_of_addr);
-    int sfd = prepareHost(NULL, port, SOCK_DGRAM, 1, addr);
+    int sfd = prepareHost(NULL, port, SOCK_DGRAM, 1);
 
     size_t size_of_socket_struct[1];
     *size_of_socket_struct = 0;
@@ -314,7 +305,8 @@ void connectionless_server(char* port, int initial_buff_size,
 
 
 
-    
+    void *addr = ssp_init_sockaddr_struct(size_of_addr);
+
     for (;;)
     {
 
@@ -348,8 +340,8 @@ void connectionless_server(char* port, int initial_buff_size,
         }
 
         if (ssp_fd_is_set(sfd, read_socket_set)) {
-        
-            int count = ssp_recvfrom(sfd, buff, *buff_size, 0, addr, size_of_addr[0]);
+            int count = ssp_recvfrom(sfd, buff, *buff_size, 0, addr, size_of_addr);
+
 
             if (count == -1)
                 continue;
@@ -358,7 +350,7 @@ void connectionless_server(char* port, int initial_buff_size,
                 ssp_printf("packet too large\n");
             }
             else {
-                if (onRecv(sfd, buff, count, buff_size, addr, size_of_addr[0], other) == -1)
+                if (onRecv(sfd, buff, count, buff_size, addr, *size_of_addr, other) == -1)
                     ssp_printf("recv failed\n");
             }
         }
@@ -396,10 +388,10 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
     char *buff = ssp_alloc(sizeof(char), prev_buff_size);
     checkAlloc(buff, 1);
 
-    size_t size_of_addr[1];
-    *size_of_addr = 0;
+    size_t size_of_addr[1] = {0};
     void *addr = ssp_init_sockaddr_struct(size_of_addr);
-    sfd = prepareHost(hostname, port, SOCK_DGRAM, 0, addr);
+
+    sfd = prepareHost(hostname, port, SOCK_DGRAM, 0);
 
     for (;;) {
 
@@ -414,7 +406,7 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
         if (onSend(sfd, addr, onSendParams)) 
             ssp_error("send failed\n");
 
-        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, addr,  size_of_addr[0]);
+        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, addr, size_of_addr);
        
         if (count == -1)
             continue;
@@ -424,7 +416,7 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
             continue;
         }
         else{
-            if (onRecv(sfd, buff, count, buff_size, addr, size_of_addr[0], onRecvParams) == -1)
+            if (onRecv(sfd, buff, count, buff_size, addr, *size_of_addr, onRecvParams) == -1)
                 ssp_error("recv failed\n");
         }
         
@@ -455,14 +447,14 @@ void connection_client(char *hostname, char*port, int packet_len, void *onSendPa
 
     uint32_t prev_buff_size = *buff_size;
 
-    char *buff = ssp_alloc(sizeof(char), prev_buff_size);
+    char *buff = ssp_alloc(prev_buff_size, sizeof(char));
     checkAlloc(buff, 1);
 
     size_t size_of_addr[1];
     *size_of_addr = 0;
     void *addr = ssp_init_sockaddr_struct(size_of_addr);
 
-    sfd = prepareHost(hostname, port, SOCK_STREAM, 2, addr);
+    sfd = prepareHost(hostname, port, SOCK_STREAM, 0);
 
     for (;;) {
         
@@ -476,7 +468,7 @@ void connection_client(char *hostname, char*port, int packet_len, void *onSendPa
         if (onSend(sfd, addr, onSendParams)) 
             ssp_error("send failed here\n");
 
-        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, NULL, size_of_addr[0]);
+        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, NULL, size_of_addr);
        
         if (count == -1)
             continue;
@@ -486,7 +478,7 @@ void connection_client(char *hostname, char*port, int packet_len, void *onSendPa
             continue;
         }
         else{
-            if (onRecv(sfd, buff, count, buff_size, addr, size_of_addr[0], onRecvParams) == -1)
+            if (onRecv(sfd, buff, count, buff_size, addr, *size_of_addr, onRecvParams) == -1)
                 ssp_error("recv failed\n");
         }
         

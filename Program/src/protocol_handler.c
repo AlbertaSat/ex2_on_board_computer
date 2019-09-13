@@ -156,7 +156,7 @@ int process_pdu_header(char*packet, uint8_t is_server, Response res, Request **r
         found_req->transaction_sequence_number = transaction_sequence_number;
         found_req->pdu_header = get_header_from_mib(p_state->mib, source_id, p_state->my_cfdp_id);
         found_req->procedure = sending_put_metadata;
-        found_req->res.addr = ssp_alloc(res.size_of_addr, 1);
+        found_req->res.addr = ssp_alloc(1, res.size_of_addr);
         memcpy(found_req->res.addr, res.addr, res.size_of_addr);
         found_req->res.packet_len = p_state->packet_size;
         found_req->res.sfd = res.sfd;

@@ -18,7 +18,7 @@ This file is the header file for server.c
                 is either 0 for udp, or 1 for tcp
     Return: It returns a socket descriptor to a UDP ready port
 ------------------------------------------------------------------------------*/
-int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host, void *addr);
+int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host);
 
 
 /*------------------------------------------------------------------------------
