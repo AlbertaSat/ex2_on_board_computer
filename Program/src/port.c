@@ -84,14 +84,10 @@ int ssp_close(int fd) {
 void ssp_sendto(Response res) {
     
     #ifdef POSIX_PORT
-        //struct sockaddr* addr = (struct sockaddr*) res.addr;
-        //int n = sendto(res.sfd, res.msg, res.packet_len, 0, addr, sizeof(*addr));
-        //if (n < 0) 
-        //    ssp_error("ERROR in ssp_sendto");
-
-        int n = write(res.sfd, res.msg, res.packet_len);
+        struct sockaddr* addr = (struct sockaddr*) res.addr;
+        int n = sendto(res.sfd, res.msg, res.packet_len, 0, addr, sizeof(*addr));
         if (n < 0) 
-            ssp_error("ERROR in write");
+            ssp_error("ERROR in ssp_sendto");
     #endif
 }
 
@@ -149,7 +145,6 @@ int ssp_select(int sfd, void *read_socket_set, void *write_socket_set, void *res
 
     struct timeval timeout = {
         .tv_sec = 0,
-        //.tv_usec = 100e3,
         .tv_usec = timeout_in_usec
     };
 

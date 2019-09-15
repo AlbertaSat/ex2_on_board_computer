@@ -50,10 +50,9 @@ int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host)
     
     int err = getaddrinfo(host_name, port, &hints, &res);
 
-    if (err != 0)
-    {
-        ssp_printf("get addr info");
-        exit(EXIT_FAILURE);
+    if (err != 0) {
+        ssp_error("get addr info");
+        return -1;
     }
 
     int sfd;
@@ -64,8 +63,7 @@ int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host)
 
         sfd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
 
-        if (sfd < 0)
-        {
+        if (sfd < 0) {
             ssp_error("socket");
         }
 
@@ -99,8 +97,9 @@ int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host)
 
     if (cur == NULL)
     {
-        fprintf(stderr, "could not create server\n");
-        exit(EXIT_FAILURE);
+        ssp_printf("error could not create server\n");
+        freeaddrinfo(res);
+        return -1;
     }
 
     return sfd;
@@ -151,7 +150,7 @@ static int resizeBuff(char **buffer, uint32_t *newBufferSize, uint32_t *prev_buf
     return 1;
 }
 //see header file
-void connection_server(char* port, int initial_buff_size,
+void connection_server(char* port, int initial_buff_size, int connection_limit, 
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
     int (*onTimeOut)(void *other),
     int (*onStdIn)(void *other),
@@ -160,23 +159,24 @@ void connection_server(char* port, int initial_buff_size,
     void *other)
 {
 
-
-    size_t size_of_addr[1];
-    *size_of_addr = 0;
-    void *addr = ssp_init_sockaddr_struct(size_of_addr);
-
     int sfd = prepareHost(NULL, port, SOCK_STREAM, 1);
+    if (sfd < 0)
+        return;
 
     int err = listen(sfd, 10);
 
     if (err == -1)
         ssp_error("listen failed\n");
 
-    size_t size_of_socket_struct[1];
-    *size_of_socket_struct = 0;
 
-    void *socket_set = ssp_init_socket_set(size_of_socket_struct);
-    void *read_socket_set = ssp_init_socket_set(size_of_socket_struct);
+    size_t size_of_addr[1];
+    *size_of_addr = 0;
+    void *addr = ssp_init_sockaddr_struct(size_of_addr);
+
+    size_t size_of_socket_struct = 0;
+
+    void *socket_set = ssp_init_socket_set(&size_of_socket_struct);
+    void *read_socket_set = ssp_init_socket_set(&size_of_socket_struct);
 
     ssp_fd_zero(socket_set);
     ssp_fd_set(sfd, socket_set);
@@ -191,13 +191,11 @@ void connection_server(char* port, int initial_buff_size,
     char *buff = ssp_alloc(sizeof(char), *buff_size);
     checkAlloc(buff, 1);
 
-
     for (;;)
     {
+        memcpy(read_socket_set, socket_set, size_of_socket_struct);
+        int nrdy = ssp_select(FD_SETSIZE, read_socket_set, NULL,  NULL, 100e3);
         
-        memcpy(read_socket_set, socket_set, size_of_socket_struct[0]);
-        int nrdy = ssp_select(sfd, read_socket_set, NULL,  NULL, 100e3);
-
         if (exit_now || checkExit(other)){
             ssp_printf("exiting server thread\n");
             break;
@@ -215,6 +213,7 @@ void connection_server(char* port, int initial_buff_size,
         if (nrdy == 0) {
             if (onTimeOut(other) == -1)
                 ssp_printf("timeout failed\n");
+
             continue;
         }
 
@@ -234,11 +233,10 @@ void connection_server(char* port, int initial_buff_size,
                         ssp_error ("accept failed");
                     
                     ssp_fd_set(new_socket, socket_set);
-                    ssp_fd_set(new_socket, read_socket_set);
-                    continue;
+                    break;
                 }
 
-                int count = ssp_recvfrom(i, buff, *buff_size, 0, NULL, size_of_addr);
+                int count = ssp_recvfrom(i, buff, *buff_size, 0, NULL, NULL);
                 
                 if (count < 0) {
                     ssp_error("recv failed server");
@@ -269,7 +267,7 @@ void connection_server(char* port, int initial_buff_size,
 
 
 //see header file
-void connectionless_server(char* port, int initial_buff_size,
+void connectionless_server(char* port, int initial_buff_size, 
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
     int (*onTimeOut)(void *other),
     int (*onStdIn)(void *other),
@@ -278,17 +276,15 @@ void connectionless_server(char* port, int initial_buff_size,
     void *other)
 {
 
-
-    size_t size_of_addr[1];
-    *size_of_addr = 0;
-
     int sfd = prepareHost(NULL, port, SOCK_DGRAM, 1);
+    if (sfd < 0)
+        return;
 
-    size_t size_of_socket_struct[1];
-    *size_of_socket_struct = 0;
+    size_t size_of_socket_struct = 0;
 
-    void *socket_set = ssp_init_socket_set(size_of_socket_struct);
-    void *read_socket_set = ssp_init_socket_set(size_of_socket_struct);
+
+    void *socket_set = ssp_init_socket_set(&size_of_socket_struct);
+    void *read_socket_set = ssp_init_socket_set(&size_of_socket_struct);
 
     ssp_fd_zero(socket_set);
     ssp_fd_set(sfd, socket_set);
@@ -303,16 +299,16 @@ void connectionless_server(char* port, int initial_buff_size,
     char *buff = ssp_alloc(sizeof(char), *buff_size);
     checkAlloc(buff, 1);
 
-
-
+    size_t size_of_addr[1];
+    *size_of_addr = 0;
     void *addr = ssp_init_sockaddr_struct(size_of_addr);
 
     for (;;)
     {
 
-        memcpy(read_socket_set, socket_set, size_of_socket_struct[0]);
+        memcpy(read_socket_set, socket_set, size_of_socket_struct);
 
-        int nrdy = ssp_select(FD_SETSIZE, read_socket_set, NULL,  NULL, 100e3);
+        int nrdy = ssp_select(sfd + 1, read_socket_set, NULL,  NULL, 100e3);
 
         if (exit_now || checkExit(other)){
             ssp_printf("exiting server thread\n");
@@ -377,6 +373,9 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
 {
 
     int sfd, count;
+    sfd = prepareHost(hostname, port, SOCK_DGRAM, 0);
+    if (sfd < 0)
+        return;
 
     uint32_t *buff_size = ssp_alloc(1, sizeof(uint32_t));
     checkAlloc(buff_size, 1);
@@ -391,7 +390,7 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
     size_t size_of_addr[1] = {0};
     void *addr = ssp_init_sockaddr_struct(size_of_addr);
 
-    sfd = prepareHost(hostname, port, SOCK_DGRAM, 0);
+
 
     for (;;) {
 
@@ -440,6 +439,10 @@ void connection_client(char *hostname, char*port, int packet_len, void *onSendPa
 
     int sfd, count;
 
+    sfd = prepareHost(hostname, port, SOCK_STREAM, 0);
+    if (sfd < 0)
+        exit_now = 1;
+
     uint32_t *buff_size = ssp_alloc(1, sizeof(uint32_t));
     checkAlloc(buff_size, 1);
 
@@ -454,7 +457,6 @@ void connection_client(char *hostname, char*port, int packet_len, void *onSendPa
     *size_of_addr = 0;
     void *addr = ssp_init_sockaddr_struct(size_of_addr);
 
-    sfd = prepareHost(hostname, port, SOCK_STREAM, 0);
 
     for (;;) {
         
@@ -483,8 +485,7 @@ void connection_client(char *hostname, char*port, int packet_len, void *onSendPa
         }
         
     }
-
-    printf("exiting loop\n");
+    free(addr);
     free(buff_size);
     free(buff);
     ssp_close(sfd);

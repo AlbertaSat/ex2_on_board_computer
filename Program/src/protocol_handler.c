@@ -265,7 +265,8 @@ int nak_response(char *packet, uint32_t start, Request *req, Response res, Clien
             offset_end = ntohl(offset_end);
             packet_index += 4;
             build_nak_response(req->buff, outgoing_packet_index, offset_start, req, client);
-            ssp_sendto(res);
+            ssp_write(res.sfd, req->buff, res.packet_len);
+            //ssp_sendto(res);
         }
         
         return packet_index;
@@ -345,7 +346,8 @@ void user_request_handler(Response res, Request *req, Client* client) {
             req->procedure = none;
             build_eof_packet(req->buff, start, req);
             req->local_entity->EOF_sent_indication = 1;
-            ssp_sendto(res);
+            ssp_write(res.sfd, req->buff, res.packet_len);
+            //ssp_sendto(res);
             break;
 
         case sending_data: 
@@ -356,20 +358,23 @@ void user_request_handler(Response res, Request *req, Client* client) {
                 req->procedure = sending_eof;
                 ssp_printf("sending data blast transaction: %d\n", req->transaction_sequence_number);
             }
-            ssp_sendto(res);
+            ssp_write(res.sfd, req->buff, res.packet_len);
+            //ssp_sendto(res);
             break;
 
         case sending_put_metadata:
             ssp_printf("sending metadata transaction: %d\n", req->transaction_sequence_number);
             start = build_put_packet_metadata(res, start, req);
-            ssp_sendto(res);
+            ssp_write(res.sfd, req->buff, res.packet_len);
+            //ssp_sendto(res);
             req->procedure = sending_data;
             break;
 
         case sending_finished:
             ssp_printf("sending finished packet transaction: %d\n", req->transaction_sequence_number);
             build_ack(req->buff, start, FINISHED_PDU);
-            ssp_sendto(res);
+            ssp_write(res.sfd, req->buff, res.packet_len);
+            //ssp_sendto(res);
             req->resent_finished++;
             break;
 

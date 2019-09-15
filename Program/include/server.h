@@ -44,7 +44,7 @@ int prepareHost(char *host_name, char *port, int conn_type, int bind_to_host);
     Return:     None
 ------------------------------------------------------------------------------*/
 
-void connectionless_server(char* port, int initial_buff_size,
+void connectionless_server(char* port, int initial_buff_size, 
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len, uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
     int (*onTimeOut)(void *other),
     int (*onStdIn)(void *other),
@@ -52,7 +52,7 @@ void connectionless_server(char* port, int initial_buff_size,
     void (*onExit)(void *other),
     void *other);
 
-void connection_server(char* port, int initial_buff_size,
+void connection_server(char* port, int initial_buff_size, int connection_limit,
     int (*onRecv)(int sfd, char *packet, uint32_t packet_len,  uint32_t *buff_size, void *addr, size_t size_of_addr, void *other), 
     int (*onTimeOut)(void *other),
     int (*onStdIn)(void *other),

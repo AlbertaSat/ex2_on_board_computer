@@ -63,8 +63,26 @@ void ssp_connection_server(Protocol_state *p_state) {
 }
 
 
-void ssp_connection_client(Protocol_state *p_state) {
-    ssp_thread_create(STACK_ALLOCATION, ssp_connection_client_task, p_state);
+Client *ssp_connection_client(uint32_t cfdp_id, Protocol_state *p_state) {
+    Client *client = ssp_alloc(sizeof(Client), 1);
+    checkAlloc(client, 1);
+
+    client->current_request = NULL;
+    client->request_list = linked_list();
+    client->packet_len = PACKET_LEN;
+
+    Remote_entity *remote = get_remote_entity(p_state->mib, cfdp_id);
+
+    if (remote == NULL)
+        ssp_printf("couldn't find entity in Remote_entity list\n");
+
+    //TODO clean this up, we don't need multiple instances of UT_ports etc
+    client->remote_entity = remote;
+    client->pdu_header = get_header_from_mib(p_state->mib, cfdp_id, p_state->my_cfdp_id);
+    client->p_state = p_state;
+
+    client->client_handle = ssp_thread_create(STACK_ALLOCATION, ssp_connection_client_task, client);
+    return client;
 }
 
 Client *ssp_connectionless_client(uint32_t cfdp_id, Protocol_state *p_state) {
