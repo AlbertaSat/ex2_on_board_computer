@@ -542,11 +542,13 @@ typedef struct request {
     Response res;
 } Request;
 
+//add "client" in here to represent local entity
 typedef struct protocol_state {
-    uint32_t packet_size;
+    uint32_t packet_len;
     char *server_port;
     void *server_handle;
     MIB *mib;
+
     uint32_t my_cfdp_id;
     
     List* request_list; 
@@ -568,12 +570,16 @@ typedef struct protocol_state {
 typedef struct client {
     
     void *client_handle;
+    //the maximum size of the packet
     uint32_t packet_len;
     
     Request *current_request;
     List *request_list;
 
+    //information about the remote_entity
     Remote_entity *remote_entity;
+
+    //packet header, useful for copying into outgoing packets
     Pdu_header *pdu_header;
     
     Protocol_state *p_state;    

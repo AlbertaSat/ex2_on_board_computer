@@ -163,7 +163,7 @@ void connection_server(char* port, int initial_buff_size, int connection_limit,
     if (sfd < 0)
         return;
 
-    int err = listen(sfd, 10);
+    int err = listen(sfd, connection_limit);
 
     if (err == -1)
         ssp_error("listen failed\n");
@@ -185,7 +185,7 @@ void connection_server(char* port, int initial_buff_size, int connection_limit,
     uint32_t *buff_size = ssp_alloc(1, sizeof(uint32_t));
     checkAlloc(buff_size, 1);
 
-    *buff_size = initial_buff_size + 10;
+    *buff_size = initial_buff_size;
     uint32_t prev_buff_size = *buff_size;
 
     char *buff = ssp_alloc(sizeof(char), *buff_size);
@@ -194,7 +194,7 @@ void connection_server(char* port, int initial_buff_size, int connection_limit,
     for (;;)
     {
         memcpy(read_socket_set, socket_set, size_of_socket_struct);
-        int nrdy = ssp_select(FD_SETSIZE, read_socket_set, NULL,  NULL, 100e3);
+        int nrdy = ssp_select(connection_limit + 1, read_socket_set, NULL,  NULL, 100e3);
         
         if (exit_now || checkExit(other)){
             ssp_printf("exiting server thread\n");
@@ -217,10 +217,9 @@ void connection_server(char* port, int initial_buff_size, int connection_limit,
             continue;
         }
 
-        for(int i = 0; i < FD_SETSIZE; i++) {
+        for(int i = 0; i < connection_limit + 1; i++) {
 
             if (ssp_fd_is_set(i, read_socket_set)) {
-                ssp_printf("receiving from socket %d!\n", i);
 
                 if (i == STDIN_FILENO) {
                     onStdIn(other);
@@ -237,17 +236,14 @@ void connection_server(char* port, int initial_buff_size, int connection_limit,
                 }
 
                 int count = ssp_recvfrom(i, buff, *buff_size, 0, NULL, NULL);
-                
+
                 if (count < 0) {
                     ssp_error("recv failed server");
                     ssp_close(i);
                     ssp_fd_clr(i, socket_set);
                 }
-                else if (count >= *buff_size) {   
-                    ssp_printf("packet too large %d\n", count);
-                }
+
                 else {
-                    ssp_printf("reading\n");
                     if (onRecv(i, buff, count, buff_size, addr, *size_of_addr, other) == -1)
                         ssp_printf("recv failed\n");
                 }
@@ -337,7 +333,7 @@ void connectionless_server(char* port, int initial_buff_size,
 
         if (ssp_fd_is_set(sfd, read_socket_set)) {
             int count = ssp_recvfrom(sfd, buff, *buff_size, 0, addr, size_of_addr);
-
+            ssp_printf("read in this amount %d\n", count);
 
             if (count == -1)
                 continue;
@@ -387,13 +383,10 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
     char *buff = ssp_alloc(sizeof(char), prev_buff_size);
     checkAlloc(buff, 1);
 
-    size_t size_of_addr[1] = {0};
-    void *addr = ssp_init_sockaddr_struct(size_of_addr);
-
-
+    size_t size_of_addr = 0;
+    void *addr = ssp_init_sockaddr_struct(&size_of_addr);
 
     for (;;) {
-
 
         if (exit_now || checkExit(checkExitParams))
              break;
@@ -405,7 +398,7 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
         if (onSend(sfd, addr, onSendParams)) 
             ssp_error("send failed\n");
 
-        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, addr, size_of_addr);
+        count = ssp_recvfrom(sfd, buff, packet_len, MSG_DONTWAIT, addr, &size_of_addr);
        
         if (count == -1)
             continue;
@@ -415,7 +408,7 @@ void connectionless_client(char *hostname, char*port, int packet_len, void *onSe
             continue;
         }
         else{
-            if (onRecv(sfd, buff, count, buff_size, addr, *size_of_addr, onRecvParams) == -1)
+            if (onRecv(sfd, buff, count, buff_size, addr, size_of_addr, onRecvParams) == -1)
                 ssp_error("recv failed\n");
         }
         
@@ -446,8 +439,7 @@ void connection_client(char *hostname, char*port, int packet_len, void *onSendPa
     uint32_t *buff_size = ssp_alloc(1, sizeof(uint32_t));
     checkAlloc(buff_size, 1);
 
-    *buff_size = packet_len + 10;
-
+    *buff_size = packet_len;
     uint32_t prev_buff_size = *buff_size;
 
     char *buff = ssp_alloc(prev_buff_size, sizeof(char));
@@ -475,10 +467,6 @@ void connection_client(char *hostname, char*port, int packet_len, void *onSendPa
         if (count == -1)
             continue;
 
-        else if (count >= *buff_size){   
-            ssp_error("packet too large\n");
-            continue;
-        }
         else{
             if (onRecv(sfd, buff, count, buff_size, addr, *size_of_addr, onRecvParams) == -1)
                 ssp_error("recv failed\n");

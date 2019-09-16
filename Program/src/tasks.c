@@ -23,7 +23,7 @@ static int on_recv_server(int sfd, char *packet,  uint32_t packet_len, uint32_t 
     Response res;
     res.addr = addr;
     res.sfd = sfd;
-    res.packet_len = p_state->packet_size;
+    res.packet_len = p_state->packet_len;
     res.size_of_addr = size_of_addr;
 
     Request **request_container = &p_state->current_request;
@@ -219,7 +219,7 @@ void *ssp_connectionless_server_task(void *params) {
     
     Protocol_state* p_state = (Protocol_state*) params;
     p_state->transaction_sequence_number = 1;
-    connectionless_server(p_state->server_port, PACKET_LEN, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
+    connectionless_server(p_state->server_port, p_state->packet_len, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
 
     return NULL;
 }
@@ -238,7 +238,7 @@ void *ssp_connectionless_client_task(void* params){
     //convert uint id to char *
     inet_ntop(AF_INET, &client->remote_entity->UT_address, host_name, INET_ADDRSTRLEN);
     
-    connectionless_client(host_name, port, PACKET_LEN, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
+    connectionless_client(host_name, port, client->packet_len, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
     
     return NULL;
 }
@@ -247,7 +247,7 @@ void *ssp_connection_server_task(void *params) {
     Protocol_state* p_state = (Protocol_state*) params;
     p_state->transaction_sequence_number = 1;
     //1024 is the connection max limit
-    connection_server(p_state->server_port, PACKET_LEN, 10, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
+    connection_server(p_state->server_port, p_state->packet_len, 10, on_recv_server, on_time_out_posix, on_stdin, check_exit_server, on_exit_server, p_state);
     return NULL;
 }
 
@@ -264,7 +264,7 @@ void *ssp_connection_client_task(void *params) {
     //convert uint id to char *
     inet_ntop(AF_INET, &client->remote_entity->UT_address, host_name, INET_ADDRSTRLEN);
 
-    connection_client(host_name, port, PACKET_LEN, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
+    connection_client(host_name, port, client->packet_len, client, client, client, client, on_send_client, on_recv_client, check_exit_client, on_exit_client);
   
     return NULL;
 }
