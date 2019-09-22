@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "csp_thread.h": "c",
-        "csp.h": "c",
-        "stdio.h": "c",
-        "array": "c"
-    }
-}

@@ -1,0 +1,3 @@
+[submodule "Project/FileTransfer/CCSDS_FileDeliveryProtocol"]
+	path = Project/FileTransfer/CCSDS_FileDeliveryProtocol
+	url = https://github.com/EvanGee/CCSDS_FileDeliveryProtocol

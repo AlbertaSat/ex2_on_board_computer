@@ -17,6 +17,7 @@ include $(P_BASEDIR)/build/reliance.mk
 
 
 
+
 ######## Build options ########
 
 verbose = 0
@@ -28,7 +29,6 @@ SRCROOT         = $(CURDIR)
 
 # .o directory
 ODIR            = obj
-
 
 # Source VPATHS
 VPATH           += $(SRCROOT)/Source
@@ -85,6 +85,11 @@ INCLUDES        += -I$(SRCROOT)/Source/portable/GCC/POSIX/
 INCLUDES        += -I$(SRCROOT)/Demo/include
 INCLUDES        += -I$(SRCROOT)/Project
 INCLUDES		+= -I$(SRCROOT)/Project/FileSystem
+INCLUDES		+= -I$(SRCROOT)/Project/FileTransfer/CCSDS_FileDeliveryProtocol/Program/include
+
+
+# includeing .a fils
+STATIC_OBJS  	+= $(SRCROOT)/Project/FileTransfer/CCSDS_FileDeliveryProtocol/Program/src/file_delivery_app.a
 
 # Generate OBJS names
 OBJS = $(patsubst %.c,%.o,$(C_FILES))
@@ -158,7 +163,8 @@ else
 endif
 
 # $(REDDRIVOBJ)
-SatelliteSim: $(_OBJS) $(REDDRIVOBJ)
+SatelliteSim: $(_OBJS) $(REDDRIVOBJ) $(STATIC_OBJS)
+
 	@echo ">> Linking $@..."
 ifeq ($(verbose),1)
 	$(CC) $(CFLAGS) $^ $(LINKFLAGS) $(LIBS) -o $@

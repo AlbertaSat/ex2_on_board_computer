@@ -18,6 +18,10 @@
 //Custom FileSystem tasks
 #include "FileSystemTasks.h"
 
+//Ftp task
+#include "file_delivery_app.h"
+#include "requests.h"
+
 // Arguments to mount redfs filesystems
 struct redfs_args
 {
@@ -52,7 +56,7 @@ unsigned long ulLine, const char * const pcFileName
 
 int main(void)
 {
-
+/*
 	int32_t iErr;
 	const char *pszVolume0 = gaRedVolConf[0].pszPathPrefix;
 	const char *pszVolume1 = gaRedVolConf[1].pszPathPrefix;
@@ -94,9 +98,17 @@ int main(void)
 
 	//FileSystem Tasks
 	vStartFSWriteTask(mainCREATOR_TASK_PRIORITY);
+*/
 
-
+    Protocol_state *p_state = init_ftp(1);
+    printf("My ftp ID %d\n", p_state->my_cfdp_id);
 	
+	ssp_connectionless_server(p_state);
+
+	Client *remote = ssp_connectionless_client(1, p_state);
+	
+	put_request("TEST.txt", "newFILE.txt", 0, 0, 0, 0, NULL, NULL, remote, p_state);
+
 	/* Start the scheduler itself. */
 	vTaskStartScheduler();
 
