@@ -139,9 +139,10 @@ CFLAGS += $(INCLUDES) $(CWARNS) -O2
 
 # Rules
 .PHONY : all
-all: setup SatelliteSim
-	 $(MAKE) -C $(SRCROOT)/Project/FileTransfer/CCSDS_FileDeliveryProtocol/Program/src/ lib
-
+all: setup
+	$(MAKE) -C $(SRCROOT)/Project/FileTransfer/CCSDS_FileDeliveryProtocol/Program/src/ lib
+	$(MAKE) SatelliteSim
+	 
 .PHONY : setup
 setup:
 # Make obj directory
