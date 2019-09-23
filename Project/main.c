@@ -6,7 +6,6 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
-
 //File System includes
 #include <redfs.h>
 #include <redposix.h>
@@ -56,6 +55,7 @@ unsigned long ulLine, const char * const pcFileName
 
 int main(void)
 {
+
 /*
 	int32_t iErr;
 	const char *pszVolume0 = gaRedVolConf[0].pszPathPrefix;
