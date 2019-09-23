@@ -11,7 +11,7 @@ Project is where we should do our simulator development.
 
 
 make sure to install the sub modules with, this will download the various applications 
-$ git submodule init
+$ git submodule update
 
 You can make the simulator and associated apps with 
 $ make all

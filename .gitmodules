@@ -1,3 +1,12 @@
 [submodule "Project/FileTransfer/CCSDS_FileDeliveryProtocol"]
 	path = Project/FileTransfer/CCSDS_FileDeliveryProtocol
 	url = https://github.com/EvanGee/CCSDS_FileDeliveryProtocol
+
+[submodule "libcsp"]
+	path = libcsp
+	url = https://github.com/libcsp/libcsp
+
+
+
+
+
