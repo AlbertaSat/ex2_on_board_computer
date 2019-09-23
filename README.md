@@ -13,6 +13,9 @@ add it to main.c.
 To install currently running modules:
 
 make sure to install the sub modules (our code) with  
+$ git submodule init
+
+make sure to update the sub modules with
 $ git submodule update
 
 You can make the simulator and associated apps with  
