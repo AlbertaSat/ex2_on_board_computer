@@ -47,6 +47,7 @@
 
 /* Include Files */
 
+
 #include "HL_sys_common.h"
 
 /* USER CODE BEGIN (1) */
@@ -89,11 +90,12 @@ void vTask1(void *pvParameters)
 /* USER CODE BEGIN (2) */
 /* USER CODE END */
 
-uint8	emacAddress[6U] = 	{0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
-uint32 	emacPhyAddress	=	1U;
+uint8   emacAddress[6U] =   {0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
+uint32  emacPhyAddress  =   1U;
 
 
-#define D_COUNT  8
+
+#define D_COUNT 8
 
 uint32 cnt=0, error =0, tx_done =0;
 uint8 tx_data1[D_COUNT] = {1,2,3,4,5,6,7,8};
@@ -110,91 +112,60 @@ uint8 *dptr=0;
 
 int main(void)
 {
-/* USER CODE BEGIN (3) */
 
-    /* Set high end timer GIO port hetPort pin direction to all output */
-    gioInit();
-    gioSetDirection(gioPORTB, 0xFFFFFFFF);
 
-    /* enable irq interrupt in */
-        _enable_IRQ_interrupt_();
+    canInit();
 
-        /** - configuring CAN1 MB1,Msg ID-1 to transmit and CAN2 MB1 to receive */
-        canInit();
-        canEnableloopback(canREG1, Internal_Lbk);
-        canEnableloopback(canREG2, Internal_Lbk);
-        canEnableloopback(canREG3, Internal_Lbk);
-        canEnableloopback(canREG4, Internal_Lbk);
-
-        /** - enabling error interrupts */
-        canEnableErrorNotification(canREG1);
+    canEnableErrorNotification(canREG1);
         canEnableErrorNotification(canREG2);
         canEnableErrorNotification(canREG3);
         canEnableErrorNotification(canREG4);
 
-        canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &tx_data1[0]);
-        canTransmit(canREG2, canMESSAGE_BOX1, (const uint8 *) &tx_data2[0]);
-        canTransmit(canREG3, canMESSAGE_BOX1, (const uint8 *) &tx_data3[0]);
-        canTransmit(canREG4, canMESSAGE_BOX1, (const uint8 *) &tx_data4[0]);
+           canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &tx_data1[0]);
+           canTransmit(canREG2, canMESSAGE_BOX1, (const uint8 *) &tx_data2[0]);
+           canTransmit(canREG3, canMESSAGE_BOX1, (const uint8 *) &tx_data3[0]);
+           canTransmit(canREG4, canMESSAGE_BOX1, (const uint8 *) &tx_data4[0]);
 
-        int i;
-        for(i = 0; i <8; i++){
-            if(tx_data1[i] != rx_data1[i]){
-                fprintf(stderr,"can 1, index = %d error\n", i);
-                fprintf(stderr, "tx = %d, rx = %d\n", tx_data1[i], rx_data1[i]);
-            }
-            else if(tx_data2[i] != rx_data2[i]){
-                fprintf(stderr,"can 2, index = %d error\n", i);
-            }
-            else if(tx_data3[i] != rx_data3[i]){
-                fprintf(stderr,"can 3, index = %d error\n", i);
-            }
-            else if(tx_data4[i] != rx_data4[i]){
-                fprintf(stderr,"can 4, index = %d error\n", i);
-            }
 
-            else if(i == 7){
-                fprintf(stderr,"Checking tx and rx complete");
-            }
+        while(!canIsRxMessageArrived(canREG1,canMESSAGE_BOX1)){
+           canGetData(canREG1, canMESSAGE_BOX1, rx_data1);
+           canGetData(canREG1, canMESSAGE_BOX1, rx_data2);
+           canGetData(canREG1, canMESSAGE_BOX1, rx_data3);
+           canGetData(canREG1, canMESSAGE_BOX1, rx_data4);
         }
 
-    /* Create Task 1 */
-    if (xTaskCreate(vTask1,"Task1", configMINIMAL_STACK_SIZE, NULL, 1, &xTask1Handle) != pdTRUE)
-    {
-        /* Task could not be created */
-        while(1);
-    }
+           int i;
+           for(i = 0; i <8; i++){
+               if(tx_data1[i] != rx_data1[i]){
+                   fprintf(stderr,"can 1, index = %d error\n", i);
+                   fprintf(stderr, "tx = %d, rx = %d\n", tx_data1[i], rx_data1[i]);
+               }
+               else if(tx_data2[i] != rx_data2[i]){
+                   fprintf(stderr,"can 2, index = %d error\n", i);
+               }
+               else if(tx_data3[i] != rx_data3[i]){
+                   fprintf(stderr,"can 3, index = %d error\n", i);
+               }
+               else if(tx_data4[i] != rx_data4[i]){
+                   fprintf(stderr,"can 4, index = %d error\n", i);
+               }
 
-    /* Start Scheduler */
-    vTaskStartScheduler();
+               else if(i == 7){
+                   fprintf(stderr,"Checking tx and rx complete");
+               }
+           }
 
-    /* Run forever */
-    while(1);
+
+
+           return(0);
+
+}
+
 /* USER CODE END */
 
-    return 0;
-}
 
 
 
 /* USER CODE BEGIN (4) */
-void canMessageNotification(canBASE_t *node, uint32 messageBox)
-{
-     if(node==canREG1)
-     {
-         canGetData(canREG1, canMESSAGE_BOX2, (uint8 * )&rx_data1[0]); /* copy to RAM */
-     }
-     if(node==canREG2)
-     {
-         canGetData(canREG2, canMESSAGE_BOX2, (uint8 * )&rx_data2[0]); /* copy to RAM */
-     }
-     if(node==canREG3)
-     {
-         canGetData(canREG3, canMESSAGE_BOX2, (uint8 * )&rx_data3[0]); /* copy to RAM */
-     }
-     if(node==canREG4)
-     {
-         canGetData(canREG4, canMESSAGE_BOX2, (uint8 * )&rx_data4[0]); /* copy to RAM */
-     }
-}
+
 /* USER CODE END */
