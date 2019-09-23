@@ -33,8 +33,8 @@ In the master makefile (the one in this directory) link your new .a file,
 add your .h files. To add your .h files, add it to INCLUDES, to include it in the
 include path, followed by your .a file to the STATIC_OBJ varable.
 
-INCLUDES		+= -I$(SRCROOT)/Project/yourproject/include
-STATIC_OBJS  	+= $(SRCROOT)/Project/yourproject/your_app.a
+INCLUDES		+= -I$(SRCROOT)/Project/yourproject/include  
+STATIC_OBJS  	+= $(SRCROOT)/Project/yourproject/your_app.a  
 
 Doing this should link your files, and make them run with the simulator, if you want
 your app to build when you call 'make all' add a $(make) command to the make all rule.
