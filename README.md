@@ -15,17 +15,17 @@ To install currently running modules:
 make sure to install the sub modules (our code) with  
 $ git submodule update
 
-You can make the simulator and associated apps with 
+You can make the simulator and associated apps with  
 $ make all
 
-If you just want to link the object files without rebuilding everything, run
+If you just want to link the object files without rebuilding everything, run  
 $ make SatelliteSim
 
 
 
 # Adding new code
 
-I think the best way to add a new application is to make it into a .a (archive) file. This is just
+I think the best way to add a new application is to make your app into a .a (archive) file. This is just
 a bundle of .o files. make an archive file with: 
     $ ar -rsc name_of_archive.a obj.o ob1.o ob2.o ...
 
