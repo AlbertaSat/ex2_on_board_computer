@@ -111,5 +111,13 @@ PDE_DEPS__QUOTED :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+libcsp/examples \
+libcsp/src/arch/freertos \
+libcsp/src/crypto \
+libcsp/src \
+libcsp/src/drivers/can \
+libcsp/src/interfaces \
+libcsp/src/rtable \
+libcsp/src/transport \
 source \
 

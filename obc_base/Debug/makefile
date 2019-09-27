@@ -4,12 +4,50 @@
 
 SHELL = cmd.exe
 
-CG_TOOL_ROOT := C:/Users/vince/Programs/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS
+CG_TOOL_ROOT := C:/ti/ccs901/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS
 
 GEN_OPTS__FLAG := 
 GEN_CMDS__FLAG := 
 
 ORDERED_OBJS += \
+"./libcsp/examples/csp_if_fifo.obj" \
+"./libcsp/examples/kiss.obj" \
+"./libcsp/examples/simple.obj" \
+"./libcsp/src/arch/freertos/csp_malloc.obj" \
+"./libcsp/src/arch/freertos/csp_queue.obj" \
+"./libcsp/src/arch/freertos/csp_semaphore.obj" \
+"./libcsp/src/arch/freertos/csp_system.obj" \
+"./libcsp/src/arch/freertos/csp_thread.obj" \
+"./libcsp/src/arch/freertos/csp_time.obj" \
+"./libcsp/src/crypto/csp_hmac.obj" \
+"./libcsp/src/crypto/csp_sha1.obj" \
+"./libcsp/src/crypto/csp_xtea.obj" \
+"./libcsp/src/csp_bridge.obj" \
+"./libcsp/src/csp_buffer.obj" \
+"./libcsp/src/csp_conn.obj" \
+"./libcsp/src/csp_crc32.obj" \
+"./libcsp/src/csp_debug.obj" \
+"./libcsp/src/csp_dedup.obj" \
+"./libcsp/src/csp_endian.obj" \
+"./libcsp/src/csp_iflist.obj" \
+"./libcsp/src/csp_io.obj" \
+"./libcsp/src/csp_port.obj" \
+"./libcsp/src/csp_promisc.obj" \
+"./libcsp/src/csp_qfifo.obj" \
+"./libcsp/src/csp_route.obj" \
+"./libcsp/src/csp_service_handler.obj" \
+"./libcsp/src/csp_services.obj" \
+"./libcsp/src/csp_sfp.obj" \
+"./libcsp/src/drivers/can/can_socketcan.obj" \
+"./libcsp/src/interfaces/csp_if_can.obj" \
+"./libcsp/src/interfaces/csp_if_i2c.obj" \
+"./libcsp/src/interfaces/csp_if_kiss.obj" \
+"./libcsp/src/interfaces/csp_if_lo.obj" \
+"./libcsp/src/interfaces/csp_if_zmqhub.obj" \
+"./libcsp/src/rtable/csp_rtable_cidr.obj" \
+"./libcsp/src/rtable/csp_rtable_static.obj" \
+"./libcsp/src/transport/csp_rdp.obj" \
+"./libcsp/src/transport/csp_udp.obj" \
 "./source/HL_adc.obj" \
 "./source/HL_can.obj" \
 "./source/HL_crc.obj" \
@@ -70,7 +108,23 @@ RMDIR := RMDIR /S/Q
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include libcsp/examples/subdir_vars.mk
+-include libcsp/src/arch/freertos/subdir_vars.mk
+-include libcsp/src/crypto/subdir_vars.mk
+-include libcsp/src/subdir_vars.mk
+-include libcsp/src/drivers/can/subdir_vars.mk
+-include libcsp/src/interfaces/subdir_vars.mk
+-include libcsp/src/rtable/subdir_vars.mk
+-include libcsp/src/transport/subdir_vars.mk
 -include source/subdir_vars.mk
+-include libcsp/examples/subdir_rules.mk
+-include libcsp/src/arch/freertos/subdir_rules.mk
+-include libcsp/src/crypto/subdir_rules.mk
+-include libcsp/src/subdir_rules.mk
+-include libcsp/src/drivers/can/subdir_rules.mk
+-include libcsp/src/interfaces/subdir_rules.mk
+-include libcsp/src/rtable/subdir_rules.mk
+-include libcsp/src/transport/subdir_rules.mk
 -include source/subdir_rules.mk
 -include objects.mk
 
@@ -188,23 +242,26 @@ all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 obc_base.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: ARM Linker'
-	"C:/Users/vince/Programs/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/bin/armcl" -mv7R5 --code_state=32 --float_support=VFPv3D16 -g --diag_warning=225 --diag_wrap=off --display_error_number --enum_type=packed --abi=eabi -z -m"obc_base.map" --heap_size=0x800 --stack_size=0x800 -i"C:/Users/vince/Programs/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/lib" -i"C:/Users/vince/Programs/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="obc_base_linkInfo.xml" --rom_model --be32 -o "obc_base.out" $(ORDERED_OBJS)
+	"C:/ti/ccs901/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/bin/armcl" -mv7R5 --code_state=32 --float_support=VFPv3D16 -g --diag_warning=225 --diag_wrap=off --display_error_number --enum_type=packed --abi=eabi -z -m"obc_base.map" --heap_size=0x800 --stack_size=0x800 -i"C:/ti/ccs901/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/lib" -i"C:/ti/ccs901/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="obc_base_linkInfo.xml" --rom_model --be32 -o "obc_base.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 obc_base.hex: $(EXE_OUTPUTS)
 	@echo 'Building files: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo 'Invoking: ARM Hex Utility'
-	"C:/Users/vince/Programs/ccs/tools/compiler/ti-cgt-arm_18.12.2.LTS/bin/armhex"  -o "obc_base.hex" $(EXE_OUTPUTS__QUOTED)
+	"C:/ti/ccs901/ccs/tools/compiler/ti-cgt-arm_18.12.1.LTS/bin/armhex"  -o "obc_base.hex" $(EXE_OUTPUTS__QUOTED)
 	@echo 'Finished building: $(strip $(EXE_OUTPUTS__QUOTED))'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "source\HL_adc.obj" "source\HL_can.obj" "source\HL_crc.obj" "source\HL_dcc.obj" "source\HL_ecap.obj" "source\HL_emac.obj" "source\HL_emif.obj" "source\HL_epc.obj" "source\HL_eqep.obj" "source\HL_errata.obj" "source\HL_errata_SSWF021_45.obj" "source\HL_esm.obj" "source\HL_etpwm.obj" "source\HL_gio.obj" "source\HL_het.obj" "source\HL_i2c.obj" "source\HL_lin.obj" "source\HL_mdio.obj" "source\HL_mibspi.obj" "source\HL_nmpu.obj" "source\HL_notification.obj" "source\HL_phy_dp83640.obj" "source\HL_phy_tlk111.obj" "source\HL_pinmux.obj" "source\HL_pom.obj" "source\HL_sci.obj" "source\HL_sys_core.obj" "source\HL_sys_dma.obj" "source\HL_sys_intvecs.obj" "source\HL_sys_main.obj" "source\HL_sys_mpu.obj" "source\HL_sys_pcr.obj" "source\HL_sys_phantom.obj" "source\HL_sys_pmm.obj" "source\HL_sys_pmu.obj" "source\HL_sys_startup.obj" "source\HL_sys_vim.obj" "source\HL_system.obj" "source\main_blinky.obj" "source\os_croutine.obj" "source\os_event_groups.obj" "source\os_heap.obj" "source\os_list.obj" "source\os_mpu_wrappers.obj" 
-	-$(RM) "source\os_port.obj" "source\os_portasm.obj" "source\os_queue.obj" "source\os_tasks.obj" "source\os_timer.obj" 
-	-$(RM) "source\HL_adc.d" "source\HL_can.d" "source\HL_crc.d" "source\HL_dcc.d" "source\HL_ecap.d" "source\HL_emac.d" "source\HL_emif.d" "source\HL_epc.d" "source\HL_eqep.d" "source\HL_errata.d" "source\HL_errata_SSWF021_45.d" "source\HL_esm.d" "source\HL_etpwm.d" "source\HL_gio.d" "source\HL_het.d" "source\HL_i2c.d" "source\HL_lin.d" "source\HL_mdio.d" "source\HL_mibspi.d" "source\HL_nmpu.d" "source\HL_notification.d" "source\HL_phy_dp83640.d" "source\HL_phy_tlk111.d" "source\HL_pinmux.d" "source\HL_pom.d" "source\HL_sci.d" "source\HL_sys_dma.d" "source\HL_sys_main.d" "source\HL_sys_pcr.d" "source\HL_sys_phantom.d" "source\HL_sys_pmm.d" "source\HL_sys_startup.d" "source\HL_sys_vim.d" "source\HL_system.d" "source\main_blinky.d" "source\os_croutine.d" "source\os_event_groups.d" "source\os_heap.d" "source\os_list.d" "source\os_mpu_wrappers.d" "source\os_port.d" "source\os_queue.d" "source\os_tasks.d" "source\os_timer.d" 
+	-$(RM) "libcsp\examples\csp_if_fifo.obj" "libcsp\examples\kiss.obj" "libcsp\examples\simple.obj" "libcsp\src\arch\freertos\csp_malloc.obj" "libcsp\src\arch\freertos\csp_queue.obj" "libcsp\src\arch\freertos\csp_semaphore.obj" "libcsp\src\arch\freertos\csp_system.obj" "libcsp\src\arch\freertos\csp_thread.obj" "libcsp\src\arch\freertos\csp_time.obj" "libcsp\src\crypto\csp_hmac.obj" "libcsp\src\crypto\csp_sha1.obj" "libcsp\src\crypto\csp_xtea.obj" "libcsp\src\csp_bridge.obj" "libcsp\src\csp_buffer.obj" "libcsp\src\csp_conn.obj" "libcsp\src\csp_crc32.obj" "libcsp\src\csp_debug.obj" "libcsp\src\csp_dedup.obj" "libcsp\src\csp_endian.obj" "libcsp\src\csp_iflist.obj" "libcsp\src\csp_io.obj" "libcsp\src\csp_port.obj" "libcsp\src\csp_promisc.obj" "libcsp\src\csp_qfifo.obj" "libcsp\src\csp_route.obj" "libcsp\src\csp_service_handler.obj" "libcsp\src\csp_services.obj" "libcsp\src\csp_sfp.obj" "libcsp\src\drivers\can\can_socketcan.obj" "libcsp\src\interfaces\csp_if_can.obj" "libcsp\src\interfaces\csp_if_i2c.obj" 
+	-$(RM) "libcsp\src\interfaces\csp_if_kiss.obj" "libcsp\src\interfaces\csp_if_lo.obj" "libcsp\src\interfaces\csp_if_zmqhub.obj" "libcsp\src\rtable\csp_rtable_cidr.obj" "libcsp\src\rtable\csp_rtable_static.obj" "libcsp\src\transport\csp_rdp.obj" "libcsp\src\transport\csp_udp.obj" "source\HL_adc.obj" "source\HL_can.obj" "source\HL_crc.obj" "source\HL_dcc.obj" "source\HL_ecap.obj" "source\HL_emac.obj" "source\HL_emif.obj" "source\HL_epc.obj" "source\HL_eqep.obj" "source\HL_errata.obj" "source\HL_errata_SSWF021_45.obj" "source\HL_esm.obj" "source\HL_etpwm.obj" "source\HL_gio.obj" "source\HL_het.obj" "source\HL_i2c.obj" "source\HL_lin.obj" "source\HL_mdio.obj" "source\HL_mibspi.obj" "source\HL_nmpu.obj" "source\HL_notification.obj" "source\HL_phy_dp83640.obj" "source\HL_phy_tlk111.obj" "source\HL_pinmux.obj" "source\HL_pom.obj" "source\HL_sci.obj" "source\HL_sys_core.obj" "source\HL_sys_dma.obj" "source\HL_sys_intvecs.obj" "source\HL_sys_main.obj" "source\HL_sys_mpu.obj" "source\HL_sys_pcr.obj" "source\HL_sys_phantom.obj" 
+	-$(RM) "source\HL_sys_pmm.obj" "source\HL_sys_pmu.obj" "source\HL_sys_startup.obj" "source\HL_sys_vim.obj" "source\HL_system.obj" "source\main_blinky.obj" "source\os_croutine.obj" "source\os_event_groups.obj" "source\os_heap.obj" "source\os_list.obj" "source\os_mpu_wrappers.obj" "source\os_port.obj" "source\os_portasm.obj" "source\os_queue.obj" "source\os_tasks.obj" "source\os_timer.obj" 
+	-$(RM) "libcsp\examples\csp_if_fifo.d" "libcsp\examples\kiss.d" "libcsp\examples\simple.d" "libcsp\src\arch\freertos\csp_malloc.d" "libcsp\src\arch\freertos\csp_queue.d" "libcsp\src\arch\freertos\csp_semaphore.d" "libcsp\src\arch\freertos\csp_system.d" "libcsp\src\arch\freertos\csp_thread.d" "libcsp\src\arch\freertos\csp_time.d" "libcsp\src\crypto\csp_hmac.d" "libcsp\src\crypto\csp_sha1.d" "libcsp\src\crypto\csp_xtea.d" "libcsp\src\csp_bridge.d" "libcsp\src\csp_buffer.d" "libcsp\src\csp_conn.d" "libcsp\src\csp_crc32.d" "libcsp\src\csp_debug.d" "libcsp\src\csp_dedup.d" "libcsp\src\csp_endian.d" "libcsp\src\csp_iflist.d" "libcsp\src\csp_io.d" "libcsp\src\csp_port.d" "libcsp\src\csp_promisc.d" "libcsp\src\csp_qfifo.d" "libcsp\src\csp_route.d" "libcsp\src\csp_service_handler.d" "libcsp\src\csp_services.d" "libcsp\src\csp_sfp.d" "libcsp\src\drivers\can\can_socketcan.d" "libcsp\src\interfaces\csp_if_can.d" "libcsp\src\interfaces\csp_if_i2c.d" "libcsp\src\interfaces\csp_if_kiss.d" "libcsp\src\interfaces\csp_if_lo.d" 
+	-$(RM) "libcsp\src\interfaces\csp_if_zmqhub.d" "libcsp\src\rtable\csp_rtable_cidr.d" "libcsp\src\rtable\csp_rtable_static.d" "libcsp\src\transport\csp_rdp.d" "libcsp\src\transport\csp_udp.d" "source\HL_adc.d" "source\HL_can.d" "source\HL_crc.d" "source\HL_dcc.d" "source\HL_ecap.d" "source\HL_emac.d" "source\HL_emif.d" "source\HL_epc.d" "source\HL_eqep.d" "source\HL_errata.d" "source\HL_errata_SSWF021_45.d" "source\HL_esm.d" "source\HL_etpwm.d" "source\HL_gio.d" "source\HL_het.d" "source\HL_i2c.d" "source\HL_lin.d" "source\HL_mdio.d" "source\HL_mibspi.d" "source\HL_nmpu.d" "source\HL_notification.d" "source\HL_phy_dp83640.d" "source\HL_phy_tlk111.d" "source\HL_pinmux.d" "source\HL_pom.d" "source\HL_sci.d" "source\HL_sys_dma.d" "source\HL_sys_main.d" "source\HL_sys_pcr.d" "source\HL_sys_phantom.d" "source\HL_sys_pmm.d" "source\HL_sys_startup.d" "source\HL_sys_vim.d" "source\HL_system.d" "source\main_blinky.d" "source\os_croutine.d" "source\os_event_groups.d" "source\os_heap.d" "source\os_list.d" 
+	-$(RM) "source\os_mpu_wrappers.d" "source\os_port.d" "source\os_queue.d" "source\os_tasks.d" "source\os_timer.d" 
 	-$(RM) "source\HL_sys_core.d" "source\HL_sys_intvecs.d" "source\HL_sys_mpu.d" "source\HL_sys_pmu.d" "source\os_portasm.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
