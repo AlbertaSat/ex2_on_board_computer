@@ -90,6 +90,8 @@ void vTask1(void *pvParameters)
 /* USER CODE BEGIN (2) */
 /* USER CODE END */
 
+
+/* USER CODE BEGIN (3) */
 uint8   emacAddress[6U] =   {0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
 uint32  emacPhyAddress  =   1U;
 
@@ -116,22 +118,19 @@ int main(void)
 
     canInit();
 
-    canEnableErrorNotification(canREG1);
-        canEnableErrorNotification(canREG2);
-        canEnableErrorNotification(canREG3);
         canEnableErrorNotification(canREG4);
 
-           canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &tx_data1[0]);
-           canTransmit(canREG2, canMESSAGE_BOX1, (const uint8 *) &tx_data2[0]);
-           canTransmit(canREG3, canMESSAGE_BOX1, (const uint8 *) &tx_data3[0]);
+           canTransmit(canREG4, canMESSAGE_BOX1, (const uint8 *) &tx_data1[0]);
+           canTransmit(canREG4, canMESSAGE_BOX1, (const uint8 *) &tx_data2[0]);
+           canTransmit(canREG4, canMESSAGE_BOX1, (const uint8 *) &tx_data3[0]);
            canTransmit(canREG4, canMESSAGE_BOX1, (const uint8 *) &tx_data4[0]);
 
 
         while(!canIsRxMessageArrived(canREG1,canMESSAGE_BOX1)){
-           canGetData(canREG1, canMESSAGE_BOX1, rx_data1);
-           canGetData(canREG1, canMESSAGE_BOX1, rx_data2);
-           canGetData(canREG1, canMESSAGE_BOX1, rx_data3);
-           canGetData(canREG1, canMESSAGE_BOX1, rx_data4);
+           canGetData(canREG4, canMESSAGE_BOX1, rx_data1);
+           canGetData(canREG4, canMESSAGE_BOX1, rx_data2);
+           canGetData(canREG4, canMESSAGE_BOX1, rx_data3);
+           canGetData(canREG4, canMESSAGE_BOX1, rx_data4);
         }
 
            int i;
