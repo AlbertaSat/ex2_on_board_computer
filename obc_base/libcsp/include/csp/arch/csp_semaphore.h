@@ -80,7 +80,7 @@ typedef HANDLE csp_mutex_t;
 #if defined(CSP_FREERTOS)
 
 #include <FreeRTOS.h>
-#include <semphr.h>
+#include <os_semphr.h>
 
 #define CSP_SEMAPHORE_OK 	pdPASS
 #define CSP_SEMAPHORE_ERROR	pdFAIL

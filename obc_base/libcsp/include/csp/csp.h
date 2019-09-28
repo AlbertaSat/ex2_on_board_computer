@@ -28,7 +28,7 @@ extern "C" {
 /* Includes */
 #include <stdint.h>
 
-//#include <csp/csp_autoconfig.h>
+#include <csp/csp_autoconfig.h>
 
 /* CSP includes */
 #include "csp_types.h"

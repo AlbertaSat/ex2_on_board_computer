@@ -70,8 +70,8 @@ CSP_DEFINE_TASK(task_client) {
     char outbuf = 'q';
     char inbuf[3] = {0};
     int pingResult;
-
-    for(int i = 50; i <= 200; i+= 50) {
+    int i;
+    for(i = 50; i <= 200; i+= 50) {
         pingResult = csp_ping(MY_ADDRESS, 1000, 100, CSP_O_NONE);
         printf("Ping with payload of %d bytes, took %d ms\n", i, pingResult);
         csp_sleep_ms(1000);

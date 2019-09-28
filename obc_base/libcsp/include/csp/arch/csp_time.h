@@ -41,7 +41,7 @@ extern "C" {
 #if defined(CSP_FREERTOS)
 
 #include <FreeRTOS.h>
-#include <task.h>
+#include <os_task.h>
 
 #endif // CSP_FREERTOS
 
