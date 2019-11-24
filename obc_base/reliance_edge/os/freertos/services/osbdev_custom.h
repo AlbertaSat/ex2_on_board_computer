@@ -70,21 +70,8 @@ static REDSTATUS DiskOpen(
     uint8_t         bVolNum,
     BDEVOPENMODE    mode)
 {
-    REDSTATUS       ret;
-
-    /*  Avoid warnings about unused function parameters.
-    */
-    (void)bVolNum;
-    (void)mode;
-
     //  Insert code here to open/initialize the block device.
-    disk_initialize();//what to use as argument? Physical drive number?
-    //
-    //REDERROR();
-    //ret = -RED_ENOSYS;
-    ret = 0;
-
-    return ret;
+    return disk_initialize();
 }
 
 
