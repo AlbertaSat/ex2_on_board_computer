@@ -30,7 +30,7 @@ typedef enum {
 
 
 DSTATUS disk_initialize ();
-DSTATUS disk_status (BYTE pdrv);
+DSTATUS disk_status ();
 DRESULT disk_read (BYTE* buff, DWORD sector, UINT count);
 DRESULT disk_write (const BYTE* buff, DWORD sector, UINT count);
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
