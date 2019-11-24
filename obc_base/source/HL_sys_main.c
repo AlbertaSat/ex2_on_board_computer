@@ -79,35 +79,37 @@ xTaskHandle xTask1Handle;
 void vTask1(void *pvParameters)
 {
 
-        int32_t iErr;
-        const char *pszVolume0 = gaRedVolConf[0].pszPathPrefix;
+    int32_t iErr;
+    const char *pszVolume0 = gaRedVolConf[0].pszPathPrefix;
 
-        iErr = red_init();
-        if (iErr == -1)
-        {
-            fprintf(stderr, "Unexpected error %d from red_init()\n", (int)red_errno);
-            exit(red_errno);
-        }
+    iErr = red_init();
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_init()\n", (int)red_errno);
+        exit(red_errno);
+    }
 
-        iErr = red_format(pszVolume0);
-        if (iErr == -1)
-        {
-            fprintf(stderr, "Unexpected error %d from red_format()\n", (int)red_errno);
-            exit(red_errno);
-        }
+    iErr = red_format(pszVolume0);
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_format()\n", (int)red_errno);
+        exit(red_errno);
+    }
 
-        iErr = red_mount(pszVolume0);
-        if (iErr == -1)
-        {
-            fprintf(stderr, "Unexpected error %d from red_mount()\n", (int)red_errno);
-            exit(red_errno);
-        }
-}
+    iErr = red_mount(pszVolume0);
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_mount()\n", (int)red_errno);
+        exit(red_errno);
+    }
 
-void vTask2(void *pvParameters)
-{
+    fprintf(stderr, "Mounted (errno = %d)\n", (int)red_errno);
 
+    char buf[1024] = "";
 
+    red_getcwd(buf, 1024);
+
+    fprintf(stderr, "CWD = %s (errno = %d)\n", buf, (int)red_errno);
 }
 
 /* USER CODE END */
@@ -129,31 +131,8 @@ uint32 	emacPhyAddress	=	1U;
 int main(void)
 {
 /* USER CODE BEGIN (3) */
-
-    /*
-    spiDAT1_t dat1 = {0U, 0U, SPI_FMT_0, SPI_CS_1};
     spiInit();
     gioInit();
-    //gioToggleBit(gioPORTA, 0U);
-    //gioPORTA->DSET = 0x01;
-    //gioPORTA-> DCLR = 0x01;
-    uint16 nextword = 0b1101011;
-
-    for(;;){
-        spiTransmitData(spiREG3, &dat1, 1, &nextword);
-        gioPORTA->DSET = 0x01;
-        spiTransmitData(spiREG3, &dat1, 1, &nextword);
-        gioPORTA-> DCLR = 0x01;
-        spiTransmitData(spiREG3, &dat1, 1, &nextword);
-    }
-    uint16 receivedword;
-    receivedword = spiREG3->BUF;
-    uint32 flagregister = spiREG3->FLG;
-    */
-    spiInit();
-    gioInit();
-    //gioPORTA->DSET = 0x01;
-    //gioPORTA-> DCLR = 0x01;
 
     /* Create Task 1 */
     if (xTaskCreate(vTask1,"Task1", 1024, NULL, 1, &xTask1Handle) != pdTRUE)
@@ -177,26 +156,26 @@ int main(void)
 /* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an
 implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
 used by the Idle task. */
-void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
-                                    StackType_t **ppxIdleTaskStackBuffer,
-                                    uint32_t *pulIdleTaskStackSize )
+void vApplicationGetIdleTaskMemory(
+        StaticTask_t **ppxIdleTaskTCBBuffer,
+        StackType_t **ppxIdleTaskStackBuffer,
+        uint32_t *pulIdleTaskStackSize
+)
 {
 /* If the buffers to be provided to the Idle task are declared inside this
-function then they must be declared static – otherwise they will be allocated on
+function then they must be declared static ï¿½ otherwise they will be allocated on
 the stack and so not exists after this function exits. */
     static StaticTask_t xIdleTaskTCB;
     static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
-    /* Pass out a pointer to the StaticTask_t structure in which the Idle task’s
+    /* Pass out a pointer to the StaticTask_t structure in which the Idle taskï¿½s
     state will be stored. */
     *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
-    /* Pass out the array that will be used as the Idle task’s stack. */
+    /* Pass out the array that will be used as the Idle taskï¿½s stack. */
     *ppxIdleTaskStackBuffer = uxIdleTaskStack;
     /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
     Note that, as the array is necessarily of type StackType_t,
     configMINIMAL_STACK_SIZE is specified in words, not bytes. */
     *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
 }
-
-
 
 /* USER CODE END */
