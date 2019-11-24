@@ -56,7 +56,7 @@ extern "C" {
 #define COUNT_DOWN    0U
 
 /** @brief Enumeration to define the pulse width modulation (ETPWM) clock divider
-*   TBCLK = VCLK4 / (HSPCLKDIV × CLKDIV)
+*   TBCLK = VCLK4 / (HSPCLKDIV ï¿½ CLKDIV)
 */
 typedef enum
 {
@@ -71,7 +71,7 @@ typedef enum
 } etpwmClkDiv_t;
 
 /** @brief Enumeration to define the pulse width modulation (ETPWM) high speed clock divider
-*   TBCLK = VCLK4 / (HSPCLKDIV × CLKDIV)
+*   TBCLK = VCLK4 / (HSPCLKDIV ï¿½ CLKDIV)
 */
 typedef enum
 {

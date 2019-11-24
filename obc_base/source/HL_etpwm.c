@@ -816,7 +816,7 @@ void etpwmStopTBCLK(void)
 *                     - HspClkDiv_by_14
 *
 *   This function sets the TimeBase Clock and the High Speed time base clock divider
-*   TBCLK = VCLK4 / (HSPCLKDIV × CLKDIV)
+*   TBCLK = VCLK4 / (HSPCLKDIV ï¿½ CLKDIV)
 */
 /* SourceId : ETPWM_SourceId_004 */
 /* DesignId : ETPWM_DesignId_004 */
