@@ -1,0 +1,8 @@
+
+**** Build of configuration Debug for project DCAN_1 ****
+
+"C:\\ti\\ccs910\\ccs\\utils\\bin\\gmake" -k -j 2 all -O 
+ 
+gmake[1]: 'DCAN_1.out' is up to date.
+
+**** Build Finished ****
