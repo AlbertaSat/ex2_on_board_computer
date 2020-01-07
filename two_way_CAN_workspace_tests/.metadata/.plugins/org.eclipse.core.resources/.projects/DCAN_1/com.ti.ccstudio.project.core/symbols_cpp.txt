@@ -1,7 +1,7 @@
 #define __unsigned_chars__ 1	/* Predefined */
 #define __PRAGMA_REDEFINE_EXTNAME 1	/* Predefined */
-#define __DATE__ "Nov 24 2019"	/* Predefined */
-#define __TIME__ "14:36:42"	/* Predefined */
+#define __DATE__ "Nov 25 2019"	/* Predefined */
+#define __TIME__ "18:14:26"	/* Predefined */
 #define __STDC__ 1	/* Predefined */
 #define __STDC_HOSTED__ 1	/* Predefined */
 #define __cplusplus 201402L	/* Predefined */
@@ -52,9 +52,9 @@
 #define __VERSION__ "EDG g++ 4.8 mode"	/* Predefined */
 #define __CHAR16_TYPE__ unsigned short	/* Predefined */
 #define __CHAR32_TYPE__ unsigned int	/* Predefined */
-#define __TI_COMPILER_VERSION__ 18012002	/* Predefined */
-#define __COMPILER_VERSION__ 18012002	/* Predefined */
-#define __TI_COMPILER_VERSION_QUAL_ID__ 19101	/* Predefined */
+#define __TI_COMPILER_VERSION__ 18012003	/* Predefined */
+#define __COMPILER_VERSION__ 18012003	/* Predefined */
+#define __TI_COMPILER_VERSION_QUAL_ID__ 19205	/* Predefined */
 #define __TI_COMPILER_VERSION_QUAL__ QUAL_LETTER	/* Predefined */
 #define __TMS470__ 1	/* Predefined */
 #define __TI_ARM__ 1	/* Predefined */
