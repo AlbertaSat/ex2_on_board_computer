@@ -1,5 +1,7 @@
-This contains a ‘send’ project (DCAN_TX) to be loaded onto one Hercules development board that transmits a 
-message over CAN, and a ‘receive’ project (DCAN_RX) on a second board that receives the message using the CAN 
+DCAN_RX and DCAN_TX / DCAN_TX_LC43X:
+
+This contains a â€˜sendâ€™ project (DCAN_TX) to be loaded onto one Hercules development board that transmits a 
+message over CAN, and a â€˜receiveâ€™ project (DCAN_RX) on a second board that receives the message using the CAN 
 module. The obc_base folder is not part of the CAN project.
 
 The projects are created to work with the following boards and CAN modules:
@@ -15,3 +17,10 @@ To run the code:
 sent by DCAN_TX (you should receive the message "ALBERTAS" over CAN)
 
 This code is based off the following tutorial: https://training.ti.com/hercules-how-tutorial-can-communication
+
+DCAN_TX_LC43X contains equivalent code to DCAN_TX but for the TMS570LC43x instead of the TMS570LS12x.
+
+
+two_way_CAN_workspace_tests:
+
+See the README.txt inside the two_way_CAN_workspace_tests folder for more information.
