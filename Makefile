@@ -93,7 +93,7 @@ INCLUDE			+= -I$(SRCROOT)/libcsp/include
 INCLUDE 		+= -I$(SRCROOT)/libcsp/build/include
 
 # includeing .a fils
-STATIC_OBJS  	+= $(SRCROOT)/Project/FileTransfer/CCSDS_FileDeliveryProtocol/Program/src/file_delivery_app.a
+STATIC_OBJS  	+= $(SRCROOT)/Project/FileTransfer/file_delivery_app.a
 STATIC_OBJS  	+= $(SRCROOT)/libcsp/build/libcsp.a
 
 
@@ -146,7 +146,7 @@ CFLAGS += $(INCLUDES) $(CWARNS) -O2
 # Rules
 .PHONY : all
 all: setup
-	$(MAKE) -C $(SRCROOT)/Project/FileTransfer/CCSDS_FileDeliveryProtocol/Program/src/ lib
+	#$(MAKE) -C $(SRCROOT)/Project/FileTransfer/CCSDS_FileDeliveryProtocol/Program/src/ lib
 	$(MAKE) SatelliteSim
 	 
 .PHONY : setup
