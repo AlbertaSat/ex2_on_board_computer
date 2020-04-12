@@ -100,15 +100,24 @@ int main(void)
 	vStartFSWriteTask(mainCREATOR_TASK_PRIORITY);
 */
 
-    Protocol_state *p_state = init_ftp(1);
-    printf("My ftp ID %d\n", p_state->my_cfdp_id);
-	
-	ssp_connectionless_server(p_state);
+	//start a ftp server task, these IDs will be found in the MIB (management information base)
+	int my_id = 3;
+ 	FTP *app = init_ftp(my_id);
+    if (app == NULL) {
+        return 1;
+    }
+    printf("My ftp ID %d\n", app->my_cfdp_id);
 
-	Client *remote = ssp_connectionless_client(1, p_state);
-	
-	put_request("TEST.txt", "newFILE.txt", 0, 0, 0, 0, NULL, NULL, remote, p_state);
+	//load an ftp put request
+	Request *put_req = put_request(app->my_cfdp_id, "FileFolder/pic.jpeg", "FileFolder/put.jpg", ACKNOWLEDGED_MODE, app);
+	//start an ftp put request
+	start_request(put_req);
 
+	//load an ftp get request (proxy to myself request)
+	Request *proxy_req = put_request(app->my_cfdp_id, NULL, NULL, ACKNOWLEDGED_MODE, app);
+	add_proxy_message_to_request(app->my_cfdp_id, 1, "FileFolder/pic.jpeg", "FileFolder/proxy.jpg", proxy_req);
+	start_request(proxy_req);
+	
 	/* Start the scheduler itself. */
 	vTaskStartScheduler();
 
