@@ -37,7 +37,7 @@ CFLAGS = ['-Os', '-Wall', '-g', '-std=gnu99', '-m32']
 
 then run ./waf build
 
-# We need to install libcsp manually
+# To Run
 to run:
 ./SatelliteSim
 
