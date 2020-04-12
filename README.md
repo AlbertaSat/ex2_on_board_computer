@@ -24,7 +24,24 @@ $ make all
 If you just want to link the object files without rebuilding everything, run  
 $ make SatelliteSim
 
+# We need to install libcsp manually
 
+cd into libcsp and run
+./waf configure --with-os=posix
+
+then we need to change this line in build/c4che/_cache.py:
+CFLAGS = ['-Os', '-Wall', '-g', '-std=gnu99']
+
+to this:
+CFLAGS = ['-Os', '-Wall', '-g', '-std=gnu99', '-m32']
+
+then run ./waf build
+
+# We need to install libcsp manually
+to run:
+./SatelliteSim
+
+the entry point of SatelliteSim is in /Project/main.c
 
 # Adding new code
 
