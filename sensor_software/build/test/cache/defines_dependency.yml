@@ -1,0 +1,7 @@
+---
+src/adc_handler.c:
+- TEST
+build/test/mocks/mock_spi.c:
+- TEST
+src/sensor.c:
+- TEST

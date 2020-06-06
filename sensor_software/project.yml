@@ -35,6 +35,8 @@
     - -:test/support
   :source:
     - src/**
+    - ../include
+    - ../source
   :support:
     - test/support
   :libraries: []
@@ -58,6 +60,7 @@
   :plugins:
     - :ignore
     - :callback
+    - :expect_any_args
   :treat_as:
     uint8:    HEX8
     uint16:   HEX16
