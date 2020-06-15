@@ -7,31 +7,29 @@ ADC_Handler handle;
 
 void setUp(void)
 {
-    spiInit_Expect();
-    adc_init(&handle, spiREG3);
+    adc_init(&handle, 4096);
 }
 
 void tearDown(void)
 {
 }
 
-void test_adc_handler_SetControlReg(void)
-{
-    spiTransmitData_ExpectAnyArgsAndReturn(0);
-
-    adc_set_control_reg(&handle, 0x0FFF);
-
-    TEST_ASSERT_EQUAL_INT(4096, handle.adc_res);
-    TEST_ASSERT_EQUAL_HEX16(0x0FFF, handle.control_reg_val);  
-}
-
 void test_adc_handler_getVal(void) 
 {
+
+    float temp = 0;
     uint16_t val = 0;
 
-    spiReceiveData_ExpectAnyArgsAndReturn(0x7FFF);
+    adc_set_control_reg(&handle, 0,
+                                 1,
+                                 0,
+                                 0,
+                                 0);
 
-    val = adc_get_val(&handle);
+    adc_get_raw(&handle, &val);
 
-    TEST_ASSERT_EQUAL_HEX16(0x7FFF, val);
+    temp = adc_get_temp(&handle, val, 2.5);
+
+    //TEST_ASSERT_EQUAL_HEX16(0x7FFF, val);
+    TEST_ASSERT_EQUAL_FLOAT(25.0, temp);
 }

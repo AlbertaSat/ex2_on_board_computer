@@ -6,6 +6,8 @@
 
 
 
+
+
 ADC_Handler handle;
 
 
@@ -14,9 +16,7 @@ void setUp(void)
 
 {
 
-    spiInit_CMockExpect(10);
-
-    adc_init(&handle, ((spiBASE_t *)0xFFF7F800U));
+    adc_init(&handle, 4096);
 
 }
 
@@ -30,47 +30,35 @@ void tearDown(void)
 
 
 
-void test_adc_handler_SetControlReg(void)
-
-{
-
-    spiTransmitData_CMockExpectAnyArgsAndReturn(20, 0);
-
-
-
-    adc_set_control_reg(&handle, 0x0FFF);
-
-
-
-    UnityAssertEqualNumber((UNITY_INT)((4096)), (UNITY_INT)((handle.adc_res)), (
-
-   ((void *)0)
-
-   ), (UNITY_UINT)(24), UNITY_DISPLAY_STYLE_INT);
-
-    UnityAssertEqualNumber((UNITY_INT)(UNITY_INT16)((0x0FFF)), (UNITY_INT)(UNITY_INT16)((handle.control_reg_val)), (
-
-   ((void *)0)
-
-   ), (UNITY_UINT)(25), UNITY_DISPLAY_STYLE_HEX16);
-
-}
-
-
-
 void test_adc_handler_getVal(void)
 
 {
+
+
+
+    float temp = 0;
 
     uint16_t val = 0;
 
 
 
-    spiReceiveData_CMockExpectAnyArgsAndReturn(32, 0x7FFF);
+    adc_set_control_reg(&handle, 0,
+
+                                 1,
+
+                                 0,
+
+                                 0,
+
+                                 0);
 
 
 
-    val = adc_get_val(&handle);
+    adc_get_raw(&handle, &val);
+
+
+
+    temp = adc_get_temp(&handle, val, 2.5);
 
 
 
@@ -78,6 +66,6 @@ void test_adc_handler_getVal(void)
 
    ((void *)0)
 
-   ), (UNITY_UINT)(36), UNITY_DISPLAY_STYLE_HEX16);
+   ), (UNITY_UINT)(33), UNITY_DISPLAY_STYLE_HEX16);
 
 }

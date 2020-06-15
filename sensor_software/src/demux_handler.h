@@ -1,7 +1,7 @@
 #ifndef DEMUX_HANDLER_H
 #define DEMUX_HANDLER_H
 
-#include "gio.h"
+//#include "gio.h"
 
 enum pin_state_t{
     LOW = 0,
@@ -17,7 +17,14 @@ enum spi_cs_line_t{
     SPI_CS_N 
 };
 
-void demux_init(gioPORT_t *gio);
+typedef struct demux_handler_t DEMUX_Handler;
+
+struct demux_handler_t{
+    //gioPORT_t *gio_port_addr;
+}demux_handler_t;
+
+
+// void demux_init(DEMUX_Handler *handl, gioPORT_t *gio);
 
 void set_pin(enum spi_cs_line_t, enum pin_state_t);
 

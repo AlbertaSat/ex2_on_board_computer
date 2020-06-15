@@ -2,21 +2,17 @@
 :source:
   :path: test
   :file: test_adc_handler.c
-:successes:
-- :test: test_adc_handler_SetControlReg
-  :line: 18
-  :message: ''
-  :unity_test_time: 0
+:successes: []
 :failures:
 - :test: test_adc_handler_getVal
-  :line: 36
+  :line: 33
   :message: Expected 0x7FFF Was 0x0000
   :unity_test_time: 0
 :ignores: []
 :counts:
-  :total: 2
-  :passed: 1
+  :total: 1
+  :passed: 0
   :failed: 1
   :ignored: 0
 :stdout: []
-:time: 0.0010074630044982769
+:time: 0.0013651810004375875

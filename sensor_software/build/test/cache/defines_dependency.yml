@@ -5,3 +5,7 @@ build/test/mocks/mock_spi.c:
 - TEST
 src/sensor.c:
 - TEST
+src/demux_handler.c:
+- TEST
+src/panel_handler.c:
+- TEST

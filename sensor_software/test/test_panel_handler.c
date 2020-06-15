@@ -1,6 +1,6 @@
 #include "unity.h"
 
-#include "sensor.h"
+#include "panel_handler.h"
 
 void setUp(void)
 {

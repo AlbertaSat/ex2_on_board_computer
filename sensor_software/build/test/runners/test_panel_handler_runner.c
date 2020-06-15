@@ -2,8 +2,6 @@
 
 /*=======Automagically Detected Files To Include=====*/
 #include "unity.h"
-#include "cmock.h"
-#include "mock_spi.h"
 
 int GlobalExpectCount;
 int GlobalVerifyOrder;
@@ -12,7 +10,7 @@ char* GlobalOrderError;
 /*=======External Functions This Runner Calls=====*/
 extern void setUp(void);
 extern void tearDown(void);
-extern void test_adc_handler_getVal(void);
+extern void test_sensor_NeedToImplement(void);
 
 
 /*=======Mock Management=====*/
@@ -21,15 +19,12 @@ static void CMock_Init(void)
   GlobalExpectCount = 0;
   GlobalVerifyOrder = 0;
   GlobalOrderError = NULL;
-  mock_spi_Init();
 }
 static void CMock_Verify(void)
 {
-  mock_spi_Verify();
 }
 static void CMock_Destroy(void)
 {
-  mock_spi_Destroy();
 }
 
 /*=======Test Reset Options=====*/
@@ -79,9 +74,8 @@ static void run_test(UnityTestFunction func, const char* name, int line_num)
 /*=======MAIN=====*/
 int main(void)
 {
-  UnityBegin("test_adc_handler.c");
-  run_test(test_adc_handler_getVal, "test_adc_handler_getVal", 17);
+  UnityBegin("test_panel_handler.c");
+  run_test(test_sensor_NeedToImplement, "test_sensor_NeedToImplement", 13);
 
-  CMock_Guts_MemFreeFinal();
   return UnityEnd();
 }

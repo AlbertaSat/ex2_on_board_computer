@@ -1,15 +1,11 @@
 #include "demux_handler.h"
 
-struct {
-    gioPORT_t *gio_port_addr;
-}demux_handler_t;
 
+// void demux_init(DEMUX_Handler *handl, gioPORT_t *gio){
+//     handl->gio_port_addr = gio;
 
-void demux_init(gioPORT_t *gio){
-    demux_handler_t.gio_port_addr = gio;
-
-    gioInit();
-}
+//     gioInit();
+// }
 
 void set_pin(enum spi_cs_line_t cs_line, enum pin_state_t state) {
     switch(cs_line){
