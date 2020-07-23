@@ -1,0 +1,23 @@
+{
+    "cfdp_id": 4,
+    "UT_address" : 2130706433,
+    "UT_port" : 1114,
+    "type_of_network" : 0,
+    "default_transmission_mode" : 1,
+    "MTU" : 1500,
+
+    "one_way_light_time" : 123,
+    "total_round_trip_allowance" : 123,
+    "async_NAK_interval" : 123,
+    "async_keep_alive_interval" : 123,
+    "async_report_interval" : 123,
+    "immediate_nak_mode_enabled" : 123,
+    "prompt_transmission_interval" : 123,
+    "disposition_of_incomplete" : 123,
+    
+    "CRC_required" : 0,
+    "keep_alive_discrepancy_limit" : 8,
+    "positive_ack_timer_expiration_limit" : 123,
+    "nak_timer_expiration_limit" : 123,
+    "transaction_inactivity_limit" : 123
+}

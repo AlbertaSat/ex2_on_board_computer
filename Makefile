@@ -82,10 +82,11 @@ INCLUDES        += -I$(SRCROOT)/Project
 INCLUDES		+= -I$(SRCROOT)/Project/FileSystem
 INCLUDES		+= -I$(SRCROOT)/Project/FileTransfer/CCSDS_FileDeliveryProtocol/Program/include
 
-
-INCLUDE 		+= -I$(SRCROOT)/libcsp/include/csp
-INCLUDE			+= -I$(SRCROOT)/libcsp/include
-INCLUDE 		+= -I$(SRCROOT)/libcsp/build/include
+#libcsp
+INCLUDES 		+= -I$(SRCROOT)/libcsp/include/csp
+INCLUDES		+= -I$(SRCROOT)/libcsp/include
+INCLUDES 		+= -I$(SRCROOT)/libcsp/build/include
+INCLUDES 		+= -I$(SRCROOT)/libcsp/src
 
 # includeing .a fils
 STATIC_OBJS  	+= $(SRCROOT)/Project/FileTransfer/CCSDS_FileDeliveryProtocol/Program/src/file_delivery_app.a
