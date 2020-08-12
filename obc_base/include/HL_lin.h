@@ -219,110 +219,6 @@ typedef struct lin_config_reg
 } lin_config_reg_t;
 
 
-/* Configuration registers initial value for LIN*/
-#define LIN1_GCR0_CONFIGVALUE       0x00000001U   
-#define LIN1_GCR1_CONFIGVALUE       (0x03000CC0U \
-                                 | (uint32)((uint32)1U << 12U) \
-                                 | (uint32)((uint32)0U << 2U)\
-								 | (uint32)((uint32)1U << 5U))
-#define LIN1_GCR2_CONFIGVALUE       0x00000000U       
-#define LIN1_SETINTLVL_CONFIGVALUE  (0x00000000U \
-								 |	0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U)
-
-#define LIN1_SETINT_CONFIGVALUE    (0x00000000U \
-								 |	0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U)
-
-#define LIN1_FORMAT_CONFIGVALUE     ((uint32)((uint32)(8U - 1U) << 16U))
-#define LIN1_BRSR_CONFIGVALUE       (233U)
-#define LIN1_COMP_CONFIGVALUE       ((uint32)((uint32)(1U - 1U) << 8U) | (13U - 13U))
-#define LIN1_MASK_CONFIGVALUE       ((uint32)((uint32)0xFFU << 16U) | 0xFFU)
-#define LIN1_MBRSR_CONFIGVALUE      (3370U)
-#define LIN1_FUN_CONFIGVALUE        (4U | 2U | 0U)
-#define LIN1_DIR_CONFIGVALUE        (0U | 0U | 0U)
-#define LIN1_ODR_CONFIGVALUE        (0U | 0U | 0U)
-#define LIN1_PD_CONFIGVALUE         (0U | 0U | 0U)
-#define LIN1_PSL_CONFIGVALUE        (4U | 2U | 1U)
-
- 
-/* Configuration registers initial value for LIN*/
-#define LIN2_GCR0_CONFIGVALUE       0x00000001U   
-#define LIN2_GCR1_CONFIGVALUE       (0x03000CC0U \
-                                 | (uint32)((uint32)1U << 12U) \
-                                 | (uint32)((uint32)0U << 2U) \
-								 | (uint32)((uint32)1U << 5U))
-#define LIN2_GCR2_CONFIGVALUE       0x00000000U       
-#define LIN2_SETINTLVL_CONFIGVALUE  (0x00000000U \
-								 |	0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U)
-
-#define LIN2_SETINT_CONFIGVALUE     (0x00000000U \
-								 |	0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U \
-                                 | 0x00000000U)
-
-#define LIN2_FORMAT_CONFIGVALUE     ((uint32)((uint32)(8U - 1U) << 16U))
-#define LIN2_BRSR_CONFIGVALUE       (233U)
-#define LIN2_COMP_CONFIGVALUE       ((uint32)((uint32)(1U - 1U) << 8U) | (13U - 13U))
-#define LIN2_MASK_CONFIGVALUE       ((uint32)((uint32)0xFFU << 16U) | 0xFFU)
-#define LIN2_MBRSR_CONFIGVALUE      (3370U)
-#define LIN2_FUN_CONFIGVALUE        (4U | 2U | 0U)
-#define LIN2_DIR_CONFIGVALUE        (0U | 0U | 0U)
-#define LIN2_ODR_CONFIGVALUE        (0U | 0U | 0U)
-#define LIN2_PD_CONFIGVALUE         (0U | 0U | 0U)
-#define LIN2_PSL_CONFIGVALUE        (4U | 2U | 1U)
 
 /** 
  *  @defgroup LIN LIN
@@ -358,8 +254,6 @@ void   linEnableNotification(linBASE_t *lin, uint32 flags);
 void   linDisableNotification(linBASE_t *lin, uint32 flags);
 void   linEnableLoopback(linBASE_t *lin, loopBackType_t Loopbacktype);
 void   linDisableLoopback(linBASE_t *lin);
-void     lin1GetConfigValue(lin_config_reg_t *config_reg, config_value_type_t type);
-void     lin2GetConfigValue(lin_config_reg_t *config_reg, config_value_type_t type);
 uint32   linGetStatusFlag(linBASE_t *lin);
 void     linClearStatusFlag(linBASE_t *lin, uint32 flags);
 

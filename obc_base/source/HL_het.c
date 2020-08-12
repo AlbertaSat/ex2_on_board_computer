@@ -2136,7 +2136,7 @@ void hetInit(void)
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
-                 | (uint32) 0x00000000U
+                 | (uint32) 0x00040000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
@@ -2204,7 +2204,7 @@ void hetInit(void)
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
-                    | (uint32) 0x00000000U
+                    | (uint32) 0x00040000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
@@ -2238,7 +2238,7 @@ void hetInit(void)
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
-                 | (uint32) 0x00000000U
+                 | (uint32) 0x00040000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U

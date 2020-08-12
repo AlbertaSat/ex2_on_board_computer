@@ -124,16 +124,16 @@ void i2cInit(void)
                   | (uint32)(0U);     /* scl pin */
 
     /** - set i2c pins output direction */
-    i2cREG1->DIR = (uint32)((uint32)0U << 1U)     /* sda pin */
-                 | (uint32)(0U);     /* scl pin */
+    i2cREG1->DIR = (uint32)((uint32)1U << 1U)     /* sda pin */
+                 | (uint32)(1U);     /* scl pin */
 
     /** - set i2c pins open drain enable */
-    i2cREG1->PDR = (uint32)((uint32)0U << 1U)     /* sda pin */
-                 | (uint32)(0U);     /* scl pin */
+    i2cREG1->PDR = (uint32)((uint32)1U << 1U)     /* sda pin */
+                 | (uint32)(1U);     /* scl pin */
 
     /** - set i2c pins pullup/pulldown enable */
-    i2cREG1->PDIS = (uint32)((uint32)0U << 1U)     /* sda pin */
-                | (uint32)(0U);     /* scl pin */
+    i2cREG1->PDIS = (uint32)((uint32)1U << 1U)     /* sda pin */
+                | (uint32)(1U);     /* scl pin */
 
     /** - set i2c pins pullup/pulldown select */
     i2cREG1->PSEL = (uint32)((uint32)1U << 1U)     /* sda pin */
@@ -203,16 +203,16 @@ void i2cInit(void)
                   | (uint32)(0U);     /* scl pin */
 
     /** - set i2c pins output direction */
-    i2cREG2->DIR = (uint32)((uint32)0U << 1U)     /* sda pin */
-                 | (uint32)(0U);     /* scl pin */
+    i2cREG2->DIR = (uint32)((uint32)1U << 1U)     /* sda pin */
+                 | (uint32)(1U);     /* scl pin */
 
     /** - set i2c pins open drain enable */
-    i2cREG2->PDR = (uint32)((uint32)0U << 1U)     /* sda pin */
-                 | (uint32)(0U);     /* scl pin */
+    i2cREG2->PDR = (uint32)((uint32)1U << 1U)     /* sda pin */
+                 | (uint32)(1U);     /* scl pin */
 
     /** - set i2c pins pullup/pulldown enable */
-    i2cREG2->PDIS = (uint32)((uint32)0U << 1U)     /* sda pin */
-                | (uint32)(0U);     /* scl pin */
+    i2cREG2->PDIS = (uint32)((uint32)1U << 1U)     /* sda pin */
+                | (uint32)(1U);     /* scl pin */
 
     /** - set i2c pins pullup/pulldown select */
     i2cREG2->PSEL = (uint32)((uint32)1U << 1U)     /* sda pin */

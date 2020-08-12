@@ -32,7 +32,6 @@ C_SRCS += \
 ../source/HL_gio.c \
 ../source/HL_het.c \
 ../source/HL_i2c.c \
-../source/HL_lin.c \
 ../source/HL_mdio.c \
 ../source/HL_mibspi.c \
 ../source/HL_nmpu.c \
@@ -78,7 +77,6 @@ C_DEPS += \
 ./source/HL_gio.d \
 ./source/HL_het.d \
 ./source/HL_i2c.d \
-./source/HL_lin.d \
 ./source/HL_mdio.d \
 ./source/HL_mibspi.d \
 ./source/HL_nmpu.d \
@@ -124,7 +122,6 @@ OBJS += \
 ./source/HL_gio.obj \
 ./source/HL_het.obj \
 ./source/HL_i2c.obj \
-./source/HL_lin.obj \
 ./source/HL_mdio.obj \
 ./source/HL_mibspi.obj \
 ./source/HL_nmpu.obj \
@@ -182,7 +179,6 @@ OBJS__QUOTED += \
 "source\HL_gio.obj" \
 "source\HL_het.obj" \
 "source\HL_i2c.obj" \
-"source\HL_lin.obj" \
 "source\HL_mdio.obj" \
 "source\HL_mibspi.obj" \
 "source\HL_nmpu.obj" \
@@ -233,7 +229,6 @@ C_DEPS__QUOTED += \
 "source\HL_gio.d" \
 "source\HL_het.d" \
 "source\HL_i2c.d" \
-"source\HL_lin.d" \
 "source\HL_mdio.d" \
 "source\HL_mibspi.d" \
 "source\HL_nmpu.d" \
@@ -286,7 +281,6 @@ C_SRCS__QUOTED += \
 "../source/HL_gio.c" \
 "../source/HL_het.c" \
 "../source/HL_i2c.c" \
-"../source/HL_lin.c" \
 "../source/HL_mdio.c" \
 "../source/HL_mibspi.c" \
 "../source/HL_nmpu.c" \
