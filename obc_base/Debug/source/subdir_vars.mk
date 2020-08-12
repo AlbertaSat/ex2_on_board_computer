@@ -33,7 +33,6 @@ C_SRCS += \
 ../source/HL_het.c \
 ../source/HL_i2c.c \
 ../source/HL_mdio.c \
-../source/HL_mibspi.c \
 ../source/HL_nmpu.c \
 ../source/HL_notification.c \
 ../source/HL_phy_dp83640.c \
@@ -41,6 +40,7 @@ C_SRCS += \
 ../source/HL_pinmux.c \
 ../source/HL_pom.c \
 ../source/HL_sci.c \
+../source/HL_spi.c \
 ../source/HL_sys_dma.c \
 ../source/HL_sys_main.c \
 ../source/HL_sys_pcr.c \
@@ -58,7 +58,8 @@ C_SRCS += \
 ../source/os_port.c \
 ../source/os_queue.c \
 ../source/os_tasks.c \
-../source/os_timer.c 
+../source/os_timer.c \
+../source/rtcmk.c 
 
 C_DEPS += \
 ./source/HL_adc.d \
@@ -78,7 +79,6 @@ C_DEPS += \
 ./source/HL_het.d \
 ./source/HL_i2c.d \
 ./source/HL_mdio.d \
-./source/HL_mibspi.d \
 ./source/HL_nmpu.d \
 ./source/HL_notification.d \
 ./source/HL_phy_dp83640.d \
@@ -86,6 +86,7 @@ C_DEPS += \
 ./source/HL_pinmux.d \
 ./source/HL_pom.d \
 ./source/HL_sci.d \
+./source/HL_spi.d \
 ./source/HL_sys_dma.d \
 ./source/HL_sys_main.d \
 ./source/HL_sys_pcr.d \
@@ -103,7 +104,8 @@ C_DEPS += \
 ./source/os_port.d \
 ./source/os_queue.d \
 ./source/os_tasks.d \
-./source/os_timer.d 
+./source/os_timer.d \
+./source/rtcmk.d 
 
 OBJS += \
 ./source/HL_adc.obj \
@@ -123,7 +125,6 @@ OBJS += \
 ./source/HL_het.obj \
 ./source/HL_i2c.obj \
 ./source/HL_mdio.obj \
-./source/HL_mibspi.obj \
 ./source/HL_nmpu.obj \
 ./source/HL_notification.obj \
 ./source/HL_phy_dp83640.obj \
@@ -131,6 +132,7 @@ OBJS += \
 ./source/HL_pinmux.obj \
 ./source/HL_pom.obj \
 ./source/HL_sci.obj \
+./source/HL_spi.obj \
 ./source/HL_sys_core.obj \
 ./source/HL_sys_dma.obj \
 ./source/HL_sys_intvecs.obj \
@@ -153,7 +155,8 @@ OBJS += \
 ./source/os_portasm.obj \
 ./source/os_queue.obj \
 ./source/os_tasks.obj \
-./source/os_timer.obj 
+./source/os_timer.obj \
+./source/rtcmk.obj 
 
 ASM_DEPS += \
 ./source/HL_sys_core.d \
@@ -180,7 +183,6 @@ OBJS__QUOTED += \
 "source\HL_het.obj" \
 "source\HL_i2c.obj" \
 "source\HL_mdio.obj" \
-"source\HL_mibspi.obj" \
 "source\HL_nmpu.obj" \
 "source\HL_notification.obj" \
 "source\HL_phy_dp83640.obj" \
@@ -188,6 +190,7 @@ OBJS__QUOTED += \
 "source\HL_pinmux.obj" \
 "source\HL_pom.obj" \
 "source\HL_sci.obj" \
+"source\HL_spi.obj" \
 "source\HL_sys_core.obj" \
 "source\HL_sys_dma.obj" \
 "source\HL_sys_intvecs.obj" \
@@ -210,7 +213,8 @@ OBJS__QUOTED += \
 "source\os_portasm.obj" \
 "source\os_queue.obj" \
 "source\os_tasks.obj" \
-"source\os_timer.obj" 
+"source\os_timer.obj" \
+"source\rtcmk.obj" 
 
 C_DEPS__QUOTED += \
 "source\HL_adc.d" \
@@ -230,7 +234,6 @@ C_DEPS__QUOTED += \
 "source\HL_het.d" \
 "source\HL_i2c.d" \
 "source\HL_mdio.d" \
-"source\HL_mibspi.d" \
 "source\HL_nmpu.d" \
 "source\HL_notification.d" \
 "source\HL_phy_dp83640.d" \
@@ -238,6 +241,7 @@ C_DEPS__QUOTED += \
 "source\HL_pinmux.d" \
 "source\HL_pom.d" \
 "source\HL_sci.d" \
+"source\HL_spi.d" \
 "source\HL_sys_dma.d" \
 "source\HL_sys_main.d" \
 "source\HL_sys_pcr.d" \
@@ -255,7 +259,8 @@ C_DEPS__QUOTED += \
 "source\os_port.d" \
 "source\os_queue.d" \
 "source\os_tasks.d" \
-"source\os_timer.d" 
+"source\os_timer.d" \
+"source\rtcmk.d" 
 
 ASM_DEPS__QUOTED += \
 "source\HL_sys_core.d" \
@@ -282,7 +287,6 @@ C_SRCS__QUOTED += \
 "../source/HL_het.c" \
 "../source/HL_i2c.c" \
 "../source/HL_mdio.c" \
-"../source/HL_mibspi.c" \
 "../source/HL_nmpu.c" \
 "../source/HL_notification.c" \
 "../source/HL_phy_dp83640.c" \
@@ -290,6 +294,7 @@ C_SRCS__QUOTED += \
 "../source/HL_pinmux.c" \
 "../source/HL_pom.c" \
 "../source/HL_sci.c" \
+"../source/HL_spi.c" \
 "../source/HL_sys_dma.c" \
 "../source/HL_sys_main.c" \
 "../source/HL_sys_pcr.c" \
@@ -307,7 +312,8 @@ C_SRCS__QUOTED += \
 "../source/os_port.c" \
 "../source/os_queue.c" \
 "../source/os_tasks.c" \
-"../source/os_timer.c" 
+"../source/os_timer.c" \
+"../source/rtcmk.c" 
 
 ASM_SRCS__QUOTED += \
 "../source/HL_sys_core.asm" \

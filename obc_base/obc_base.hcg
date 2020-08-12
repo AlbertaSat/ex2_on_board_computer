@@ -349,15 +349,16 @@
         <NAME>HL_mibspi.h</NAME>
       </HDRMIBSPI>
       <SRCMIBSPI>
-        <NAME>HL_mibspi.c</NAME>
-      </SRCMIBSPI>
+        </SRCMIBSPI>
       <HDRSPI_R>
         <NAME>HL_reg_spi.h</NAME>
       </HDRSPI_R>
       <HDRSPI>
         <NAME>HL_spi.h</NAME>
       </HDRSPI>
-      <SRCSPI/>
+      <SRCSPI>
+        <NAME>HL_spi.c</NAME>
+      </SRCSPI>
       <HDRCAN_R>
         <NAME>HL_reg_can.h</NAME>
       </HDRCAN_R>
@@ -723,7 +724,7 @@
         <PATH>include\HL_mibspi.h</PATH>
       </HDRMIBSPI>
       <SRCMIBSPI>
-        <PATH>source\HL_mibspi.c</PATH>
+        <PATH></PATH>
       </SRCMIBSPI>
     </FILENAMES>
   </MIBSPI>
@@ -736,7 +737,7 @@
         <PATH>include\HL_spi.h</PATH>
       </HDRSPI>
       <SRCSPI>
-        <PATH/>
+        <PATH>source\HL_spi.c</PATH>
       </SRCSPI>
     </FILENAMES>
   </SPI>
