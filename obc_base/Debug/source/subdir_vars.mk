@@ -49,6 +49,8 @@ C_SRCS += \
 ../source/HL_sys_startup.c \
 ../source/HL_sys_vim.c \
 ../source/HL_system.c \
+../source/board_io_tests.c \
+../source/ina226.c \
 ../source/main_blinky.c \
 ../source/os_croutine.c \
 ../source/os_event_groups.c \
@@ -95,6 +97,8 @@ C_DEPS += \
 ./source/HL_sys_startup.d \
 ./source/HL_sys_vim.d \
 ./source/HL_system.d \
+./source/board_io_tests.d \
+./source/ina226.d \
 ./source/main_blinky.d \
 ./source/os_croutine.d \
 ./source/os_event_groups.d \
@@ -145,6 +149,8 @@ OBJS += \
 ./source/HL_sys_startup.obj \
 ./source/HL_sys_vim.obj \
 ./source/HL_system.obj \
+./source/board_io_tests.obj \
+./source/ina226.obj \
 ./source/main_blinky.obj \
 ./source/os_croutine.obj \
 ./source/os_event_groups.obj \
@@ -203,6 +209,8 @@ OBJS__QUOTED += \
 "source\HL_sys_startup.obj" \
 "source\HL_sys_vim.obj" \
 "source\HL_system.obj" \
+"source\board_io_tests.obj" \
+"source\ina226.obj" \
 "source\main_blinky.obj" \
 "source\os_croutine.obj" \
 "source\os_event_groups.obj" \
@@ -250,6 +258,8 @@ C_DEPS__QUOTED += \
 "source\HL_sys_startup.d" \
 "source\HL_sys_vim.d" \
 "source\HL_system.d" \
+"source\board_io_tests.d" \
+"source\ina226.d" \
 "source\main_blinky.d" \
 "source\os_croutine.d" \
 "source\os_event_groups.d" \
@@ -303,6 +313,8 @@ C_SRCS__QUOTED += \
 "../source/HL_sys_startup.c" \
 "../source/HL_sys_vim.c" \
 "../source/HL_system.c" \
+"../source/board_io_tests.c" \
+"../source/ina226.c" \
 "../source/main_blinky.c" \
 "../source/os_croutine.c" \
 "../source/os_event_groups.c" \
