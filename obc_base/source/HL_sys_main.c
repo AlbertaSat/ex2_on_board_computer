@@ -58,20 +58,23 @@
 #include "HL_het.h"
 #include "HL_gio.h"
 #include "board_io_tests.h"
+#include "ina226.h"
+#include "deployablescontrol.h"
+#include "demux_handler.h"
 
-/* Define Task Handles */
-xTaskHandle xTask1Handle;
-
-/* Task1 */
-void vTask1(void *pvParameters)
-{
-    for(;;)
-    {
-        /* Taggle HET[1] with timer tick */
-        gioSetBit(hetPORT1, 18, gioGetBit(hetPORT1, 18) ^ 1);
-        vTaskDelay(100);
-    }
-}
+///* Define Task Handles */
+//xTaskHandle xTask1Handle;
+//
+///* Task1 */
+//void vTask1(void *pvParameters)
+//{
+//    for(;;)
+//    {
+//        /* Taggle HET[1] with timer tick */
+//        gioSetBit(hetPORT1, 18, gioGetBit(hetPORT1, 18) ^ 1);
+//        vTaskDelay(100);
+//    }
+//}
 
 
 
@@ -97,6 +100,74 @@ int main(void)
 {
 /* USER CODE BEGIN (3) */
     InitIO();
+
+
+//    activateknife(PortKnife);
+//    activateknife(UHFKnife1);
+//    activateknife(UHFKnife2);
+//    activateknife(UHFKnife3);
+//    activateknife(UHFKnife4);
+//    activateknife(DFGMKnife);
+//    activateknife(StarboardKnife);
+//    activateknife(PayloadKnife);
+
+    int i;
+    while(1){
+
+//        demux_disable()
+//        demux_select_pin(OUT_Y0);
+//        demux_enable();
+//        for(i=0;i<100000;i++);
+//        demux_disable()
+//        demux_select_pin(OUT_Y1);
+
+
+        demux_enable();
+        for(i=0;i<100000;i++);
+        demux_disable();
+        demux_select_pin(OUT_Y2);
+        demux_enable();
+        for(i=0;i<100000;i++);
+        demux_disable();
+        demux_select_pin(OUT_Y3);
+        demux_enable();
+        for(i=0;i<100000;i++);
+        demux_disable();
+        demux_select_pin(OUT_Y4);
+        demux_enable();
+        for(i=0;i<100000;i++);
+        demux_disable();
+        demux_select_pin(OUT_Y5);
+        demux_enable();
+        for(i=0;i<100000;i++);
+        demux_disable();
+        demux_select_pin(OUT_Y6);
+        demux_enable();
+        for(i=0;i<100000;i++);
+        demux_disable();
+        demux_select_pin(OUT_Y7);
+        demux_enable();
+        for(i=0;i<100000;i++);
+        demux_disable();
+
+
+    }
+
+
+
+
+
+//    uint16_t dieID = 0;
+//    //get the die ID to check if its working
+//    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegDieID, &dieID)){
+//        while(1);
+//    }
+//
+//    uint16_t shuntvoltage = 0;
+//
+//    if(INA226_ReadShuntVoltage(i2cREG2, 0x40, &shuntvoltage) == -1){
+//        while(1);
+//    }
 
 
 

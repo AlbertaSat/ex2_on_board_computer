@@ -260,7 +260,7 @@ int INA226_RegisterGet(i2cBASE_t *i2c,
 
 int INA226_ReadShuntVoltage(i2cBASE_t *i2c,
                          uint8_t addr,
-                         int *val);
+                         uint16_t *val);
 
 int INA226_ReadBusVoltage(i2cBASE_t *i2c,
                          uint8_t addr,
