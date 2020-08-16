@@ -66,12 +66,26 @@
 #include "tmp421.h"
 #include "tempsense_athena.h"
 
+#include "HL_spi.h"
+#include "HL_esm.h"
+#include "HL_sys_core.h"
+#include "HL_system.h"
+
+#include <redfs.h>
+#include <redposix.h>
+#include <redfse.h>
+#include <redconf.h>
+#include <redvolume.h>
+#include <redtests.h>
+
+#include <stdlib.h>
+
 
 ///* Define Task Handles */
 xTaskHandle xTask1Handle;
 //
 ///* Task1 */
-void vTask1(void *pvParameters)
+void vBlinkyTask(void *pvParameters)
 {
     for(;;)
     {
@@ -81,6 +95,42 @@ void vTask1(void *pvParameters)
         gioSetBit(hetPORT1, 18, 0);
         vTaskDelay(100);
     }
+}
+
+void vTaskFileSys(void *pvParameters)
+{
+
+    int32_t iErr;
+    const char *pszVolume0 = gaRedVolConf[0].pszPathPrefix;
+
+    iErr = red_init();
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_init()\n", (int)red_errno);
+        exit(red_errno);
+    }
+
+    iErr = red_format(pszVolume0);
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_format()\n", (int)red_errno);
+        exit(red_errno);
+    }
+
+    iErr = red_mount(pszVolume0);
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_mount()\n", (int)red_errno);
+        exit(red_errno);
+    }
+
+    fprintf(stderr, "Mounted (errno = %d)\n", (int)red_errno);
+
+    char buf[1024] = "";
+
+    red_getcwd(buf, 1024);
+
+    fprintf(stderr, "CWD = %s (errno = %d)\n", buf, (int)red_errno);
 }
 
 
@@ -301,11 +351,18 @@ int main(void)
 //
 //
 //    /* Create Task 1 */
-    if (xTaskCreate(vTask1,"Task1", configMINIMAL_STACK_SIZE, NULL, 1, &xTask1Handle) != pdTRUE)
+//    if (xTaskCreate(vBlinkyTask,"BlinkyTask", configMINIMAL_STACK_SIZE, NULL, 1, &xTask1Handle) != pdTRUE)
+//    {
+//        /* Task could not be created */
+//        while(1);
+//    }
+
+    if (xTaskCreate(vTaskFileSys,"TaskFileSys", 1024, NULL, 1, &xTask1Handle) != pdTRUE)
     {
         /* Task could not be created */
         while(1);
     }
+
 
     /* Start Scheduler */
     vTaskStartScheduler();
@@ -319,4 +376,32 @@ int main(void)
 
 
 /* USER CODE BEGIN (4) */
+
+/* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an
+implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
+used by the Idle task. */
+void vApplicationGetIdleTaskMemory(
+        StaticTask_t **ppxIdleTaskTCBBuffer,
+        StackType_t **ppxIdleTaskStackBuffer,
+        uint32_t *pulIdleTaskStackSize
+)
+{
+/* If the buffers to be provided to the Idle task are declared inside this
+function then they must be declared static otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+    static StaticTask_t xIdleTaskTCB;
+    static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+    /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
+    state will be stored. */
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+    /* Pass out the array that will be used as the Idle task's stack. */
+    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+    /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
+
+
+
 /* USER CODE END */
