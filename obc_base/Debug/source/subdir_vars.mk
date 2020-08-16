@@ -49,10 +49,6 @@ C_SRCS += \
 ../source/HL_sys_startup.c \
 ../source/HL_sys_vim.c \
 ../source/HL_system.c \
-../source/board_io_tests.c \
-../source/demux_handler.c \
-../source/deployablecontrol.c \
-../source/ina226.c \
 ../source/main_blinky.c \
 ../source/os_croutine.c \
 ../source/os_event_groups.c \
@@ -62,10 +58,7 @@ C_SRCS += \
 ../source/os_port.c \
 ../source/os_queue.c \
 ../source/os_tasks.c \
-../source/os_timer.c \
-../source/rtcmk.c \
-../source/tempsense_athena.c \
-../source/tmp421.c 
+../source/os_timer.c 
 
 C_DEPS += \
 ./source/HL_adc.d \
@@ -101,10 +94,6 @@ C_DEPS += \
 ./source/HL_sys_startup.d \
 ./source/HL_sys_vim.d \
 ./source/HL_system.d \
-./source/board_io_tests.d \
-./source/demux_handler.d \
-./source/deployablecontrol.d \
-./source/ina226.d \
 ./source/main_blinky.d \
 ./source/os_croutine.d \
 ./source/os_event_groups.d \
@@ -114,10 +103,7 @@ C_DEPS += \
 ./source/os_port.d \
 ./source/os_queue.d \
 ./source/os_tasks.d \
-./source/os_timer.d \
-./source/rtcmk.d \
-./source/tempsense_athena.d \
-./source/tmp421.d 
+./source/os_timer.d 
 
 OBJS += \
 ./source/HL_adc.obj \
@@ -157,10 +143,6 @@ OBJS += \
 ./source/HL_sys_startup.obj \
 ./source/HL_sys_vim.obj \
 ./source/HL_system.obj \
-./source/board_io_tests.obj \
-./source/demux_handler.obj \
-./source/deployablecontrol.obj \
-./source/ina226.obj \
 ./source/main_blinky.obj \
 ./source/os_croutine.obj \
 ./source/os_event_groups.obj \
@@ -171,10 +153,7 @@ OBJS += \
 ./source/os_portasm.obj \
 ./source/os_queue.obj \
 ./source/os_tasks.obj \
-./source/os_timer.obj \
-./source/rtcmk.obj \
-./source/tempsense_athena.obj \
-./source/tmp421.obj 
+./source/os_timer.obj 
 
 ASM_DEPS += \
 ./source/HL_sys_core.d \
@@ -221,10 +200,6 @@ OBJS__QUOTED += \
 "source\HL_sys_startup.obj" \
 "source\HL_sys_vim.obj" \
 "source\HL_system.obj" \
-"source\board_io_tests.obj" \
-"source\demux_handler.obj" \
-"source\deployablecontrol.obj" \
-"source\ina226.obj" \
 "source\main_blinky.obj" \
 "source\os_croutine.obj" \
 "source\os_event_groups.obj" \
@@ -235,10 +210,7 @@ OBJS__QUOTED += \
 "source\os_portasm.obj" \
 "source\os_queue.obj" \
 "source\os_tasks.obj" \
-"source\os_timer.obj" \
-"source\rtcmk.obj" \
-"source\tempsense_athena.obj" \
-"source\tmp421.obj" 
+"source\os_timer.obj" 
 
 C_DEPS__QUOTED += \
 "source\HL_adc.d" \
@@ -274,10 +246,6 @@ C_DEPS__QUOTED += \
 "source\HL_sys_startup.d" \
 "source\HL_sys_vim.d" \
 "source\HL_system.d" \
-"source\board_io_tests.d" \
-"source\demux_handler.d" \
-"source\deployablecontrol.d" \
-"source\ina226.d" \
 "source\main_blinky.d" \
 "source\os_croutine.d" \
 "source\os_event_groups.d" \
@@ -287,10 +255,7 @@ C_DEPS__QUOTED += \
 "source\os_port.d" \
 "source\os_queue.d" \
 "source\os_tasks.d" \
-"source\os_timer.d" \
-"source\rtcmk.d" \
-"source\tempsense_athena.d" \
-"source\tmp421.d" 
+"source\os_timer.d" 
 
 ASM_DEPS__QUOTED += \
 "source\HL_sys_core.d" \
@@ -333,10 +298,6 @@ C_SRCS__QUOTED += \
 "../source/HL_sys_startup.c" \
 "../source/HL_sys_vim.c" \
 "../source/HL_system.c" \
-"../source/board_io_tests.c" \
-"../source/demux_handler.c" \
-"../source/deployablecontrol.c" \
-"../source/ina226.c" \
 "../source/main_blinky.c" \
 "../source/os_croutine.c" \
 "../source/os_event_groups.c" \
@@ -346,10 +307,7 @@ C_SRCS__QUOTED += \
 "../source/os_port.c" \
 "../source/os_queue.c" \
 "../source/os_tasks.c" \
-"../source/os_timer.c" \
-"../source/rtcmk.c" \
-"../source/tempsense_athena.c" \
-"../source/tmp421.c" 
+"../source/os_timer.c" 
 
 ASM_SRCS__QUOTED += \
 "../source/HL_sys_core.asm" \
