@@ -24,31 +24,31 @@
 void activateknife(HotKnife_TypeDef knife){
     switch(knife){
         case PortKnife:
-            gioSetBit(hetPORT1, 23, 1);
+            gioSetBit(hetPORT1, 8, 1);
             //add a delay for x seconds
-            gioSetBit(hetPORT1, 23, 0);
+            gioSetBit(hetPORT1, 8, 0);
             break;
-        case UHFKnife1:
+        case UHFKnife_P:
             gioSetBit(hetPORT2, 5, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT2, 5, 0);
             break;
-        case UHFKnife2:
+        case UHFKnife_Z:
             gioSetBit(hetPORT1, 26, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT1, 26, 0);
             break;
-        case UHFKnife3:
+        case PayloadKnife:
             gioSetBit(hetPORT1, 14, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT1, 14, 0);
             break;
-        case UHFKnife4:
+        case UHFKnife_S:
             gioSetBit(gioPORTA, 0, 1);
             //add a delay for x seconds
             gioSetBit(gioPORTA, 0, 0);
             break;
-        case DFGMKnife:
+        case UHFKnife_N:
             gioSetBit(hetPORT1, 22, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT1, 22, 0);
@@ -58,7 +58,7 @@ void activateknife(HotKnife_TypeDef knife){
             //add a delay for x seconds
             gioSetBit(hetPORT2, 1, 0);
             break;
-        case PayloadKnife:
+        case DFGMKnife:
             gioSetBit(hetPORT1, 16, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT1, 16, 0);

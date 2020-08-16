@@ -23,13 +23,13 @@
 typedef enum
 {
     PortKnife = 0,
-    UHFKnife1 = 1,
-    UHFKnife2 = 2,
-    UHFKnife3 = 3,
-    UHFKnife4 = 4,
-    DFGMKnife = 5,
+    UHFKnife_P = 1,
+    UHFKnife_Z = 2,
+    PayloadKnife = 3,
+    UHFKnife_S = 4,
+    UHFKnife_N = 5,
     StarboardKnife = 6,
-    PayloadKnife = 7,
+    DFGMKnife = 7,
 } HotKnife_TypeDef;
 
 void activateknife(HotKnife_TypeDef knife);

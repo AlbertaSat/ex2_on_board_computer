@@ -703,7 +703,7 @@ typedef struct het_config_reg
 								| (uint32)0x00000000U \
 								| (uint32)0x00000004U \
 								| (uint32)0x00000000U \
-								| (uint32)0x00000001U)
+								| (uint32)0x00000000U)
 
 #define HET2_PSL_CONFIGVALUE     ((uint32)0x00000000U \
                                 | (uint32)0x00000000U \

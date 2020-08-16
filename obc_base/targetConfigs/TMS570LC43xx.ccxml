@@ -8,7 +8,7 @@
             <instance XML_version="1.2" href="drivers/tixds510cortexR.xml" id="drivers" xml="tixds510cortexR.xml" xmlpath="drivers"/>
             <property Type="choicelist" Value="1" id="The JTAG TCLK Frequency (MHz)">
                 <choice Name="Fixed with user specified value" value="SPECIFIC">
-                    <property Type="stringfield" Value="600kHz" id="-- Enter a value from 100.0kHz to 2.5MHz"/>
+                    <property Type="stringfield" Value="1000kHz" id="-- Enter a value from 100.0kHz to 2.5MHz"/>
                 </choice>
             </property>
             <property Type="choicelist" Value="0" id="Power Selection">

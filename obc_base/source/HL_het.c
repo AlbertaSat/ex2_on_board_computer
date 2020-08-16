@@ -2587,7 +2587,7 @@ void hetInit(void)
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000004U
                     | (uint32) 0x00000000U
-                    | (uint32) 0x00000001U;
+                    | (uint32) 0x00000000U;
 
     /** - Set HET pins pullup/down select */
     hetREG2->PSL = (uint32) 0x00000000U

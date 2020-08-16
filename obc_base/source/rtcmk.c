@@ -46,21 +46,21 @@ int RTCMK_RegisterSet(/* I2C_TypeDef *i2c, */
 
   data = val;
 
-  i2cSetDirection(i2cREG1, I2C_TRANSMITTER);
-  i2cSetCount(i2cREG1, 1);
-  i2cSetMode(i2cREG1, I2C_MASTER);
-  i2cSetStop(i2cREG1);
-  i2cSetStart(i2cREG1);
-  i2cSend(i2cREG1, 1, &data);
+  i2cSetDirection(i2cREG2, I2C_TRANSMITTER);
+  i2cSetCount(i2cREG2, 1);
+  i2cSetMode(i2cREG2, I2C_MASTER);
+  i2cSetStop(i2cREG2);
+  i2cSetStart(i2cREG2);
+  i2cSend(i2cREG2, 1, &data);
 
   /* Wait until Bus Busy is cleared */
-  while(i2cIsBusBusy(i2cREG1) == true);
+  while(i2cIsBusBusy(i2cREG2) == true);
 
   /* Wait until Stop is detected */
-  while(i2cIsStopDetected(i2cREG1) == 0);
+  while(i2cIsStopDetected(i2cREG2) == 0);
 
   /* Clear the Stop condition */
-  i2cClearSCD(i2cREG1);
+  i2cClearSCD(i2cREG2);
 
 //  unsigned int retries = 0;
 
@@ -73,7 +73,7 @@ int RTCMK_RegisterSet(/* I2C_TypeDef *i2c, */
 //    /* Could do a timeout function here. */
 //  }
   
-  return((int)i2cIsBusBusy(i2cREG1));
+  return((int)i2cIsBusBusy(i2cREG2));
 }
 
 /***************************************************************************//**
@@ -101,32 +101,32 @@ int RTCMK_RegisterGet(/*I2C_TypeDef *i2c,*/
                          uint8_t *val)
 {
   /* Configure address of Slave to talk to */
-    i2cSetSlaveAdd(i2cREG1, addr);
+    i2cSetSlaveAdd(i2cREG2, addr);
 
-    i2cSetDirection(i2cREG1, I2C_TRANSMITTER);
-    i2cSetCount(i2cREG1, 1);
-    i2cSetMode(i2cREG1, I2C_MASTER);
-    i2cSetStop(i2cREG1);
-    i2cSetStart(i2cREG1);
-    i2cSend(i2cREG1, 1, &reg);
+    i2cSetDirection(i2cREG2, I2C_TRANSMITTER);
+    i2cSetCount(i2cREG2, 1);
+    i2cSetMode(i2cREG2, I2C_MASTER);
+    i2cSetStop(i2cREG2);
+    i2cSetStart(i2cREG2);
+    i2cSend(i2cREG2, 1, &reg);
 
-    while(i2cIsBusBusy(i2cREG1) == true);
-    while(i2cIsStopDetected(i2cREG1) == 0);
-    i2cClearSCD(i2cREG1);
+    while(i2cIsBusBusy(i2cREG2) == true);
+    while(i2cIsStopDetected(i2cREG2) == 0);
+    i2cClearSCD(i2cREG2);
 
     int temp;
     for (temp = 0; temp < 0x10000; temp++);//temporary fix... don't want delay down the road
 
-    i2cSetSlaveAdd(i2cREG1, addr);
+    i2cSetSlaveAdd(i2cREG2, addr);
     /* Set direction to receiver */
-    i2cSetDirection(i2cREG1, I2C_RECEIVER);
-    i2cSetCount(i2cREG1, 1);
+    i2cSetDirection(i2cREG2, I2C_RECEIVER);
+    i2cSetCount(i2cREG2, 1);
     /* Set mode as Master */
-    i2cSetMode(i2cREG1, I2C_MASTER);
-    i2cSetStop(i2cREG1);
+    i2cSetMode(i2cREG2, I2C_MASTER);
+    i2cSetStop(i2cREG2);
     /* Transmit Start Condition */
-    i2cSetStart(i2cREG1);
-    *val = i2cReceiveByte(i2cREG1);
+    i2cSetStart(i2cREG2);
+    *val = i2cReceiveByte(i2cREG2);
 
 //  unsigned int retries = 0;
 //  while (I2C_getStatus(i2c) == i2cTransferInProgress)
@@ -139,15 +139,15 @@ int RTCMK_RegisterGet(/*I2C_TypeDef *i2c,*/
 //  }
 
     /* Wait until Bus Busy is cleared */
-    while(i2cIsBusBusy(i2cREG1) == true);
+    while(i2cIsBusBusy(i2cREG2) == true);
 
     /* Wait until Stop is detected */
-    while(i2cIsStopDetected(i2cREG1) == 0);
+    while(i2cIsStopDetected(i2cREG2) == 0);
 
     /* Clear the Stop condition */
-    i2cClearSCD(i2cREG1);
+    i2cClearSCD(i2cREG2);
 
-  return((int)i2cIsBusBusy(i2cREG1));
+  return((int)i2cIsBusBusy(i2cREG2));
 }
 
 /***************************************************************************//**
@@ -167,34 +167,30 @@ int RTCMK_ResetTime(/*I2C_TypeDef *i2c,*/
                          uint8_t addr)
 {
 
-  uint8_t data[8] = {0};
 
-  data[0] = ((uint8_t)RTCMK_RegSec) << 1;
+    uint8_t data[8] = {0};
 
-  i2cSetDirection(i2cREG1, I2C_TRANSMITTER);
-  i2cSetCount(i2cREG1, 8);
-  i2cSetMode(i2cREG1, I2C_MASTER);
-  i2cSetStop(i2cREG1);
-  i2cSetStart(i2cREG1);
-  i2cSend(i2cREG1, 8, data);
+    data[0] = ((uint8_t)RTCMK_RegSec) << 1;
 
-  /* Wait until Bus Busy is cleared */
-  while(i2cIsBusBusy(i2cREG1) == true);
+    i2cSetSlaveAdd(i2cREG2, addr);
+    i2cSetDirection(i2cREG2, I2C_TRANSMITTER);
+    i2cSetCount(i2cREG2, 8);
+    i2cSetMode(i2cREG2, I2C_MASTER);
+    i2cSetStop(i2cREG2);
+    i2cSetStart(i2cREG2);
+    i2cSend(i2cREG2, 8, data);
+    while(i2cIsBusBusy(i2cREG2) == true);
+    while(i2cIsStopDetected(i2cREG2) == 0);
+    i2cClearSCD(i2cREG2);
 
-  /* Wait until Stop is detected */
-  while(i2cIsStopDetected(i2cREG1) == 0);
+  //  while (I2C_getStatus(i2c) == i2cTransferInProgress)
+  //  {
+  //    /* Enter EM1 while waiting for I2C interrupt */
+  //    EMU_EnterEM1();
+  //    /* Could do a timeout function here. */
+  //  }
 
-  /* Clear the Stop condition */
-  i2cClearSCD(i2cREG1);
-
-//  while (I2C_getStatus(i2c) == i2cTransferInProgress)
-//  {
-//    /* Enter EM1 while waiting for I2C interrupt */
-//    EMU_EnterEM1();
-//    /* Could do a timeout function here. */
-//  }
-
-  return((int)i2cIsBusBusy(i2cREG1));
+    return((int)i2cIsBusBusy(i2cREG2));
 }
 
 /***************************************************************************//**

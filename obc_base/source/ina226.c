@@ -45,31 +45,26 @@ int INA226_RegisterSet(i2cBASE_t *i2c,
                          uint16_t val)
 {
   //I2C_TransferSeq_TypeDef seq;
-  uint8_t data[3];
-  int error = 0;
+  uint8_t data[2] = {0};
+  data[0] = val >> 8;
+  data[1] = val & 0xFF;
 
-  //Check if the busy is currently busy
-  if((i2c->STR & (uint32)I2C_BUSBUSY ) == 0)
-  {
-      i2cSetDirection(i2c,I2C_TRANSMITTER);
-      i2cSetSlaveAdd(i2c,addr);
-      //seq.addr = addr;
-      //seq.flags = I2C_FLAG_WRITE;
 
-      data[0] = ((uint8_t)reg);
-      data[1] = (uint8_t)(val >> 8);
-      data[2] = (uint8_t)val;
+//  //Check if the busy is currently busy
+//  if((i2c->STR & (uint32)I2C_BUSBUSY ) == 0)
+//  {
 
-      //seq.buf[0].data = data;
-      //seq.buf[0].len = 3;
-
-      //I2C_setStatus(i2c,I2C_TransferInit(i2c, &seq));
-      i2cSetStart(i2c);
-
-      //unsigned int retries = 0;
-
-      i2cSend(i2c,3,data);
-      i2cSetStop(i2c);
+    i2cSetSlaveAdd(i2cREG2, addr);
+    i2cSetDirection(i2cREG2, I2C_TRANSMITTER);
+    i2cSetCount(i2cREG2, 3);
+    i2cSetMode(i2cREG2, I2C_MASTER);
+    i2cSetStop(i2cREG2);
+    i2cSetStart(i2cREG2);
+    i2cSendByte(i2cREG2, reg);
+    i2cSend(i2cREG2, 2, data);
+    while(i2cIsBusBusy(i2cREG2) == true);
+    while(i2cIsStopDetected(i2cREG2) == 0);
+    i2cClearSCD(i2cREG2);
 
       //while (I2C_getStatus(i2c) == i2cTransferInProgress)
       //while (i2c_IsBusBusy(i2c) == true)
@@ -80,14 +75,14 @@ int INA226_RegisterSet(i2cBASE_t *i2c,
         //EMU_EnterEM1();
         /* Could do a timeout function here. */
       //}
-  }
-  else
-  {
+//  }
+//  else
+//  {
       //Busy is busy return a error
-      error = -1;
-  }
+//      error = -1;
+//  }
   //return((int)I2C_getStatus(i2c));
-  return error;
+  return i2cIsBusBusy(i2cREG2);
 }
 
 /***************************************************************************//**
@@ -178,6 +173,7 @@ int INA226_ReadShuntVoltage(i2cBASE_t *i2c,
   uint16_t tmp = 0;
 
   ret = INA226_RegisterGet(i2c,addr,INA226_RegShuntV,&tmp);
+
   if (ret < 0)
   {
     return(ret);

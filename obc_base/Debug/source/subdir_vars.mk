@@ -63,7 +63,8 @@ C_SRCS += \
 ../source/os_queue.c \
 ../source/os_tasks.c \
 ../source/os_timer.c \
-../source/rtcmk.c 
+../source/rtcmk.c \
+../source/tmp421.c 
 
 C_DEPS += \
 ./source/HL_adc.d \
@@ -113,7 +114,8 @@ C_DEPS += \
 ./source/os_queue.d \
 ./source/os_tasks.d \
 ./source/os_timer.d \
-./source/rtcmk.d 
+./source/rtcmk.d \
+./source/tmp421.d 
 
 OBJS += \
 ./source/HL_adc.obj \
@@ -168,7 +170,8 @@ OBJS += \
 ./source/os_queue.obj \
 ./source/os_tasks.obj \
 ./source/os_timer.obj \
-./source/rtcmk.obj 
+./source/rtcmk.obj \
+./source/tmp421.obj 
 
 ASM_DEPS += \
 ./source/HL_sys_core.d \
@@ -230,7 +233,8 @@ OBJS__QUOTED += \
 "source\os_queue.obj" \
 "source\os_tasks.obj" \
 "source\os_timer.obj" \
-"source\rtcmk.obj" 
+"source\rtcmk.obj" \
+"source\tmp421.obj" 
 
 C_DEPS__QUOTED += \
 "source\HL_adc.d" \
@@ -280,7 +284,8 @@ C_DEPS__QUOTED += \
 "source\os_queue.d" \
 "source\os_tasks.d" \
 "source\os_timer.d" \
-"source\rtcmk.d" 
+"source\rtcmk.d" \
+"source\tmp421.d" 
 
 ASM_DEPS__QUOTED += \
 "source\HL_sys_core.d" \
@@ -337,7 +342,8 @@ C_SRCS__QUOTED += \
 "../source/os_queue.c" \
 "../source/os_tasks.c" \
 "../source/os_timer.c" \
-"../source/rtcmk.c" 
+"../source/rtcmk.c" \
+"../source/tmp421.c" 
 
 ASM_SRCS__QUOTED += \
 "../source/HL_sys_core.asm" \

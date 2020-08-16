@@ -61,20 +61,25 @@
 #include "ina226.h"
 #include "deployablescontrol.h"
 #include "demux_handler.h"
+#include "rtcmk.h"
+#include "tmp421.h"
+#include "stdio.h"
 
 ///* Define Task Handles */
-//xTaskHandle xTask1Handle;
+xTaskHandle xTask1Handle;
 //
 ///* Task1 */
-//void vTask1(void *pvParameters)
-//{
-//    for(;;)
-//    {
-//        /* Taggle HET[1] with timer tick */
-//        gioSetBit(hetPORT1, 18, gioGetBit(hetPORT1, 18) ^ 1);
-//        vTaskDelay(100);
-//    }
-//}
+void vTask1(void *pvParameters)
+{
+    for(;;)
+    {
+        /* Taggle HET[1] with timer tick */
+        gioSetBit(hetPORT1, 18, 1);
+        vTaskDelay(100);
+        gioSetBit(hetPORT1, 18, 0);
+        vTaskDelay(100);
+    }
+}
 
 
 
@@ -101,18 +106,20 @@ int main(void)
 /* USER CODE BEGIN (3) */
     InitIO();
 
+//    TMP421test(0x4C);
+
 
 //    activateknife(PortKnife);
-//    activateknife(UHFKnife1);
-//    activateknife(UHFKnife2);
-//    activateknife(UHFKnife3);
-//    activateknife(UHFKnife4);
-//    activateknife(DFGMKnife);
-//    activateknife(StarboardKnife);
+//    activateknife(UHFKnife_P);
+//    activateknife(UHFKnife_Z);
 //    activateknife(PayloadKnife);
+//    activateknife(StarboardKnife);
+//    activateknife(UHFKnife_S);
+//    activateknife(DFGMKnife);
+//    activateknife(UHFKnife_N);
 
-    int i;
-    while(1){
+//    int i;
+//    while(1){
 
 //        demux_disable()
 //        demux_select_pin(OUT_Y0);
@@ -120,52 +127,114 @@ int main(void)
 //        for(i=0;i<100000;i++);
 //        demux_disable()
 //        demux_select_pin(OUT_Y1);
+//        demux_enable();
+//        for(i=0;i<100000;i++);
+//        demux_disable();
+//        demux_select_pin(OUT_Y2);
+//        demux_enable();
+//        for(i=0;i<100000;i++);
+//        demux_disable();
+//        demux_select_pin(OUT_Y3);
+//        demux_enable();
+//        for(i=0;i<100000;i++);
+//        demux_disable();
+//        demux_select_pin(OUT_Y4);
+//        demux_enable();
+//        for(i=0;i<100000;i++);
+//        demux_disable();
+//        demux_select_pin(OUT_Y5);
+//        demux_enable();
+//        for(i=0;i<100000;i++);
+//        demux_disable();
+//        demux_select_pin(OUT_Y6);
+//        demux_enable();
+//        for(i=0;i<100000;i++);
+//        demux_disable();
+//        demux_select_pin(OUT_Y7);
+//        demux_enable();
+//        for(i=0;i<100000;i++);
+//        demux_disable();
+//
+//
+//    }
+//    i2cSetSlaveAdd(i2cREG2, 0x1D);
+//    i2cSetDirection(i2cREG2, I2C_TRANSMITTER);
+//    i2cSetCount(i2cREG2, 1);
+//    i2cSetMode(i2cREG2, I2C_MASTER);
+//    i2cSetStop(i2cREG2);
+//    i2cSetStart(i2cREG2);
+//    i2cSendByte(i2cREG2, 0xFF);
+//    while(i2cIsBusBusy(i2cREG2) == true);
+//    while(i2cIsStopDetected(i2cREG2) == 0);
+//    i2cClearSCD(i2cREG2);
+
+//    RTCMK_ResetTime(0x64);
+//    uint8_t secs = 0;
+//
+//    RTCMK_ReadSeconds(0x64, &secs);
 
 
-        demux_enable();
-        for(i=0;i<100000;i++);
-        demux_disable();
-        demux_select_pin(OUT_Y2);
-        demux_enable();
-        for(i=0;i<100000;i++);
-        demux_disable();
-        demux_select_pin(OUT_Y3);
-        demux_enable();
-        for(i=0;i<100000;i++);
-        demux_disable();
-        demux_select_pin(OUT_Y4);
-        demux_enable();
-        for(i=0;i<100000;i++);
-        demux_disable();
-        demux_select_pin(OUT_Y5);
-        demux_enable();
-        for(i=0;i<100000;i++);
-        demux_disable();
-        demux_select_pin(OUT_Y6);
-        demux_enable();
-        for(i=0;i<100000;i++);
-        demux_disable();
-        demux_select_pin(OUT_Y7);
-        demux_enable();
-        for(i=0;i<100000;i++);
-        demux_disable();
+    //Calibrate device and set alert properly
+    uint16_t calibrationval = 0b0100111100111111;
 
+    if(INA226_RegisterSet(i2cREG2, 0x40, INA226_RegCalib, calibrationval)){
+        while(1);
+    }
 
+    int temp;
+    for (temp = 0; temp < 0x10000; temp++);//temporary fix... don't want delay down the road
+
+    uint16_t alertlimit = 0b0001111101000000;
+    uint16_t regval = 0;
+
+    if(INA226_RegisterSet(i2cREG2, 0x40, INA226_RegAlertLim, alertlimit)){
+        while(1);
+    }
+//    for (temp = 0; temp < 0x10000; temp++);
+//    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegAlertLim, &regval)){
+//        while(1);
+//    }
+//    if(regval != alertlimit){
+//        fprintf(stderr, "alertlim register not set");
+//    }
+
+    for (temp = 0; temp < 0x10000; temp++);
+
+    uint16_t alertsetting = 0b1000000000000000;
+
+    if(INA226_RegisterSet(i2cREG2, 0x40, INA226_RegMaskEn, alertsetting)){
+        while(1);
+    }
+//    for (temp = 0; temp < 0x10000; temp++);
+//    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegMaskEn, &regval)){
+//        while(1);
+//    }
+//    if(regval != alertsetting){
+//        fprintf(stderr, "masken register not set");
+//    }
+
+    for (temp = 0; temp < 0x10000; temp++);
+
+    uint16_t shuntv = 0;
+
+    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegShuntV, &shuntv)){
+        while(1);
     }
 
 
+    //obvs make this an interrupt thing in the future
+    while(1){
+        if (gioGetBit(hetPORT2, 0) == 0){
+            gioSetBit(hetPORT2, 12, 0);
+        }
+        else{
+            gioSetBit(hetPORT2, 12, 1);
+        }
+    }
 
-
-
-//    uint16_t dieID = 0;
-//    //get the die ID to check if its working
-//    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegDieID, &dieID)){
-//        while(1);
-//    }
+//    int curr = 0;
 //
-//    uint16_t shuntvoltage = 0;
-//
-//    if(INA226_ReadShuntVoltage(i2cREG2, 0x40, &shuntvoltage) == -1){
+//    if(INA226_ReadShunt(i2cREG2, 0x40, &curr) == -1){
 //        while(1);
 //    }
 
@@ -177,17 +246,17 @@ int main(void)
 //
 //
 //    /* Create Task 1 */
-//    if (xTaskCreate(vTask1,"Task1", configMINIMAL_STACK_SIZE, NULL, 1, &xTask1Handle) != pdTRUE)
-//    {
-//        /* Task could not be created */
-//        while(1);
-//    }
-//
-//    /* Start Scheduler */
-//    vTaskStartScheduler();
-//
-//    /* Run forever */
-//    while(1);
+    if (xTaskCreate(vTask1,"Task1", configMINIMAL_STACK_SIZE, NULL, 1, &xTask1Handle) != pdTRUE)
+    {
+        /* Task could not be created */
+        while(1);
+    }
+
+    /* Start Scheduler */
+    vTaskStartScheduler();
+
+    /* Run forever */
+    while(1);
 /* USER CODE END */
 
     return 0;

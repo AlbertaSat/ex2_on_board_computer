@@ -15,17 +15,18 @@
 #include "HL_spi.h"
 
 void InitIO(void){
-    sciInit();
     i2cInit();
+    sciInit();
     canInit();
     spiInit();
     gioInit();
 
     //The following sets the proper direction for all GPIO
-    gioSetDirection(hetPORT2, 0xFFFFFFFF);
+    gioSetDirection(hetPORT2, 0xFFFFFFFE);
     gioSetDirection(hetPORT1, 0xFCFF7FFF);
     gioSetDirection(gioPORTA, 0xFFFFFF7F);
     gioSetDirection(gioPORTB, 0xFFFFFFFF);
+    gioSetBit(hetPORT2, 12, 1);
     //hetInit();
 
 }

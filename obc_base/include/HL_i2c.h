@@ -220,7 +220,7 @@ typedef struct i2c_config_reg
                                  | (uint32)((uint32)I2C_7BIT_AMODE) \
                                  | (uint32)((uint32)0 << 7U) \
                                  | (uint32)((uint32)0U) \
-                                 | (uint32)((uint32)I2C_2_BIT) \
+                                 | (uint32)((uint32)I2C_8_BIT) \
                                  | (uint32)I2C_RESET_OUT)
 
 #define I2C2_EMDR_CONFIGVALUE      ((uint32)((uint32)0U << 1U) \
@@ -232,8 +232,8 @@ typedef struct i2c_config_reg
                                  | (uint32)((uint32)1U))
 #define I2C2_ODR_CONFIGVALUE       ((uint32)((uint32)1U << 1U) \
                                  | (uint32)((uint32)1U))
-#define I2C2_PD_CONFIGVALUE        ((uint32)((uint32)1U << 1U) \
-                                 | (uint32)((uint32)1U))
+#define I2C2_PD_CONFIGVALUE        ((uint32)((uint32)0U << 1U) \
+                                 | (uint32)((uint32)0U))
 #define I2C2_PSL_CONFIGVALUE       ((uint32)((uint32)1U << 1U) \
                                  | (uint32)((uint32)1U))
 
