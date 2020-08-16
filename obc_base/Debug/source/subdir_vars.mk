@@ -64,6 +64,7 @@ C_SRCS += \
 ../source/os_tasks.c \
 ../source/os_timer.c \
 ../source/rtcmk.c \
+../source/tempsense_athena.c \
 ../source/tmp421.c 
 
 C_DEPS += \
@@ -115,6 +116,7 @@ C_DEPS += \
 ./source/os_tasks.d \
 ./source/os_timer.d \
 ./source/rtcmk.d \
+./source/tempsense_athena.d \
 ./source/tmp421.d 
 
 OBJS += \
@@ -171,6 +173,7 @@ OBJS += \
 ./source/os_tasks.obj \
 ./source/os_timer.obj \
 ./source/rtcmk.obj \
+./source/tempsense_athena.obj \
 ./source/tmp421.obj 
 
 ASM_DEPS += \
@@ -234,6 +237,7 @@ OBJS__QUOTED += \
 "source\os_tasks.obj" \
 "source\os_timer.obj" \
 "source\rtcmk.obj" \
+"source\tempsense_athena.obj" \
 "source\tmp421.obj" 
 
 C_DEPS__QUOTED += \
@@ -285,6 +289,7 @@ C_DEPS__QUOTED += \
 "source\os_tasks.d" \
 "source\os_timer.d" \
 "source\rtcmk.d" \
+"source\tempsense_athena.d" \
 "source\tmp421.d" 
 
 ASM_DEPS__QUOTED += \
@@ -343,6 +348,7 @@ C_SRCS__QUOTED += \
 "../source/os_tasks.c" \
 "../source/os_timer.c" \
 "../source/rtcmk.c" \
+"../source/tempsense_athena.c" \
 "../source/tmp421.c" 
 
 ASM_SRCS__QUOTED += \

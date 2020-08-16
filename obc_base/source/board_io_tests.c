@@ -224,7 +224,7 @@ void SPIMasterRxTest(spiBASE_t * regset){
     spiDAT1_t dataconfig1_t;
 
     dataconfig1_t.CS_HOLD = FALSE;
-    dataconfig1_t.WDEL    = TRUE;
+    dataconfig1_t.WDEL    = FALSE;
     dataconfig1_t.DFSEL   = SPI_FMT_0;
     dataconfig1_t.CSNR    = 0x00;
 

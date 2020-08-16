@@ -762,7 +762,7 @@ void spiInit(void)
                   | (uint32)((uint32)0U << 20U)  /* shift direction */
                   | (uint32)((uint32)0U << 17U)  /* clock polarity */
                   | (uint32)((uint32)0U << 16U)  /* clock phase */
-                  | (uint32)((uint32)74U << 8U) /* baudrate prescale */
+                  | (uint32)((uint32)149U << 8U) /* baudrate prescale */
                   | (uint32)((uint32)16U << 0U);  /* data word length */
 
     /** - Data Format 1 */
@@ -814,7 +814,7 @@ void spiInit(void)
     /** - enable interrupts */
     spiREG5->INT0 = (spiREG5->INT0 & 0xFFFF0000U)
                   | (uint32)((uint32)0U << 9U)  /* TXINT */
-                  | (uint32)((uint32)0U << 8U)  /* RXINT */
+                  | (uint32)((uint32)1U << 8U)  /* RXINT */
                   | (uint32)((uint32)0U << 6U)  /* OVRNINT */
                   | (uint32)((uint32)0U << 4U)  /* BITERR */
                   | (uint32)((uint32)0U << 3U)  /* DESYNC */
@@ -1683,6 +1683,210 @@ void spi5GetConfigValue(spi_config_reg_t *config_reg, config_value_type_t type)
 
 
 
+/* USER CODE BEGIN (66) */
+/* USER CODE END */
 
+/** @fn void mibspi5LowLevelInterrupt(void)
+*   @brief Level 1 Interrupt for SPI5
+*/
+#pragma CODE_STATE(mibspi5LowLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi5LowLevelInterrupt, IRQ)
+
+/* SourceId : SPI_SourceId_028 */
+/* DesignId : SPI_DesignId_016 */
+/* Requirements : HL_CONQ_SPI_SR22, HL_CONQ_SPI_SR23, HL_CONQ_SPI_SR38  */
+void mibspi5LowLevelInterrupt(void)
+{
+
+/* USER CODE BEGIN (67) */
+/* USER CODE END */
+
+    uint32 flags = (spiREG5->FLG & 0x0000FFFFU) & (spiREG5->LVL & 0x035FU);
+    uint32 vec = spiREG5->INTVECT1;
+
+/* USER CODE BEGIN (68) */
+/* USER CODE END */
+
+    switch(vec)
+    {
+
+    case 0x24U: /* Receive Buffer Full Interrupt */
+             {
+                uint16 *destbuff;
+                destbuff = g_spiPacket_t[4U].rxdata_ptr;
+
+                *destbuff = (uint16)spiREG5->BUF;
+                /*SAFETYMCUSW 567 S MR:17.1,17.4 <APPROVED> "Pointer increment needed" */
+                g_spiPacket_t[4U].rxdata_ptr++;
+                g_spiPacket_t[4U].rx_length--;
+
+                if(g_spiPacket_t[4U].rx_length == 0U)
+                {
+                    spiREG5->INT0 = (spiREG5->INT0 & 0x0000FFFFU) & (~(uint32)0x0100U);
+                    g_spiPacket_t[4U].rx_data_status = SPI_COMPLETED;
+                    spiEndNotification(spiREG5);
+                }
+                break;
+             }
+
+    case 0x28U: /* Transmit Buffer Empty Interrupt */
+             {
+                 volatile uint32 SpiBuf;
+                 uint32 Chip_Select_Hold = 0U;
+                 uint32 WDelay = (g_spiPacket_t[4U].g_spiDataFormat.WDEL) ? 0x04000000U: 0U;
+                 SPIDATAFMT_t DataFormat = g_spiPacket_t[4U].g_spiDataFormat.DFSEL;
+                 uint8 ChipSelect = g_spiPacket_t[4U].g_spiDataFormat.CSNR;
+                 uint16 Tx_Data = *g_spiPacket_t[4U].txdata_ptr;
+
+                 g_spiPacket_t[4U].tx_length--;
+
+                 if(g_spiPacket_t[4U].tx_length == 0U)
+                 {
+                    Chip_Select_Hold = 0U;
+                 }
+                 else
+                 {
+                    Chip_Select_Hold = (g_spiPacket_t[4U].g_spiDataFormat.CS_HOLD) ? 0x10000000U : 0U;
+                 }
+
+                 spiREG5->DAT1 = ((uint32)DataFormat << 24U) |
+                                 ((uint32)ChipSelect << 16U) |
+                                 (WDelay)           |
+                                 (Chip_Select_Hold) |
+                                 (uint32)Tx_Data;
+
+                 /*SAFETYMCUSW 567 S MR:17.1,17.4 <APPROVED> "Pointer increment needed" */
+                 g_spiPacket_t[4U].txdata_ptr++;
+                 /* Dummy Receive read if no RX Interrupt enabled */
+                 if(((spiREG5->INT0 & 0x0000FFFFU)& 0x0100U) == 0U)
+                 {
+                     if((spiREG5->FLG & 0x00000100U) == 0x00000100U)
+                     {
+                         SpiBuf = spiREG5->BUF;
+                     }
+                 }
+
+                 if(g_spiPacket_t[4U].tx_length == 0U)
+                 {
+                    spiREG5->INT0 = (spiREG5->INT0 & 0x0000FFFFU) & (~(uint32)0x0200U); /* Disable Interrupt */
+                    g_spiPacket_t[4U].tx_data_status = SPI_COMPLETED;
+                    spiEndNotification(spiREG5);
+                 }
+                 break;
+             }
+
+    default: /* Clear Flags and return  */
+             spiREG5->FLG = flags;
+             spiNotification(spiREG5, flags & 0xFFU);
+             break;
+    }
+
+
+/* USER CODE BEGIN (69) */
+/* USER CODE END */
+}
+
+/* USER CODE BEGIN (70) */
+/* USER CODE END */
+
+/** @fn void mibspi5HighLevelInterrupt(void)
+*   @brief Level 0 Interrupt for SPI5
+*/
+#pragma CODE_STATE(mibspi5HighLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi5HighLevelInterrupt, IRQ)
+
+/* SourceId : SPI_SourceId_029 */
+/* DesignId : SPI_DesignId_016 */
+/* Requirements : HL_CONQ_SPI_SR22, HL_CONQ_SPI_SR23, HL_CONQ_SPI_SR37  */
+void mibspi5HighLevelInterrupt(void)
+{
+
+/* USER CODE BEGIN (71) */
+/* USER CODE END */
+
+    uint32 flags = (spiREG5->FLG & 0x0000FFFFU) & (~spiREG5->LVL & 0x035FU);
+    uint32 vec = spiREG5->INTVECT0;
+
+
+/* USER CODE BEGIN (72) */
+/* USER CODE END */
+
+    switch(vec)
+    {
+
+    case 0x24U: /* Receive Buffer Full Interrupt */
+             {
+                uint16 *destbuff;
+                destbuff = g_spiPacket_t[4U].rxdata_ptr;
+
+                *destbuff = (uint16)spiREG5->BUF;
+                /*SAFETYMCUSW 567 S MR:17.1,17.4 <APPROVED> "Pointer increment needed" */
+                g_spiPacket_t[4U].rxdata_ptr++;
+                g_spiPacket_t[4U].rx_length--;
+
+                if(g_spiPacket_t[4U].rx_length == 0U)
+                {
+                    spiREG5->INT0 = (spiREG5->INT0 & 0x0000FFFFU) & (~(uint32)0x0100U);
+                    g_spiPacket_t[4U].rx_data_status = SPI_COMPLETED;
+                    spiEndNotification(spiREG5);
+                }
+                break;
+             }
+
+    case 0x28U: /* Transmit Buffer Empty Interrupt */
+             {
+                 volatile uint32 SpiBuf;
+                 uint32 Chip_Select_Hold = 0U;
+                 uint32 WDelay = (g_spiPacket_t[4U].g_spiDataFormat.WDEL) ? 0x04000000U: 0U;
+                 SPIDATAFMT_t DataFormat = g_spiPacket_t[4U].g_spiDataFormat.DFSEL;
+                 uint8 ChipSelect = g_spiPacket_t[4U].g_spiDataFormat.CSNR;
+                 uint16 Tx_Data = *g_spiPacket_t[4U].txdata_ptr;
+
+                 g_spiPacket_t[4U].tx_length--;
+
+                 if(g_spiPacket_t[4U].tx_length == 0U)
+                 {
+                    Chip_Select_Hold = 0U;
+                 }
+                 else
+                 {
+                    Chip_Select_Hold = (g_spiPacket_t[4U].g_spiDataFormat.CS_HOLD) ? 0x10000000U : 0U;
+                 }
+
+                 spiREG5->DAT1 = ((uint32)DataFormat << 24U) |
+                                 ((uint32)ChipSelect << 16U) |
+                                 (WDelay)           |
+                                 (Chip_Select_Hold) |
+                                 (uint32)Tx_Data;
+
+                 /*SAFETYMCUSW 567 S MR:17.1,17.4 <APPROVED> "Pointer increment needed" */
+                 g_spiPacket_t[4U].txdata_ptr++;
+                 /* Dummy Receive read if no RX Interrupt enabled */
+                 if(((spiREG5->INT0 & 0x0000FFFFU)& 0x0100U) == 0U)
+                 {
+                     if((spiREG5->FLG & 0x00000100U) == 0x00000100U)
+                     {
+                         SpiBuf = spiREG5->BUF;
+                     }
+                 }
+
+                 if(g_spiPacket_t[4U].tx_length == 0U)
+                 {
+                    spiREG5->INT0 = (spiREG5->INT0 & 0x0000FFFFU) & (~(uint32)0x0200U); /* Disable Interrupt */
+                    g_spiPacket_t[4U].tx_data_status = SPI_COMPLETED;
+                    spiEndNotification(spiREG5);
+                }
+                break;
+             }
+
+    default: /* Clear Flags and return  */
+             spiREG5->FLG = flags;
+             spiNotification(spiREG5, flags & 0xFFU);
+             break;
+    }
+
+/* USER CODE BEGIN (73) */
+/* USER CODE END */
+}
 
 

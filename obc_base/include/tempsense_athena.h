@@ -12,28 +12,10 @@
  * GNU General Public License for more details.
  */
 /**
- * @file    deployablecontrol.h
+ * @file    tempsense_athena.h
  * @author  Josh Lazaruk
- * @date    2020-08-13
+ * @date    2020-08-16
  */
 
-#include "HL_gio.h"
-
-
-typedef enum
-{
-    Port = 0,
-    UHF_P = 1,
-    UHF_Z = 2,
-    Payload = 3,
-    UHF_S = 4,
-    UHF_N = 5,
-    Starboard = 6,
-    DFGM = 7,
-} Deployable_TypeDef;
-
-void activateknife(Deployable_TypeDef knife);
-
-bool switchstatus(Deployable_TypeDef sw);
-
-bool deploy(Deployable_TypeDef deployable);
+void inittemp_all(void);
+int gettemp_all(long temparray[6]);

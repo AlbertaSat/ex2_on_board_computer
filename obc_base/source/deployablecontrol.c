@@ -22,45 +22,46 @@
 #include "deployablescontrol.h"
 
 void activate(Deployable_TypeDef knife){
+    int temp;
     switch(knife){
         case Port:
             gioSetBit(hetPORT1, 8, 1);
-            //add a delay for x seconds
+            for (temp = 0; temp < 0x8000000; temp++);//~6.5 seconds at 300 MHz
             gioSetBit(hetPORT1, 8, 0);
             break;
         case UHF_P:
             gioSetBit(hetPORT2, 5, 1);
-            //add a delay for x seconds
+            for (temp = 0; temp < 0x8000000; temp++);//~6.5 seconds at 300 MHz
             gioSetBit(hetPORT2, 5, 0);
             break;
         case UHF_Z:
             gioSetBit(hetPORT1, 26, 1);
-            //add a delay for x seconds
+            for (temp = 0; temp < 0x8000000; temp++);//~6.5 seconds at 300 MHz
             gioSetBit(hetPORT1, 26, 0);
             break;
         case Payload:
             gioSetBit(hetPORT1, 14, 1);
-            //add a delay for x seconds
+            for (temp = 0; temp < 0x8000000; temp++);//~6.5 seconds at 300 MHz
             gioSetBit(hetPORT1, 14, 0);
             break;
         case UHF_S:
             gioSetBit(gioPORTA, 0, 1);
-            //add a delay for x seconds
+            for (temp = 0; temp < 0x8000000; temp++);//~6.5 seconds at 300 MHz
             gioSetBit(gioPORTA, 0, 0);
             break;
         case UHF_N:
             gioSetBit(hetPORT1, 22, 1);
-            //add a delay for x seconds
+            for (temp = 0; temp < 0x8000000; temp++);//~6.5 seconds at 300 MHz
             gioSetBit(hetPORT1, 22, 0);
             break;
         case Starboard:
             gioSetBit(hetPORT2, 1, 1);
-            //add a delay for x seconds
+            for (temp = 0; temp < 0x8000000; temp++);//~6.5 seconds at 300 MHz
             gioSetBit(hetPORT2, 1, 0);
             break;
         case DFGM:
             gioSetBit(hetPORT1, 16, 1);
-            //add a delay for x seconds
+            for (temp = 0; temp < 0x8000000; temp++);//~6.5 seconds at 300 MHz
             gioSetBit(hetPORT1, 16, 0);
             break;
         default:
@@ -91,4 +92,11 @@ bool switchstatus(Deployable_TypeDef sw){
         default:
             return 1;//check this
     }
+}
+
+
+//This should return 1, assuming switches are not connected to ground when undepressed
+bool deploy(Deployable_TypeDef deployable){
+    activate(deployable);
+    return switchstatus(deployable);
 }

@@ -62,8 +62,10 @@
 #include "deployablescontrol.h"
 #include "demux_handler.h"
 #include "rtcmk.h"
-#include "tmp421.h"
 #include "stdio.h"
+#include "tmp421.h"
+#include "tempsense_athena.h"
+
 
 ///* Define Task Handles */
 xTaskHandle xTask1Handle;
@@ -105,10 +107,19 @@ int main(void)
 {
 /* USER CODE BEGIN (3) */
     InitIO();
-    bool status = 0;
 
+//    long measuredtemps[6] = {0};
+//
+//
+//    inittemp_all();
+//    int delay;
+//    for (delay = 0; delay < 0x1000; delay++);//temporary fix... don't want delay down the road
+//
+//    while(1){
+//        for (delay = 0; delay < 0x800000; delay++);
+//        gettemp_all(measuredtemps);
+//    }
 
-    SPIMasterRxTest(spiREG5);
 
 
 //    status = GPIOGetBit(1);
@@ -151,7 +162,6 @@ int main(void)
 
 
 
-//    TMP421test(0x4C);
 
 
 //    activateknife(PortKnife);
