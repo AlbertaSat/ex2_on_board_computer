@@ -22,14 +22,16 @@
 
 typedef enum
 {
-    PortKnife = 0,
-    UHFKnife_P = 1,
-    UHFKnife_Z = 2,
-    PayloadKnife = 3,
-    UHFKnife_S = 4,
-    UHFKnife_N = 5,
-    StarboardKnife = 6,
-    DFGMKnife = 7,
-} HotKnife_TypeDef;
+    Port = 0,
+    UHF_P = 1,
+    UHF_Z = 2,
+    Payload = 3,
+    UHF_S = 4,
+    UHF_N = 5,
+    Starboard = 6,
+    DFGM = 7,
+} Deployable_TypeDef;
 
-void activateknife(HotKnife_TypeDef knife);
+void activateknife(Deployable_TypeDef knife);
+
+bool switchstatus(Deployable_TypeDef sw);

@@ -105,6 +105,51 @@ int main(void)
 {
 /* USER CODE BEGIN (3) */
     InitIO();
+    bool status = 0;
+
+
+    SPIMasterRxTest(spiREG5);
+
+
+//    status = GPIOGetBit(1);
+//    status = GPIOGetBit(1);
+//
+//    status = GPIOGetBit(8);
+//    status = GPIOGetBit(8);
+//
+//    status = GPIOGetBit(10);
+//    status = GPIOGetBit(10);
+//
+//    status = GPIOGetBit(11);
+//    status = GPIOGetBit(11);
+//
+//
+//    status = switchstatus(Port);
+//    status = switchstatus(Port);
+//
+//    status = switchstatus(UHF_P);
+//    status = switchstatus(UHF_P);
+//
+//    status = switchstatus(UHF_Z);
+//    status = switchstatus(UHF_Z);
+//
+//    status = switchstatus(Payload);
+//    status = switchstatus(Payload);
+//
+//    status = switchstatus(Starboard);
+//    status = switchstatus(Starboard);
+//
+//    status = switchstatus(UHF_S);
+//    status = switchstatus(UHF_S);
+//
+//    status = switchstatus(DFGM);
+//    status = switchstatus(DFGM);
+//
+//    status = switchstatus(UHF_N);
+//    status = switchstatus(UHF_N);
+
+
+
 
 //    TMP421test(0x4C);
 
@@ -175,62 +220,62 @@ int main(void)
 
 
     //Calibrate device and set alert properly
-    uint16_t calibrationval = 0b0100111100111111;
-
-    if(INA226_RegisterSet(i2cREG2, 0x40, INA226_RegCalib, calibrationval)){
-        while(1);
-    }
-
-    int temp;
-    for (temp = 0; temp < 0x10000; temp++);//temporary fix... don't want delay down the road
-
-    uint16_t alertlimit = 0b0001111101000000;
-    uint16_t regval = 0;
-
-    if(INA226_RegisterSet(i2cREG2, 0x40, INA226_RegAlertLim, alertlimit)){
-        while(1);
-    }
-//    for (temp = 0; temp < 0x10000; temp++);
-//    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegAlertLim, &regval)){
+//    uint16_t calibrationval = 0b0100111100111111;
+//
+//    if(INA226_RegisterSet(i2cREG2, 0x40, INA226_RegCalib, calibrationval)){
 //        while(1);
 //    }
-//    if(regval != alertlimit){
-//        fprintf(stderr, "alertlim register not set");
-//    }
-
-    for (temp = 0; temp < 0x10000; temp++);
-
-    uint16_t alertsetting = 0b1000000000000000;
-
-    if(INA226_RegisterSet(i2cREG2, 0x40, INA226_RegMaskEn, alertsetting)){
-        while(1);
-    }
-//    for (temp = 0; temp < 0x10000; temp++);
-//    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegMaskEn, &regval)){
+//
+//    int temp;
+//    for (temp = 0; temp < 0x10000; temp++);//temporary fix... don't want delay down the road
+//
+//    uint16_t alertlimit = 0b0001111101000000;
+//    uint16_t regval = 0;
+//
+//    if(INA226_RegisterSet(i2cREG2, 0x40, INA226_RegAlertLim, alertlimit)){
 //        while(1);
 //    }
-//    if(regval != alertsetting){
-//        fprintf(stderr, "masken register not set");
+////    for (temp = 0; temp < 0x10000; temp++);
+////    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegAlertLim, &regval)){
+////        while(1);
+////    }
+////    if(regval != alertlimit){
+////        fprintf(stderr, "alertlim register not set");
+////    }
+//
+//    for (temp = 0; temp < 0x10000; temp++);
+//
+//    uint16_t alertsetting = 0b1000000000000000;
+//
+//    if(INA226_RegisterSet(i2cREG2, 0x40, INA226_RegMaskEn, alertsetting)){
+//        while(1);
 //    }
-
-    for (temp = 0; temp < 0x10000; temp++);
-
-    uint16_t shuntv = 0;
-
-    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegShuntV, &shuntv)){
-        while(1);
-    }
-
-
-    //obvs make this an interrupt thing in the future
-    while(1){
-        if (gioGetBit(hetPORT2, 0) == 0){
-            gioSetBit(hetPORT2, 12, 0);
-        }
-        else{
-            gioSetBit(hetPORT2, 12, 1);
-        }
-    }
+////    for (temp = 0; temp < 0x10000; temp++);
+////    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegMaskEn, &regval)){
+////        while(1);
+////    }
+////    if(regval != alertsetting){
+////        fprintf(stderr, "masken register not set");
+////    }
+//
+//    for (temp = 0; temp < 0x10000; temp++);
+//
+//    uint16_t shuntv = 0;
+//
+//    if(INA226_RegisterGet(i2cREG2, 0x40, INA226_RegShuntV, &shuntv)){
+//        while(1);
+//    }
+//
+//
+//    //obvs make this an interrupt thing in the future
+//    while(1){
+//        if (gioGetBit(hetPORT2, 0) == 0){
+//            gioSetBit(hetPORT2, 12, 0);
+//        }
+//        else{
+//            gioSetBit(hetPORT2, 12, 1);
+//        }
+//    }
 
 //    int curr = 0;
 //

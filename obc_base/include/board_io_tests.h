@@ -15,7 +15,7 @@
 
 void InitIO(void);
 uint8_t GPIOSetBit(uint8_t bit, uint8_t value);
-uint8_t GPIOGetBit(uint8_t bit, uint8_t value);
+int GPIOGetBit(uint8_t bit);
 void GPIOTxTest(void);
 void UARTTxTest(sciBASE_t * regset);
 void UARTRxTest(sciBASE_t * regset);

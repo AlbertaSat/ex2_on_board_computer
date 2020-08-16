@@ -22,11 +22,15 @@ void InitIO(void){
     gioInit();
 
     //The following sets the proper direction for all GPIO
-    gioSetDirection(hetPORT2, 0xFFFFFFFE);
-    gioSetDirection(hetPORT1, 0xFCFF7FFF);
-    gioSetDirection(gioPORTA, 0xFFFFFF7F);
+    gioSetDirection(hetPORT2, 0xFFFFFFEA);
+    gioSetDirection(hetPORT1, 0x9CFF6BEF);
+    gioSetDirection(gioPORTA, 0xFFFFFF6F);
     gioSetDirection(gioPORTB, 0xFFFFFFFF);
-    gioSetBit(hetPORT2, 12, 1);
+
+    gioSetBit(hetPORT2, 12, 1);//solar panel power - enable
+    gioSetBit(hetPORT1, 20, 1);//IRIS nCONFIG - disable
+
+
     //hetInit();
 
 }
@@ -93,7 +97,7 @@ uint8_t GPIOSetBit(uint8_t bit, uint8_t value){
 *   @param[in] value binary value read from GPIO
 *
 *   Writes a value to the specified GPIO pin */
-uint8_t GPIOGetBit(uint8_t bit, uint8_t * value){
+int GPIOGetBit(uint8_t bit){
 
     //GPIO0 - 2_23
     //GPIO1 - 1_25 - input
@@ -111,51 +115,36 @@ uint8_t GPIOGetBit(uint8_t bit, uint8_t * value){
     //GPIO13 - B0
     switch(bit){
         case 0:
-            *value = gioGetBit(hetPORT2, 23);
-            break;
+            return gioGetBit(hetPORT2, 23);
         case 1:
-            *value = gioGetBit(hetPORT1, 25);
-            break;
+            return gioGetBit(hetPORT1, 25);
         case 2:
-            *value = gioGetBit(hetPORT2, 21);
-            break;
+            return gioGetBit(hetPORT2, 21);
         case 3:
-            *value = gioGetBit(hetPORT1, 9);
-            break;
+            return gioGetBit(hetPORT1, 9);
         case 4:
-            *value = gioGetBit(hetPORT1, 3);
-            break;
+            return gioGetBit(hetPORT1, 3);
         case 5:
-            *value = gioGetBit(hetPORT1, 7);
-            break;
+            return gioGetBit(hetPORT1, 7);
         case 6:
-            *value = gioGetBit(hetPORT2, 22);
-            break;
+            return gioGetBit(hetPORT2, 22);
         case 7:
-            *value = gioGetBit(hetPORT1, 1);
-            break;
+            return gioGetBit(hetPORT1, 1);
         case 8:
-            *value = gioGetBit(hetPORT1, 24);
-            break;
+            return gioGetBit(hetPORT1, 24);
         case 9:
-            *value = gioGetBit(hetPORT1, 20);
-            break;
+            return gioGetBit(hetPORT1, 20);
         case 10:
-            *value = gioGetBit(gioPORTA, 7);
-            break;
+            return gioGetBit(gioPORTA, 7);
         case 11:
-            *value = gioGetBit(hetPORT1, 15);
-            break;
+            return gioGetBit(hetPORT1, 15);
         case 12:
-            *value = gioGetBit(gioPORTB, 1);
-            break;
+            return gioGetBit(gioPORTB, 1);
         case 13:
-            *value = gioGetBit(gioPORTB, 0);
-            break;
+            return gioGetBit(gioPORTB, 0);
         default:
-            //return -1;
+            return -1;
     }
-    return 0;
 }
 
 
@@ -237,13 +226,62 @@ void SPIMasterRxTest(spiBASE_t * regset){
     dataconfig1_t.CS_HOLD = FALSE;
     dataconfig1_t.WDEL    = TRUE;
     dataconfig1_t.DFSEL   = SPI_FMT_0;
-    dataconfig1_t.CSNR    = 0xFE;
+    dataconfig1_t.CSNR    = 0x00;
 
     uint16_t data;
+    int i = 0;
+    while(i<500){
+        data = 0;
+        if(GPIOGetBit(8) == 0){//change to interrupt
+            spiReceiveData(regset, &dataconfig1_t, 1, &data);
+            if(data == 0b0011010100110101){
+                i++;
+            }
+        }
+    }
+
+}
+
+void SPISlaveTxTest(spiBASE_t * regset){
+
+    //RUN THIS ON A DEV BOARD TO SEND DATA TO ATHENA
+    //MAKE SURE TO SET THE BOARD TO BE A SLAVE
+
+    spiDAT1_t dataconfig1_t;
+
+    dataconfig1_t.CS_HOLD = FALSE;
+    dataconfig1_t.WDEL    = FALSE;//not sure
+    dataconfig1_t.DFSEL   = SPI_FMT_0;
+    dataconfig1_t.CSNR    = 0x00;//no CS lines
+
+    uint16_t data = 0b0011010100110101;
     int i;
     for(i = 0; i<500; i++){
+        spiTransmitData(regset, &dataconfig1_t, 1, &data);
+    }
+
+}
+
+void SPISlaveRxTest(spiBASE_t * regset, uint8 spinumber){
+
+    //Make this an interrupt thing when the CS line is enabled
+
+    spiDAT1_t dataconfig1_t;
+
+    dataconfig1_t.CS_HOLD = FALSE;
+    dataconfig1_t.WDEL    = FALSE;//not sure
+    dataconfig1_t.DFSEL   = SPI_FMT_0;
+    dataconfig1_t.CSNR    = 0x00;//no CS lines
+
+    uint16_t data;
+    int i = 0;
+    while(i < 500){
         data = 0;
         spiReceiveData(regset, &dataconfig1_t, 1, &data);
+        if(data == 0b0011010100110101){
+            i++;
+        }
+
     }
 
 }
@@ -370,6 +408,7 @@ void CANTxTest(canBASE_t * regset, uint8_t msgbox){
     uint8_t data[8] = {53, 53, 53, 53, 53, 53, 53, 53};
 
     for(i = 0; i<125; i++){
+        while(canIsTxMessagePending(regset, msgbox));
         canTransmit(regset, msgbox, data);
     }
 

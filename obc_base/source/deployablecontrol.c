@@ -21,44 +21,44 @@
 #include "HL_het.h"
 #include "deployablescontrol.h"
 
-void activateknife(HotKnife_TypeDef knife){
+void activate(Deployable_TypeDef knife){
     switch(knife){
-        case PortKnife:
+        case Port:
             gioSetBit(hetPORT1, 8, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT1, 8, 0);
             break;
-        case UHFKnife_P:
+        case UHF_P:
             gioSetBit(hetPORT2, 5, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT2, 5, 0);
             break;
-        case UHFKnife_Z:
+        case UHF_Z:
             gioSetBit(hetPORT1, 26, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT1, 26, 0);
             break;
-        case PayloadKnife:
+        case Payload:
             gioSetBit(hetPORT1, 14, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT1, 14, 0);
             break;
-        case UHFKnife_S:
+        case UHF_S:
             gioSetBit(gioPORTA, 0, 1);
             //add a delay for x seconds
             gioSetBit(gioPORTA, 0, 0);
             break;
-        case UHFKnife_N:
+        case UHF_N:
             gioSetBit(hetPORT1, 22, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT1, 22, 0);
             break;
-        case StarboardKnife:
+        case Starboard:
             gioSetBit(hetPORT2, 1, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT2, 1, 0);
             break;
-        case DFGMKnife:
+        case DFGM:
             gioSetBit(hetPORT1, 16, 1);
             //add a delay for x seconds
             gioSetBit(hetPORT1, 16, 0);
@@ -67,4 +67,28 @@ void activateknife(HotKnife_TypeDef knife){
             return -1;
     }
     return 0;
+}
+
+
+bool switchstatus(Deployable_TypeDef sw){
+    switch(sw){
+        case Port:
+            return gioGetBit(hetPORT2, 4);
+        case UHF_P:
+            return gioGetBit(hetPORT1, 10);
+        case UHF_Z:
+            return gioGetBit(hetPORT1, 30);
+        case Payload:
+            return gioGetBit(hetPORT1, 4);
+        case UHF_S:
+            return gioGetBit(hetPORT2, 2);
+        case UHF_N:
+            return gioGetBit(hetPORT1, 12);
+        case Starboard:
+            return gioGetBit(gioPORTA, 4);
+        case DFGM:
+            return gioGetBit(hetPORT1, 29);
+        default:
+            return 1;//check this
+    }
 }

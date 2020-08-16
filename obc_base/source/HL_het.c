@@ -2192,8 +2192,8 @@ void hetInit(void)
 
     /** - Set HET pins pullup/down enable */
     hetREG1->PULDIS = (uint32) 0x00000000U
-                    | (uint32) 0x40000000U
-                    | (uint32) 0x20000000U
+                    | (uint32) 0x00000000U
+                    | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
@@ -2210,15 +2210,15 @@ void hetInit(void)
                     | (uint32) 0x00008000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
-                    | (uint32) 0x00001000U
+                    | (uint32) 0x00000000U
                     | (uint32) 0x00000800U
-                    | (uint32) 0x00000400U
+                    | (uint32) 0x00000000U
                     | (uint32) 0x00000200U
                     | (uint32) 0x00000100U
                     | (uint32) 0x00000080U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
-                    | (uint32) 0x00000010U
+                    | (uint32) 0x00000000U
                     | (uint32) 0x00000008U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000002U
@@ -2583,9 +2583,9 @@ void hetInit(void)
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
-                    | (uint32) 0x00000010U
                     | (uint32) 0x00000000U
-                    | (uint32) 0x00000004U
+                    | (uint32) 0x00000000U
+                    | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U;
 
