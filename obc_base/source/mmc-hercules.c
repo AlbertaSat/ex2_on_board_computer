@@ -15,6 +15,7 @@
 #include <stdbool.h>
 #include "HL_sys_common.h"
 #include "HL_gio.h"
+#include "HL_het.h"
 #include "HL_spi.h"
 #include "diskio.h"
 #include "mmc-hercules.h"
@@ -47,7 +48,8 @@ void mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) {
 // asserts the CS pin to the card
 static void DESELECT (void)
 {
-    _spiPORT->DSET = 0x01;        // SCS[0] = high
+//    _spiPORT->DSET = 0x01;        // SCS[0] = high
+    gioSetBit(hetPORT2, 6, 1);
 }
 
 
@@ -56,7 +58,8 @@ static void SELECT (void)
 {
     assert(_spiPORT); // call mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) first
     assert(_spiREG); // call mmcSelectSpi(gioPORT_t *port, spiBASE_t *reg) first
-    _spiPORT-> DCLR = 0x01;        // SCS[0] = low
+//    _spiPORT-> DCLR = 0x01;        // SCS[0] = low
+    gioSetBit(hetPORT2, 6, 0);
 }
 
 
@@ -162,7 +165,7 @@ static void power_on (void)
     * This doesn't really turn the power on, but initializes the
     * SPI port and pins needed to talk to the card.
     */
-    mmcSelectSpi(gioPORTA, spiREG3);
+    mmcSelectSpi(spiPORT1, spiREG1);
 
     /* Set DI and CS high and apply more than 74 pulses to SCLK for the card */
     /* to be able to accept a native command. */

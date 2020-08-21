@@ -21,6 +21,7 @@ void InitIO(void){
     spiInit();
     gioInit();
 
+
     //The following sets the proper direction for all GPIO
     gioSetDirection(hetPORT2, 0xFFFFFFEA);
     gioSetDirection(hetPORT1, 0x9CFF6BEF);
@@ -29,6 +30,7 @@ void InitIO(void){
 
     gioSetBit(hetPORT2, 12, 1);//solar panel power - enable
     gioSetBit(hetPORT1, 20, 1);//IRIS nCONFIG - disable
+    gioSetBit(hetPORT2, 6, 1);//SD card - disable
 
 
     //hetInit();

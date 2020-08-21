@@ -53,6 +53,7 @@
 /* Include FreeRTOS scheduler files */
 #include "FreeRTOS.h"
 #include "os_task.h"
+#include "integer.h"
 
 /* Include HET header file - types, definitions and function declarations for system driver */
 #include "HL_het.h"
@@ -67,6 +68,7 @@
 #include "tempsense_athena.h"
 
 #include "HL_spi.h"
+#include "HL_sci.h"
 #include "HL_esm.h"
 #include "HL_sys_core.h"
 #include "HL_system.h"
@@ -79,7 +81,6 @@
 #include <redtests.h>
 
 #include <stdlib.h>
-
 
 ///* Define Task Handles */
 xTaskHandle xTask1Handle;
@@ -134,6 +135,24 @@ void vTaskFileSys(void *pvParameters)
 }
 
 
+void CLIhandler(void){
+
+    //NOTE: COM3 serial port used with xds110 debugger aux UART connection
+
+    sciSend(sciREG4, 13, (unsigned char *)"read this boi");
+    unsigned char command;
+
+    switch(command){
+        case 0:
+
+            break;
+    }
+
+
+
+}
+
+
 
 
 
@@ -158,17 +177,34 @@ int main(void)
 /* USER CODE BEGIN (3) */
     InitIO();
 
+    //spiTransmitData(spiREG3, &dataconfig1_t, 1, 0b11001010);
+
+
+
+
+
 //    long measuredtemps[6] = {0};
-//
-//
-//    inittemp_all();
 //    int delay;
+//    int temp = 0x800000;
+//    inittemp_all();
 //    for (delay = 0; delay < 0x1000; delay++);//temporary fix... don't want delay down the road
 //
 //    while(1){
-//        for (delay = 0; delay < 0x800000; delay++);
 //        gettemp_all(measuredtemps);
+//
+//        temp = 0x800000 - (16*measuredtemps[4]);
+//
+//        for (delay = 0; delay < temp; delay++);
+//
+//        gioSetBit(hetPORT1, 18, 1);
+//
+//        for (delay = 0; delay < temp; delay++);
+//
+//        gioSetBit(hetPORT1, 18, 0);
+//
+//
 //    }
+
 
 
 
