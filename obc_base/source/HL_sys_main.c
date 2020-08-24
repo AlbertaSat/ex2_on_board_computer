@@ -126,13 +126,77 @@ void vTaskFileSys(void *pvParameters)
         exit(red_errno);
     }
 
-    fprintf(stderr, "Mounted (errno = %d)\n", (int)red_errno);
+    fprintf(stderr, "Mounted\n");
 
     char buf[1024] = "";
 
     red_getcwd(buf, 1024);
 
-    fprintf(stderr, "CWD = %s (errno = %d)\n", buf, (int)red_errno);
+    fprintf(stderr, "CWD = %s\n", buf);
+
+    iErr = red_mkdir("home");
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_mkdir()\n", (int)red_errno);
+        exit(red_errno);
+    }
+    iErr = red_chdir("home");
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_chdir()\n", (int)red_errno);
+        exit(red_errno);
+    }
+
+    red_getcwd(buf, 1024);
+
+    fprintf(stderr, "CWD = %s\n", buf);
+
+    int32_t file1;
+
+    file1 = red_open("damn.txt", RED_O_RDWR | RED_O_CREAT);
+    if (file1 == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_open()\n", (int)red_errno);
+        exit(red_errno);
+    }
+
+    iErr = red_write(file1, "1 2 3 4 5 6 7 8\n", strlen("1 2 3 4 5 6 7 8\n"));
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_write()\n", (int)red_errno);
+        exit(red_errno);
+    }
+    else{
+        fprintf(stderr, "%d bytes written\n", iErr);
+    }
+
+    iErr = red_close(file1);
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_close()\n", (int)red_errno);
+        exit(red_errno);
+    }
+    file1 = red_open("damn.txt", RED_O_RDWR);
+    if (file1 == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_open()\n", (int)red_errno);
+        exit(red_errno);
+    }
+
+    char readdata[30] = {0};
+
+    iErr = red_read(file1, readdata, strlen("1 2 3 4 5 6 7 8\n"));
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_read()\n", (int)red_errno);
+        exit(red_errno);
+    }
+    else{
+        fprintf(stderr, "%d bytes read\n", iErr);
+    }
+
+
+
 }
 
 
