@@ -275,6 +275,7 @@ static BYTE send_cmd (
     if (cmd == CMD0) n = 0x95;            /* CRC for CMD0(0) */
     if (cmd == CMD41) n = 0x95;
     if (cmd == CMD8) n = 0x87;            /* CRC for CMD8(0x1AA) */
+    if (cmd == CMD58) n = 0x75;//test for new card
     xmit_spi(n);
 
 
