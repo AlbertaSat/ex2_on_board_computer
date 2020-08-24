@@ -54,6 +54,7 @@
 #include "FreeRTOS.h"
 #include "os_task.h"
 #include "integer.h"
+#include "sd_io.h"
 
 /* Include HET header file - types, definitions and function declarations for system driver */
 #include "HL_het.h"
@@ -177,8 +178,36 @@ int main(void)
 /* USER CODE BEGIN (3) */
     InitIO();
 
-    //spiTransmitData(spiREG3, &dataconfig1_t, 1, 0b11001010);
-
+//    SD_DEV dev[1];          // Create device descriptor
+//    uint8_t buffer[512];    // Example of your buffer data
+//    int i = 0;
+//    //spiTransmitData(spiREG3, &dataconfig1_t, 1, 0b11001010);
+//    SDRESULTS res;
+//    // Part of your initialization code here
+//    if(SD_Init(dev)==SD_OK)
+//    {
+//      // You can read the sd card. For example you can read from the second
+//      // sector the set of bytes between [04..20]:
+//      // - Second sector is 1
+//      // - Offset is 4
+//      // - Bytes to count is 16 (20 minus 4)
+//      res = SD_Read(dev, (void*)buffer, 1, 4, 16);
+//      if(res==SD_OK)
+//      {
+//        for(i=0;i<512;i++){
+//            buffer[i] = (uint8_t)(i/2);
+//        }
+//        // Maybe you wish change the data on this sector:
+//        res = SD_Write(dev, (void*)buffer, 1);
+//        for(i=0;i<512;i++){
+//            buffer[i] = 0;
+//        }
+//        if(res==SD_OK)
+//        {
+//            res = SD_Read(dev, (void*)buffer, 1, 0, 512);
+//        }
+//      }
+//    }
 
 
 

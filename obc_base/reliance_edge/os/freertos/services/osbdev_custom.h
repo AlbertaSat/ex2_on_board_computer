@@ -51,8 +51,9 @@
     sd.h, that would be included here.
 
 */
-#include <diskio.h>
+#include <sd_io.h>
 
+SD_DEV dev[1];
 
 
 /* @brief Initialize a disk.
@@ -71,7 +72,12 @@ static REDSTATUS DiskOpen(
     BDEVOPENMODE    mode)
 {
     //  Insert code here to open/initialize the block device.
-    return disk_initialize();
+    if(SD_Init(dev)==SD_OK){
+        return 0;
+    }
+    else{
+        return -RED_EIO;
+    }
 }
 
 
@@ -124,7 +130,7 @@ static REDSTATUS DiskRead(
     uint32_t    ulSectorCount,
     void       *pBuffer)
 {
-    REDSTATUS   ret;
+//    REDSTATUS   ret;
 
     /*  Avoid warnings about unused function parameters.
     */
@@ -134,12 +140,17 @@ static REDSTATUS DiskRead(
     (void)pBuffer;
 
     /*  Insert code here to read sectors from the block device.*/
-    disk_read(pBuffer,ullSectorStart,ulSectorCount);
-    //
-    //REDERROR();
-    ret = 0;
-
-    return ret;
+    //note: assumes 512 byte sectors
+    int i;
+    for(i=0; i<ulSectorCount; i++){
+        if(SD_Read(dev, pBuffer + (BYTE)(i*512), ullSectorStart + i, 0, 512) == SD_OK){
+            //do nothing
+        }
+        else{
+            return -RED_EIO;
+        }
+    }
+    return 0;
 }
 
 
@@ -164,7 +175,7 @@ static REDSTATUS DiskWrite(
     uint32_t    ulSectorCount,
     const void *pBuffer)
 {
-    REDSTATUS   ret;
+//    REDSTATUS   ret;
 
     /*  Avoid warnings about unused function parameters.
     */
@@ -174,12 +185,18 @@ static REDSTATUS DiskWrite(
     (void)pBuffer;
 
     /*  Insert code here to write sectors to the block device.*/
-    disk_write(pBuffer,ullSectorStart,ulSectorCount);
-    //
-    //REDERROR();
-    ret = 0;
-
-    return ret;
+    int i;
+    SDRESULTS returnval;
+    for(i=0; i<ulSectorCount; i++){
+        returnval = SD_Write(dev, pBuffer + (BYTE)(i*512), ullSectorStart + i);
+        if(returnval == SD_OK){
+            //do nothing
+        }
+        else{
+            return -RED_EIO;
+        }
+    }
+    return 0;
 }
 
 
