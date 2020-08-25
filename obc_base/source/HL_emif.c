@@ -183,7 +183,7 @@ void emif_SDRAM_StartupInit(void)
 					  (uint32)((uint32)2U << 9U)|
 					  (uint32)((uint32)1U << 8U)|
 					  (uint32)((uint32)2U << 4U)|
-					  (uint32)((uint32)elements_256);
+					  (uint32)((uint32)elements_1024);
 
 	/* Procedure B  Step 5:  Read of SDRAM memory location causes processor to wait until SDRAM Initialization completes */
 	buffer           = *PTR;

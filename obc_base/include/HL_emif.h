@@ -140,7 +140,7 @@ typedef struct emif_config_reg
                                 | (uint32)((uint32)1U << 14U) \
                                 | (uint32)((uint32)2U << 9U) \
 								| (uint32)((uint32)2U << 4U) \
-                                | (uint32)((uint32)elements_256))
+                                | (uint32)((uint32)elements_1024))
 								
 #define EMIF_SDRCR_CONFIGVALUE   8191U
 

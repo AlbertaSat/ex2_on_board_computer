@@ -151,6 +151,7 @@ void vTaskFileSys(void *pvParameters)
 
     fprintf(stderr, "CWD = %s\n", buf);
 
+
     int32_t file1;
 
     file1 = red_open("damn.txt", RED_O_RDWR | RED_O_CREAT);
@@ -160,7 +161,7 @@ void vTaskFileSys(void *pvParameters)
         exit(red_errno);
     }
 
-    iErr = red_write(file1, "1 2 3 4 5 6 7 8\n", strlen("1 2 3 4 5 6 7 8\n"));
+    iErr = red_write(file1, "8 7 6 5 4 3 2 1\n", strlen("8 7 6 5 4 3 2 1\n"));
     if (iErr == -1)
     {
         fprintf(stderr, "Unexpected error %d from red_write()\n", (int)red_errno);
@@ -176,6 +177,7 @@ void vTaskFileSys(void *pvParameters)
         fprintf(stderr, "Unexpected error %d from red_close()\n", (int)red_errno);
         exit(red_errno);
     }
+
     file1 = red_open("damn.txt", RED_O_RDWR);
     if (file1 == -1)
     {
@@ -192,7 +194,14 @@ void vTaskFileSys(void *pvParameters)
         exit(red_errno);
     }
     else{
-        fprintf(stderr, "%d bytes read\n", iErr);
+        fprintf(stderr, "%d B read\n", iErr);
+    }
+
+    iErr = red_close(file1);
+    if (iErr == -1)
+    {
+        fprintf(stderr, "Unexpected error %d from red_close()\n", (int)red_errno);
+        exit(red_errno);
     }
 
 
@@ -241,6 +250,9 @@ int main(void)
 {
 /* USER CODE BEGIN (3) */
     InitIO();
+
+
+
 
 //    SD_DEV dev[1];          // Create device descriptor
 //    uint8_t buffer[512];    // Example of your buffer data
