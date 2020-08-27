@@ -38,7 +38,7 @@ int gettemp_all(long temparray[6]){
     int i;
     int delay;
     for(i=0;i<6;i++){
-        tmp421_read(tmp_addr[i], CHANNEL_REMOTE, &temparray[i]);//assuming we want to read remote channel
+        tmp421_read(tmp_addr[i], CHANNEL_LOCAL, &temparray[i]);//assuming we want to read remote channel
         for (delay = 0; delay < 0x1000; delay++);//temporary fix... don't want delay down the road
     }
     return 0;

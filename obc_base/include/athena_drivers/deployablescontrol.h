@@ -32,7 +32,7 @@ typedef enum
     DFGM = 7,
 } Deployable_TypeDef;
 
-void activateknife(Deployable_TypeDef knife);
+void activate(Deployable_TypeDef knife);
 
 bool switchstatus(Deployable_TypeDef sw);
 

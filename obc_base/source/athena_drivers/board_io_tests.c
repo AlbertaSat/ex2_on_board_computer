@@ -13,14 +13,20 @@
 #include "HL_sci.h"
 #include "HL_can.h"
 #include "HL_spi.h"
+#include "HL_emif.h"
 
+
+
+/* Initialize all IO controllers, set the direction for all GPIO pins,
+ * and set the default state for enable lines. */
 void InitIO(void){
     i2cInit();
     sciInit();
     canInit();
     spiInit();
     gioInit();
-
+    //emif_SDRAMInit(); not using until SDRAM tested
+    //hetInit(); don't think this is necessary
 
     //The following sets the proper direction for all GPIO
     gioSetDirection(hetPORT2, 0xFFFFFFEA);
@@ -31,10 +37,6 @@ void InitIO(void){
     gioSetBit(hetPORT2, 12, 1);//solar panel power - enable
     gioSetBit(hetPORT1, 20, 1);//IRIS nCONFIG - disable
     gioSetBit(hetPORT2, 6, 1);//SD card - disable
-
-
-    //hetInit();
-
 }
 
 
@@ -42,8 +44,22 @@ void InitIO(void){
 
 *   @param[in] value binary value to write to GPIO
 *
-*   Writes a value to the specified GPIO pin */
-
+*   Writes a value to the specified GPIO pin
+*
+*   GPIO0 - 2_23
+*   GPIO1 - 1_25 - input
+*   GPIO2 - 2_21
+*   GPIO3 - 1_9
+*   GPIO4 - 1_3
+*   GPIO5 - 1_7
+*   GPIO6 - 2_22
+*   GPIO7 - 1_1
+*   GPIO8 - 1_24 - input
+*   GPIO9 - 1_20
+*   GPIO10 - A7 - input
+*   GPIO11 - 1_15 - input
+*   GPIO12 - B1
+*   GPIO13 - B0 */
 uint8_t GPIOSetBit(uint8_t bit, uint8_t value){
     switch(bit){
         case 0:
@@ -98,23 +114,24 @@ uint8_t GPIOSetBit(uint8_t bit, uint8_t value){
 
 *   @param[in] value binary value read from GPIO
 *
-*   Writes a value to the specified GPIO pin */
+*   Writes a value to the specified GPIO pin
+*
+*   GPIO0 - 2_23
+*   GPIO1 - 1_25 - input
+*   GPIO2 - 2_21
+*   GPIO3 - 1_9
+*   GPIO4 - 1_3
+*   GPIO5 - 1_7
+*   GPIO6 - 2_22
+*   GPIO7 - 1_1
+*   GPIO8 - 1_24 - input
+*   GPIO9 - 1_20
+*   GPIO10 - A7 - input
+*   GPIO11 - 1_15 - input
+*   GPIO12 - B1
+*   GPIO13 - B0 */
 int GPIOGetBit(uint8_t bit){
 
-    //GPIO0 - 2_23
-    //GPIO1 - 1_25 - input
-    //GPIO2 - 2_21
-    //GPIO3 - 1_9
-    //GPIO4 - 1_3
-    //GPIO5 - 1_7
-    //GPIO6 - 2_22
-    //GPIO7 - 1_1
-    //GPIO8 - 1_24 - input
-    //GPIO9 - 1_20
-    //GPIO10 - A7 - input
-    //GPIO11 - 1_15 - input
-    //GPIO12 - B1
-    //GPIO13 - B0
     switch(bit){
         case 0:
             return gioGetBit(hetPORT2, 23);
@@ -150,32 +167,35 @@ int GPIOGetBit(uint8_t bit){
 }
 
 
+/* Rapidly alternates all output GPIOs on stack header on and off once
+ */
 void GPIOTxTest(void){
-    //note: this loops forever
     int i;
-    while(1){
-        for(i=0;i<=13;i++){
-            if((i == 1) || (i == 8) || (i == 10) || (i == 11)){
-                //do nothing
-            }
-            else{
-                GPIOSetBit(i, 1);
-            }
+    for(i=0;i<=13;i++){
+        if((i == 1) || (i == 8) || (i == 10) || (i == 11)){//make sure inputs are not toggled
+            //do nothing
         }
-        for(i=0;i<=13;i++){
-            if((i == 1) || (i == 8) || (i == 10) || (i == 11)){
-                //do nothing
-            }
-            else{
-                GPIOSetBit(i, 0);
-            }
+        else{
+            GPIOSetBit(i, 1);
+        }
+    }
+    for(i=0;i<=13;i++){
+        if((i == 1) || (i == 8) || (i == 10) || (i == 11)){//make sure inputs are not toggled
+            //do nothing
+        }
+        else{
+            GPIOSetBit(i, 0);
         }
     }
 }
 
 
 
-
+/*  Sends 1000 bytes of pattern 00110101 over UART
+ *  Make sure that another board is ready to receive data before running this.
+ *
+ *  @param[in] regset SCI/UART register to test
+ */
 void UARTTxTest(sciBASE_t * regset){
 
     int i;
@@ -185,11 +205,17 @@ void UARTTxTest(sciBASE_t * regset){
 
 }
 
-void UARTRxTest(sciBASE_t * regset){
+/*  Receives 1000 bytes of pattern 00110101 over UART
+ *  Make sure that this is running before the master sends data.
+ *
+ *  @param[in] regset SCI/UART register to test
+ *  @return number of bytes successfully read to be 00110101
+ */
+uint8_t UARTRxTest(sciBASE_t * regset){
 
     uint8_t data = 0;
     int i = 0;
-    int pings = 0;
+    uint8_t pings = 0;
 
     while(i<1000){
         if(sciIsRxReady(regset) != 0){
@@ -201,7 +227,7 @@ void UARTRxTest(sciBASE_t * regset){
             i++;
         }
     }
-
+    return pings;
 }
 
 void SPIMasterTxTest(spiBASE_t * regset){
@@ -288,6 +314,12 @@ void SPISlaveRxTest(spiBASE_t * regset, uint8 spinumber){
 
 }
 
+/*  Sends 1000 bytes of byte 00110101 as an I2C master.
+ *  Make sure that another board is ready to receive data before running this.
+ *
+ *  @param[in] regset I2C register to test
+ *  @param[in] addr I2C slave address to send data to
+ */
 void I2CMasterTxTest(i2cBASE_t * regset, uint8_t addr){
 
     i2cSetSlaveAdd(regset, addr);
@@ -314,7 +346,14 @@ void I2CMasterTxTest(i2cBASE_t * regset, uint8_t addr){
 
 }
 
-void I2CMasterRxTest(i2cBASE_t * regset, uint8_t addr){
+/*  Receives 1000 bytes of byte 00110101 as an I2C master.
+ *  Make sure that another board is ready to send data before running this.
+ *
+ *  @param[in] regset I2C register to test
+ *  @param[in] addr I2C slave address to receive data from
+ *  @return number of successfully read bytes
+ */
+uint8_t I2CMasterRxTest(i2cBASE_t * regset, uint8_t addr){
 
     uint8_t data = 0;
 
@@ -350,9 +389,18 @@ void I2CMasterRxTest(i2cBASE_t * regset, uint8_t addr){
     /* Clear the Stop condition */
     i2cClearSCD(regset);
 
+    return pings;
+
 }
 
-void I2CSlaveRxTest(i2cBASE_t * regset, uint8_t addr){
+/*  Receives 1000 bytes of byte 00110101 as an I2C slave.
+ *  Make sure that this is running before the master sends data.
+ *
+ *  @param[in] regset I2C register to test
+ *  @param[in] addr sets slave (self) address to this value
+ *  @return number of successfully read bytes
+ */
+uint8_t I2CSlaveRxTest(i2cBASE_t * regset, uint8_t addr){
 
     i2cSetMode(regset, I2C_SLAVE);
     i2cSetOwnAdd(regset, addr);
@@ -361,10 +409,15 @@ void I2CSlaveRxTest(i2cBASE_t * regset, uint8_t addr){
 
     uint8_t data = 0;
     int i = 0;
+    int pings = 0;
 
     while(i<1000){
         if(i2cIsRxReady(regset) != 0){
+            data = 0;
             data = i2cReceiveByte(regset);
+            if(data == 0b00110101){
+                pings++;
+            }
             i++;
         }
     }
@@ -378,8 +431,16 @@ void I2CSlaveRxTest(i2cBASE_t * regset, uint8_t addr){
     /* Clear the Stop condition */
     i2cClearSCD(regset);
 
+    return pings;
+
 }
 
+/*  Transmits 1000 bytes of byte 00110101 as an I2C master.
+ *  Make sure that this is running before the master requests data.
+ *
+ *  @param[in] regset I2C register to test
+ *  @param[in] addr sets slave (self) address to this value
+ */
 void I2CSlaveTxTest(i2cBASE_t * regset, uint8_t addr){
 
     i2cSetMode(regset, I2C_SLAVE);
@@ -403,6 +464,12 @@ void I2CSlaveTxTest(i2cBASE_t * regset, uint8_t addr){
 
 }
 
+/*  Sends 1000 bytes (125 CAN frames) of 00110101.
+ *  Make sure that another board is ready to receive data before running this.
+ *
+ *  @param[in] regset CAN register to test
+ *  @param[in] msgbox Message box to use for Tx. Typically canMESSAGE_BOX1.
+ */
 void CANTxTest(canBASE_t * regset, uint8_t msgbox){
 
     int i;
@@ -413,18 +480,74 @@ void CANTxTest(canBASE_t * regset, uint8_t msgbox){
         while(canIsTxMessagePending(regset, msgbox));
         canTransmit(regset, msgbox, data);
     }
-
 }
 
-void CANRxTest(canBASE_t * regset, uint8_t msgbox){
+/*  Receives 1000 bytes (125 CAN frames) of 00110101.
+ *  Make sure to run this before message is sent from another board.
+ *
+ *  @param[in] regset CAN register to test
+ *  @param[in] msgbox Message box to use for Rx. Typically canMESSAGE_BOX2.
+ *  @return number of successfully received packets (should be 125)
+ */
+uint8_t CANRxTest(canBASE_t * regset, uint8_t msgbox){
 
     uint8_t data[8] = {0};
     int i = 0;
+    int j = 0;
+    int pings = 0;
 
     while(i<125){
         while(!canIsRxMessageArrived(regset, msgbox));
+        for(j=0;j<8;j++){
+            data[j] = 0;
+        }
         canGetData(regset, msgbox, data);
+        for(j=0;j<8;j++){
+            if(data[j] == 53){
+                pings++;
+            }
+        }
         i++;
     }
+    return (pings/8);
+}
+
+/* Used by SDRAM_Test() */
+#pragma SET_CODE_SECTION(".blinky_section")
+void blinky()
+{
+    int i;
+    while(1)
+    {
+        gioSetBit(hetPORT1, 18, 1);
+        for(i=0;i<1000000;i++);
+        gioSetBit(hetPORT1, 18, 0);
+        for(i=0;i<1000000;i++);
+    }
+}
+#pragma SET_CODE_SECTION()
+
+extern uint32 BlinkyLoadStart;
+extern uint32 BlinkyLoadEnd;
+extern uint32 BlinkySize;
+extern uint32 BlinkyStartAddr;
+extern uint32 BlinkyEndAddr;
+
+
+/*  Tests SDRAM by blinking LED using code stored/executed in SDRAM
+ *
+ *  Currently not working
+ */
+void SDRAM_Test(){
+
+    int i;
+    uint32 size=(uint32)&BlinkySize;
+
+    for(i=0;i<size;i++)
+    {
+        ((char *)&BlinkyStartAddr)[i] =((char *)&BlinkyLoadStart)[i];
+    }
+
+    blinky();
 
 }

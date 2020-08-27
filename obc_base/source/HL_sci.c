@@ -1369,6 +1369,81 @@ void sci4HighLevelInterrupt(void)
 /* USER CODE END */
 }
 
+/* SourceId : SCI_SourceId_029 */
+/* DesignId : SCI_DesignId_017 */
+/* Requirements : HL_CONQ_SCI_SR20, HL_CONQ_SCI_SR21 */
+/** @fn void sci4LowLevelInterrupt(void)
+*   @brief Level 1 Interrupt for SCI4
+*/
+#pragma CODE_STATE(sci4LowLevelInterrupt, 32)
+#pragma INTERRUPT(sci4LowLevelInterrupt, IRQ)
+void sci4LowLevelInterrupt(void)
+{
+    uint32 vec = sciREG4->INTVECT1;
+	uint8 byte;
+/* USER CODE BEGIN (43) */
+/* USER CODE END */
+
+    switch (vec)
+    {
+    case 1U:
+        sciNotification(sciREG4, (uint32)SCI_WAKE_INT);
+        break;
+    case 3U:
+        sciNotification(sciREG4, (uint32)SCI_PE_INT);
+        break;
+    case 6U:
+        sciNotification(sciREG4, (uint32)SCI_FE_INT);
+        break;
+    case 7U:
+        sciNotification(sciREG4, (uint32)SCI_BREAK_INT);
+        break;
+    case 9U:
+        sciNotification(sciREG4, (uint32)SCI_OE_INT);
+        break;
+
+    case 11U:
+        /* receive */
+		byte = (uint8)(sciREG4->RD & 0x000000FFU);
+
+            if (g_sciTransfer_t[3U].rx_length > 0U)
+            {
+                *g_sciTransfer_t[3U].rx_data = byte;
+                g_sciTransfer_t[3U].rx_data++;
+                g_sciTransfer_t[3U].rx_length--;
+                if (g_sciTransfer_t[3U].rx_length == 0U)
+                {
+                    sciNotification(sciREG4, (uint32)SCI_RX_INT);
+                }
+            }
+        
+        break;
+
+    case 12U:
+        /* transmit */
+		/*SAFETYMCUSW 30 S MR:12.2,12.3 <APPROVED> "Used for data count in Transmit/Receive polling and Interrupt mode" */
+		--g_sciTransfer_t[3U].tx_length;
+        if (g_sciTransfer_t[3U].tx_length > 0U)
+        {
+			uint8 txdata = *g_sciTransfer_t[3U].tx_data;
+            sciREG4->TD = (uint32)txdata;
+            g_sciTransfer_t[3U].tx_data++;
+        }
+        else
+        {
+            sciREG4->CLEARINT = (uint32)SCI_TX_INT;
+            sciNotification(sciREG4, (uint32)SCI_TX_INT);
+        }
+        break;
+
+    default:
+        /* phantom interrupt, clear flags and return */
+        sciREG4->FLR = sciREG4->SETINTLVL & 0x07000303U;
+         break;
+    }
+/* USER CODE BEGIN (44) */
+/* USER CODE END */
+}
 
 /* USER CODE BEGIN (45) */
 /* USER CODE END */

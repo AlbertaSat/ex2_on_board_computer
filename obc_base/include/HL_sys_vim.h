@@ -101,6 +101,7 @@ extern void mibspi5LowLevelInterrupt(void);
 extern void sci3HighLevelInterrupt(void);
 extern void lin2HighLevelInterrupt(void);
 extern void sci4HighLevelInterrupt(void);
+extern void sci4LowLevelInterrupt(void);
 
 /* USER CODE BEGIN (3) */
 /* USER CODE END */
@@ -388,7 +389,7 @@ typedef struct vim_config_reg
                                     |(uint32)((uint32)1U << 20U)\
                                     |(uint32)((uint32)0U << 21U)\
                                     |(uint32)((uint32)0U << 22U)\
-                                    |(uint32)((uint32)0U << 23U)\
+                                    |(uint32)((uint32)1U << 23U)\
                                     |(uint32)((uint32)0U << 24U)\
                                     |(uint32)((uint32)0U << 25U)\
                                     |(uint32)((uint32)0U << 26U)\
