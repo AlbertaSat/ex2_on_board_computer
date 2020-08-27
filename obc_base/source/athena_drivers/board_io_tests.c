@@ -247,7 +247,7 @@ void SPIMasterTxTest(spiBASE_t * regset){
 
 }
 
-void SPIMasterRxTest(spiBASE_t * regset){
+uint8_t SPIMasterRxTest(spiBASE_t * regset){
 
     spiDAT1_t dataconfig1_t;
 
@@ -267,7 +267,7 @@ void SPIMasterRxTest(spiBASE_t * regset){
             }
         }
     }
-
+    return i;
 }
 
 void SPISlaveTxTest(spiBASE_t * regset){

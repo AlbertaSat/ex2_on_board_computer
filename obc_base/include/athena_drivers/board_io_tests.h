@@ -20,7 +20,7 @@ void GPIOTxTest(void);
 void UARTTxTest(sciBASE_t * regset);
 uint8_t UARTRxTest(sciBASE_t * regset);
 void SPIMasterTxTest(spiBASE_t * regset);
-void SPIMasterRxTest(spiBASE_t * regset);
+uint8_t SPIMasterRxTest(spiBASE_t * regset);
 void I2CMasterTxTest(i2cBASE_t * regset, uint8_t addr);
 uint8_t I2CMasterRxTest(i2cBASE_t * regset, uint8_t addr);
 uint8_t I2CSlaveRxTest(i2cBASE_t * regset, uint8_t addr);
