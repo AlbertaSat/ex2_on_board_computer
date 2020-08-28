@@ -28,6 +28,8 @@ void CLIhandler(void){
     //NOTE: ensure that Athena Rx pin is the one on the stack header. Using the one on the separate 100 mil header will not work due to buffer IC problems
 
     //TODO: Fully test all things. "somewhat tested" = CLI structure and individual rx/tx functions verified, but not tested together
+    //TODO: implement SDRAM test (once it's working)
+    //TODO: implement filesystem calls and more complex tests
 
     while(1){
         sciSend(sciREG4, strlen("\r\n\r\nCurrent command list:\r\n\r\n"), (unsigned char *)"\r\n\r\nCurrent command list:\r\n\r\n");//make sure space and reset interrupts are working

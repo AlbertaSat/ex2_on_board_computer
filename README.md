@@ -1,17 +1,41 @@
-# AlbertaSat - Open CubeSat Platform #
+# AlbertaSat - Open CubeSat Platform - Athena Onboard Computer #
 
-This repository contains (or will contain) source code and relevant content for the Open CubeSat Platform (OCP) - an open source platform for Cube Satellites developed at the University of Alberta
+This repository contains (or will contain) source code and relevant content for the Athena Onboard Computer (OBC). Athena is a Cube Satellite OBC designed in-house by **[AlbertaSat]** at the University of Alberta, that was originally flown on Ex-Alta 1, and is being redesigned to be flown in 2022 on Ex-Alta 2, AuroraSat, and YukonSat in the upcoming Canadian CubeSat Project. Athena (both hardware and software) are part of the Open CubeSat Platform (OCP) - an open source platform for Cube Satellites developed at the University of Alberta. 
 
-## LISCENCE INFORMATION ##
+[AlbertaSat]: = http://albertasat.ca/
 
-Copyright (C) 2015  University of Alberta
+## General Information ##
+
+* Athena uses the TMS570LC4357 microcontroller. This project can be run on any Athena model using an XDS110 JTAG debug probe wired to the board appropriately, or on a development board that uses the same chip (LAUNCHXL2-TMS570LC43 or TMDX570LC43HDK). Note that much of this code requires peripheral hardware available directly on Athena, so you may be limited in what you can do if using a development board.
+* Texas Instruments' Code Composer Studio is the IDE used for debugging software on Athena or development board. HALCoGen is also used for hardware configuration.
+* Athena uses the FreeRTOS as its operating system, along with the Reliance Edge file system.
+
+## Repository Structure ##
+
+* Entry point can be found in obc_base/source/sys_main.c
+* The files in the top-level /include and /source directories are all HALCoGen-generated. Edit them by opening the obc_base.hcg file in HALCoGen. 
+* /athena_drivers contains low-level driver/equipment handler code for the chips on Athena. 
+* testing_CLI.c contains a nifty terminal interface used for testing Athena prototype hardware (and more... in the future) 
+
+## Testing Hardware ##
+
+After assembling a new Athena prototype, it is recommended that all of the functionality in TX2-CD-023 Athena Prototype 1 Firmware Test Plan is verified. testing_CLI.c should help a lot in speeding this process up.
+
+* Athena requires a UART connection between the host PC and UART1 on Athena for proper interaction using a COM terminal for testing_CLI.c. This may be done through the UART pins on the AUX header of an XDS110 debug probe, or using a UART to USB connector.
+* Many tests require wiring up jumpers to/from various headers on Athena to a development board, to resistors, or to one another. A multimeter is required to verify performance for some tests.
+* It is recommended to step through and test all of the various commands in the menu to see the command prompts and get a feel for how it works before actually performing the tests.
+* You may need to dig into the functions in testing_CLI.c during debugging if you require more detail about exactly what is happening during each test.
+
+## License Information ##
+
+Copyright (C) 2020  University of Alberta
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 The full text is available here: [http://www.gnu.org/licenses/gpl-2.0.html]
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-## CONTRIBUTION GUIDLINES ##
+## Contribution Guidelines ##
 
 *** Preamble ***
 
