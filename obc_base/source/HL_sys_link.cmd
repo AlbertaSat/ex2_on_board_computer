@@ -85,7 +85,8 @@ SECTIONS
     .kernelBSS    : {} > KRAM
     .kernelHEAP   : {} > RAM
     .bss          : {} > RAM
-    .data         : {} > RAM    
+    .data         : {} > RAM
+    .sysmem		  : {} > RAM // ADDED March 10, 2021
 
 /* USER CODE BEGIN (4) */
  	.blinky_section :  RUN = SDRAM, LOAD = FLASH0 | FLASH1

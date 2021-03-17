@@ -113,6 +113,8 @@ PDE_DEPS__QUOTED :=
 SUBDIRS := \
 Project/FileTests \
 Project/host \
+ex2_uhf_software/CommsSim/src \
+ex2_uhf_software/CommsSim/test \
 reliance_edge/core/driver \
 reliance_edge/fse \
 reliance_edge/os/freertos/services \

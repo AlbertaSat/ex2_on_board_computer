@@ -1,0 +1,6 @@
+[submodule "ex2_uhf_software"]
+	path = ex2_uhf_software
+	url = https://github.com/AlbertaSat/ex2_uhf_software
+[submodule "obc_base/ex2_uhf_software"]
+	path = obc_base/ex2_uhf_software
+	url = https://github.com/AlbertaSat/ex2_uhf_software
