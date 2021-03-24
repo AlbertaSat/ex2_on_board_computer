@@ -26,7 +26,7 @@
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.C:\Users\joshd\git\ex2_obc_blinky\ex2_on_board_computer\obc_base\targetConfigs\TMS570LC43xx.ccxml.Texas Instruments XDS110 USB Debug Probe/CortexR5" value="C:/Users\joshd\git\ex2_obc_blinky\ex2_on_board_computer\obc_base\Debug\obc_base.out"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.C:\Users\joshd\git\obc_main\targetConfigs\TMS570LC43xx.ccxml.Texas Instruments XDS110 USB Debug Probe/CortexR5" value="C:/Users\joshd\git\obc_main\Debug\obc_base.out"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.C:\Users\joshd\git\r5fblinky\ex2_on_board_computer\obc_base\targetConfigs\TMS570LC43xx.ccxml.Texas Instruments XDS110 USB Debug Probe/CortexR5" value="C:/Users\joshd\git\r5fblinky\ex2_on_board_computer\obc_base\Debug\obc_base.out"/>
-<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.TMS570LC43xx.ccxml.Texas Instruments XDS110 USB Debug Probe/CortexR5" value="C:/Users\thoma\Documents\ex2_on_board_computer\obc_base\Debug\obc_base.out"/>
+<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.TMS570LC43xx.ccxml.Texas Instruments XDS110 USB Debug Probe/CortexR5" value="C:/ex2_software\ex2_on_board_computer\ex2_on_board_computer\obc_base\Debug\obc_base.out"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/obc_base"/>
 </listAttribute>
