@@ -54,6 +54,9 @@
 #include "board_io_tests.h"
 #include "uTransceiver.h"
 
+#include <stdlib.h>
+#include <time.h>
+
 /* USER CODE END */
 
 /** @fn void main(void)
@@ -76,178 +79,144 @@ int main(void){
 /* USER CODE BEGIN (3) */
     _enable_IRQ();
     InitIO();
-    i2cInit();
+
+    gioSetBit(hetPORT2, 22, 1); // Enables the UHF transceiver
 
     int return_value = -2;
     uint8 sample_scw[12] = {0};
     return_value = UHF_genericRead(0, sample_scw);
 
-//      uint32 freq, beacon_t, uptime, transmitted_pckts = 10, received_pckts = 10, received_pckts_crc_err = 10, pipe_t, audio_t;
-//      return_value = UHF_genericRead(1, &freq);
-//    return_value = UHF_genericRead(2, &uptime);
-//    return_value = UHF_genericRead(3, &transmitted_pckts);
-//    return_value = UHF_genericRead(4, &received_pckts);
-//    return_value = UHF_genericRead(5, &received_pckts_crc_err);
-//    return_value = UHF_genericRead(6, &pipe_t);
-//    return_value = UHF_genericRead(7, &beacon_t);
-//    return_value = UHF_genericRead(8, &audio_t);
-//    BROKEN: return_value = UHF_genericRead(10, &temp);
-//    uint8 status;
-//    return_value = UHF_genericRead(244, &status);
-//    uhf_configStruct source_callsign, dest_callsign, morse_callsign, midi_beacon, beacon_msg;
-//    return_value =  UHF_genericRead(245, &dest_callsign);
-//    return_value =  UHF_genericRead(246, &source_callsign);
-//    return_value =  UHF_genericRead(247, &morse_callsign);
-//    return_value =  UHF_genericRead(248, &midi_beacon);
-//    uint8 version[4];
-//    return_value =  UHF_genericRead(249, &version);
-//    uint16 payload_size;
-//    return_value = UHF_genericRead(250, &payload_size);
-//    return_value =  UHF_genericRead(251, &beacon_msg);
-//    uhf_framStruct fram_data;
-//    fram_data.add = 0x24001;
-//    return_value = UHF_genericRead(253, &fram_data);
-
-    /* Test 3*/
-       /* 3a */
-//       uint32 freq = 0;
-//       return_value = UHF_genericRead(1, &freq);
-//    uint8 set_scw[12]= {0,3,0,2,0,0,0,0,0,0,1,1};
-//    uint8 get_scw[12]= {0};
-//    return_value = UHF_genericWrite(0, set_scw);
-//    return_value = UHF_genericRead(0, get_scw);
-//
-//    uint8 reset_scw[12] = {0};
-//    int i =0;
-//    for(i; i<12;i++){
-//        reset_scw[i] = get_scw[i];
+//    // 4a
+//    uint8 rand_scw[12] = {0};
+//    uint16 rand_pipe_t, rand_beacon_t, rand_audio_t;
+//    uint32 rand_freq;
+//    uhf_configStruct *rand_dest_callsign = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
+//    uhf_configStruct *rand_source_callsign = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
+//    uhf_configStruct *rand_beacon_msg = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
+//    srand((unsigned) time(NULL));
+//    int k;
+//    for(k=0;k<12;k++){
+//        rand_scw[k] = sample_scw[k];
 //    }
-//    reset_scw[2] = 1; // Sets reset bit
-//    return_value = UHF_genericWrite(0, reset_scw);
 //
-//    uint8 final_scw[12] = {0};
-//    return_value = UHF_genericRead(0, final_scw);
+//    int i;
+//    for(i=0; i < 10; i++){
+//        int r = rand();
+//        rand_scw[3] = r % 8;
+//        r = rand();
+//        rand_scw[4] = r % 2;
+//        r = rand();
+//        rand_scw[5] = r % 2;
 //
+//        r = rand();
+//        rand_freq = (r % 3000) * 1000 + 435000000;
+//
+//        r = rand();
+//        rand_pipe_t = (r % 255) + 1;
+//        r = rand();
+//        rand_beacon_t = (r % 65535) + 1;
+//        r = rand();
+//        rand_audio_t = r % 65536;
+//
+//        int j;
+//        rand_dest_callsign->len = 6;
+//        rand_source_callsign->len = 6;
+//        for(j=0;j<6;j++){
+//            r = rand();
+//            rand_dest_callsign->message[j] = (r % 95) + 32;
+//            r = rand();
+//            rand_source_callsign->message[j] = (r % 95) + 32;
+//        }
+//
+//        r = rand();
+//        rand_beacon_msg->len = (r % 97) + 1;
+//        for(j=0; j < rand_beacon_msg->len; j++){
+//            r = rand();
+//            rand_beacon_msg->message[j] = (r % 95) + 32;
+//        }
+//
+//        UHF_genericWrite(0, rand_scw);
+//        UHF_genericWrite(1, &rand_freq);
+//        UHF_genericWrite(6, &rand_pipe_t);
+//        UHF_genericWrite(7, &rand_beacon_t);
+//        UHF_genericWrite(8, &rand_audio_t);
+//        UHF_genericWrite(245, rand_dest_callsign);
+//        UHF_genericWrite(246, rand_source_callsign);
+//        UHF_genericWrite(251, rand_beacon_msg);
+//    }
+//
+//    uint8 confirm = 1;
+//    UHF_genericWrite(9, &confirm);
+//
+//    uint32 sample_pipe_t, sample_beacon_t, sample_audio_t;
+//
+//    UHF_genericRead(6, &sample_pipe_t);
+//    UHF_genericRead(7, &sample_beacon_t);
+//    UHF_genericRead(8, &sample_audio_t);
+//    UHF_genericRead(245, rand_dest_callsign);
+//    UHF_genericRead(246, rand_source_callsign);
 
-    /* 3b */
-//       uint8 set_scw[12]= {0,3,0,3,0,0,0,0,0,0,1,1}; // beacon off
-//       uint8 get_scw[12]= {0};
-//       return_value = UHF_genericWrite(0, set_scw);
-//       return_value = UHF_genericRead(0, get_scw);
-       /* 3c */
-//       uint32 set_freq = 435150000; //* Why uint32 in EH code?
-//       uint32 get_freq;
-//       UHF_genericWrite(1, &set_freq);
-//       return_value = UHF_genericRead(1, &get_freq);
-//       /* 3d */
-//       uint16 set_pipe_t = 30; //* Shouldn't be uint8? Read and write are inconsistent.
-//       uint32 get_pipe_t;
-//       return_value = UHF_genericWrite(6, &set_pipe_t);
-//       return_value = UHF_genericRead(6, &get_pipe_t);
-//       /* 3e */
-//       uint16 set_beacon_t = 20;
-//       uint32 get_beacon_t;
-//       return_value = UHF_genericWrite(7, &set_beacon_t);
-//       return_value = UHF_genericRead(7, &get_beacon_t);
-//       set_scw[5]= 1; // beacon on
-//       return_value = UHF_genericWrite(0, set_scw);
-//       return_value = UHF_genericRead(0, get_scw);
-//       /* 3f */
-//       uint16 set_audio_t = 0;
-//       uint32 get_audio_t;
-//       return_value = UHF_genericWrite(8, &set_audio_t);
-//       return_value = UHF_genericRead(8, &get_audio_t);
-       /* 3g & 3i*/
-//       uint8 confirm = 1;
-//       uint8 low_status;
-//       return_value = UHF_genericWrite(244, &confirm);
-//       return_value = UHF_genericRead(244, &low_status);
-//       //* Does it come out of low_power mode or we need a reset?
-       /* 3h */
-//         uhf_configStruct set_dest_callsign, get_dest_callsign;
-//         set_dest_callsign.len = 6;
-//         set_dest_callsign.message[0] = 'V';
-//         set_dest_callsign.message[1] = 'E';
-//         set_dest_callsign.message[2] = '6';
-//         set_dest_callsign.message[3] = 'U';
-//         set_dest_callsign.message[4] = 'A';
-//         set_dest_callsign.message[5] = 'B';
-//         return_value = UHF_genericWrite(245, &set_dest_callsign);
-//         return_value = UHF_genericRead(245, &get_dest_callsign);
-//
-//        int i;
-//
-//         /* 3j */
-//       uhf_configStruct set_src_callsign, get_src_callsign;
-//       set_src_callsign.len = 6;
-//       uint8_t src_callsign[6] = "EX2UAB";
-//       for (i=0;i<set_src_callsign.len; i++){
-//           set_src_callsign.message[i] = src_callsign[i];
-//       }
-//       return_value = UHF_genericWrite(246, &set_src_callsign);
-//       return_value = UHF_genericRead(246, &get_src_callsign);
-       /* 3k */
-//       uhf_configStruct set_morse_callsign, get_morse_callsign;
-//       set_morse_callsign.len = 24;
-//       uint8_t morse_callsign[24] = ". -..- ..--- ..- .- -...";
-//       for (i=0;i<set_morse_callsign.len; i++){
-//           set_morse_callsign.message[i] = morse_callsign[i];
-//       }
-//       return_value = UHF_genericWrite(247, &set_morse_callsign);
-//       return_value = UHF_genericRead(247, &get_morse_callsign);
-//       /* 3l */
-//
-//
-//       uhf_configStruct *set_midi_beacon = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
-//       uhf_configStruct *get_midi_beacon = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
-//
-//       //* Discuss the length in the test plan. The full MIDI crashes.
-//       set_midi_beacon->len = 14;
-//       uint8_t midi_callsign[42] = "67H69H71H67H67H69H71H67H71H72H74W71H72H74W";
-//       for (i=0;i<(3*set_midi_beacon->len); i++){
-//           set_midi_beacon->message[i] = midi_callsign[i];
-//       }
-//       return_value = UHF_genericWrite(248, set_midi_beacon);
-//       return_value = UHF_genericRead(248, get_midi_beacon);
-//       vPortFree(set_midi_beacon);
-//       vPortFree(get_midi_beacon);
-//
-//       /* 3m */
-//         uhf_configStruct *set_beacon_msg = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
-//         uhf_configStruct *get_beacon_msg = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
-//         set_beacon_msg->len = 16;
-//         uint8_t beacon_callsign[16] = "Hello AlbertaSat";
-//         for (i=0;i<set_beacon_msg->len; i++){
-//             set_beacon_msg->message[i] = beacon_callsign[i];
-//         }
-//         return_value = UHF_genericWrite(251, set_beacon_msg);
-//         return_value = UHF_genericRead(251, get_beacon_msg);
-//       /* 3n */
-//       uint8 i2c_addr = 0x22;
-//       return_value = UHF_genericWrite(252, &i2c_addr);
-//       //* Would we need to update our I2C I/O function to send the next command?
-       /* 3o */
-//        uhf_framStruct *set_fram_data = (uhf_framStruct *)pvPortMalloc(sizeof(uhf_framStruct));
-//        uhf_framStruct *get_fram_data = (uhf_framStruct *)pvPortMalloc(sizeof(uhf_framStruct));
-//       set_fram_data->add = 0x24001; //* uint32: 147457
-//       get_fram_data->add = 0x24001;
-//       uint8_t fram_data[16] = "0123456789ABCDEF";
-//       for (i=0;i<16; i++){
-//           set_fram_data->data[i] = fram_data[i];
-//       }
-//       return_value = UHF_genericWrite(253, set_fram_data);
-//       return_value = UHF_genericRead(253, get_fram_data);
+    //4b
+//    uint8 en_uhf_pin = 22; // ICD: H2_7: GPIO6 | Header pin assignment: en_uhf: H2_7 | board_io_test: GPIO6:gioSetBit(hetPORT2, 22, value);
+//    gioInit();
+//    gioSetDirection(hetPORT2, 0xFFFFFFEA);
+//    gioToggleBit(hetPORT2, en_uhf_pin);
+//    gioToggleBit(hetPORT2, en_uhf_pin);
+//    gioToggleBit(hetPORT2, en_uhf_pin);
 
-//       /* Additional tests */
-       /* Read some info */
-//       uint32 secure_key;
-//       return_value = UHF_genericRead(255, &secure_key);
-//       /* Other SCW tests*/
-//       /* Echo */
-//       set_scw[7] = 1; //* or [4]
-//       return_value = UHF_genericWrite(0, &set_scw);
-//       return_value = UHF_genericRead(0, &get_scw);
-//       /* PIPE */
+//    gioSetBit(hetPORT2, en_uhf_pin, 0);
+//    gioSetBit(hetPORT2, en_uhf_pin, 1);
+//    gioSetBit(hetPORT2, en_uhf_pin, 0);
+
+
+//    //4c
+//    // Generating 100 unique random locations in 1000 possible locations
+//    uint32 *address_ls = (uint32 *)pvPortMalloc(100*sizeof(uint32));
+//    uint8 num = 100;
+//    uint32 max_add = 1000;
+//    uint32 i,j=0;
+//    for (i=0; i<max_add && j<num; ++i){
+//        int ri = max_add - i;
+//        int rj = num - j;
+//        if (rand() % ri < rj)
+//            *(address_ls + (j++)) = i;
+//    }
+//
+//    uint32 addrress0 = 0x24001;
+//    uhf_framStruct *set_fram_data = (uhf_framStruct *)pvPortMalloc(sizeof(uhf_framStruct));
+//    uhf_framStruct *get_fram_data = (uhf_framStruct *)pvPortMalloc(sizeof(uhf_framStruct));
+//
+//    uint8 d;
+//    for(d=0; d<num; d++){
+//        set_fram_data->add = addrress0 + 16*address_ls[d];
+//        uint8 square;
+//        for (square=0; square<16; square+=2){
+//            set_fram_data->data[square] = 0xFF;
+//            set_fram_data->data[square+1] = 0x00;
+//        }
+//        return_value = UHF_genericWrite(253, set_fram_data);
+//    }
+//
+//    for(d=0; d<num; d++){
+//        get_fram_data->add = addrress0 + 16*address_ls[d];
+//        return_value = UHF_genericRead(253, get_fram_data);
+//    }
+//    vPortFree(set_fram_data);
+//    vPortFree(get_fram_data);
+//    vPortFree(address_ls);
+
+    //4e
+    /* 3c */
+       uint32 set_freq = 435150000;
+       uint32 get_freq;
+       UHF_genericWrite(1, &set_freq);
+       return_value = UHF_genericRead(1, &get_freq);
+       /* 3d */
+       uint16 set_pipe_t = 30;
+       uint32 get_pipe_t;
+       return_value = UHF_genericWrite(6, &set_pipe_t);
+       return_value = UHF_genericRead(6, &get_pipe_t);
+
 
     CLIhandler();
 
