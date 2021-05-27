@@ -55,7 +55,7 @@
 #include "uTransceiver.h"
 
 #include <stdlib.h>
-#include <time.h>
+
 
 /* USER CODE END */
 
@@ -81,142 +81,42 @@ int main(void){
     InitIO();
 
     gioSetBit(hetPORT2, 22, 1); // Enables the UHF transceiver
+    int i;
+    for (i = 0; i < 0x800000; i++);
 
     int return_value = -2;
     uint8 sample_scw[12] = {0};
     return_value = UHF_genericRead(0, sample_scw);
 
-//    // 4a
-//    uint8 rand_scw[12] = {0};
-//    uint16 rand_pipe_t, rand_beacon_t, rand_audio_t;
-//    uint32 rand_freq;
-//    uhf_configStruct *rand_dest_callsign = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
-//    uhf_configStruct *rand_source_callsign = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
-//    uhf_configStruct *rand_beacon_msg = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
-//    srand((unsigned) time(NULL));
-//    int k;
-//    for(k=0;k<12;k++){
-//        rand_scw[k] = sample_scw[k];
-//    }
-//
-//    int i;
-//    for(i=0; i < 10; i++){
-//        int r = rand();
-//        rand_scw[3] = r % 8;
-//        r = rand();
-//        rand_scw[4] = r % 2;
-//        r = rand();
-//        rand_scw[5] = r % 2;
-//
-//        r = rand();
-//        rand_freq = (r % 3000) * 1000 + 435000000;
-//
-//        r = rand();
-//        rand_pipe_t = (r % 255) + 1;
-//        r = rand();
-//        rand_beacon_t = (r % 65535) + 1;
-//        r = rand();
-//        rand_audio_t = r % 65536;
-//
-//        int j;
-//        rand_dest_callsign->len = 6;
-//        rand_source_callsign->len = 6;
-//        for(j=0;j<6;j++){
-//            r = rand();
-//            rand_dest_callsign->message[j] = (r % 95) + 32;
-//            r = rand();
-//            rand_source_callsign->message[j] = (r % 95) + 32;
-//        }
-//
-//        r = rand();
-//        rand_beacon_msg->len = (r % 97) + 1;
-//        for(j=0; j < rand_beacon_msg->len; j++){
-//            r = rand();
-//            rand_beacon_msg->message[j] = (r % 95) + 32;
-//        }
-//
-//        UHF_genericWrite(0, rand_scw);
-//        UHF_genericWrite(1, &rand_freq);
-//        UHF_genericWrite(6, &rand_pipe_t);
-//        UHF_genericWrite(7, &rand_beacon_t);
-//        UHF_genericWrite(8, &rand_audio_t);
-//        UHF_genericWrite(245, rand_dest_callsign);
-//        UHF_genericWrite(246, rand_source_callsign);
-//        UHF_genericWrite(251, rand_beacon_msg);
-//    }
-//
-//    uint8 confirm = 1;
-//    UHF_genericWrite(9, &confirm);
-//
-//    uint32 sample_pipe_t, sample_beacon_t, sample_audio_t;
-//
-//    UHF_genericRead(6, &sample_pipe_t);
-//    UHF_genericRead(7, &sample_beacon_t);
-//    UHF_genericRead(8, &sample_audio_t);
-//    UHF_genericRead(245, rand_dest_callsign);
-//    UHF_genericRead(246, rand_source_callsign);
+    uint32 pipe_t, sample_freq;
+    return_value = UHF_genericRead(6, &pipe_t);
+    return_value = UHF_genericRead(1, &sample_freq);
 
-    //4b
-//    uint8 en_uhf_pin = 22; // ICD: H2_7: GPIO6 | Header pin assignment: en_uhf: H2_7 | board_io_test: GPIO6:gioSetBit(hetPORT2, 22, value);
-//    gioInit();
-//    gioSetDirection(hetPORT2, 0xFFFFFFEA);
-//    gioToggleBit(hetPORT2, en_uhf_pin);
-//    gioToggleBit(hetPORT2, en_uhf_pin);
-//    gioToggleBit(hetPORT2, en_uhf_pin);
+    uint16 beacon_t = 15;
+    return_value = UHF_genericWrite(7, &beacon_t);
 
-//    gioSetBit(hetPORT2, en_uhf_pin, 0);
-//    gioSetBit(hetPORT2, en_uhf_pin, 1);
-//    gioSetBit(hetPORT2, en_uhf_pin, 0);
+    sample_scw[1] = 0b11; // UART speed: 115200
+    sample_scw[3] = 0b110; // RF Mode 6: 19200 bps, Fdev = 9600 Hz
+    sample_scw[6] = 0b0; //PIPE Mode off
+    sample_scw[5] = 0b0; //Beacon off
+    return_value = UHF_genericWrite(0, sample_scw);
 
+    int j = 0;
+    int m = 0;
+    sciSetBaudrate(sciREG2, 115200);
+    uint8 transmission_message[76] = "Hello Steven how are you? :) This is a sample message within an ESTTC packet";
 
-//    //4c
-//    // Generating 100 unique random locations in 1000 possible locations
-//    uint32 *address_ls = (uint32 *)pvPortMalloc(100*sizeof(uint32));
-//    uint8 num = 100;
-//    uint32 max_add = 1000;
-//    uint32 i,j=0;
-//    for (i=0; i<max_add && j<num; ++i){
-//        int ri = max_add - i;
-//        int rj = num - j;
-//        if (rand() % ri < rj)
-//            *(address_ls + (j++)) = i;
-//    }
-//
-//    uint32 addrress0 = 0x24001;
-//    uhf_framStruct *set_fram_data = (uhf_framStruct *)pvPortMalloc(sizeof(uhf_framStruct));
-//    uhf_framStruct *get_fram_data = (uhf_framStruct *)pvPortMalloc(sizeof(uhf_framStruct));
-//
-//    uint8 d;
-//    for(d=0; d<num; d++){
-//        set_fram_data->add = addrress0 + 16*address_ls[d];
-//        uint8 square;
-//        for (square=0; square<16; square+=2){
-//            set_fram_data->data[square] = 0xFF;
-//            set_fram_data->data[square+1] = 0x00;
-//        }
-//        return_value = UHF_genericWrite(253, set_fram_data);
-//    }
-//
-//    for(d=0; d<num; d++){
-//        get_fram_data->add = addrress0 + 16*address_ls[d];
-//        return_value = UHF_genericRead(253, get_fram_data);
-//    }
-//    vPortFree(set_fram_data);
-//    vPortFree(get_fram_data);
-//    vPortFree(address_ls);
+    while(m<10){
+        while(j<76){
+            sciSendByte(sciREG2, transmission_message[j]);
+            j++;
+        }
+        for (i = 0; i < 30000000; i++); // delay
+        j=0;
+        m++;
+    }
 
-    //4e
-    /* 3c */
-       uint32 set_freq = 435150000;
-       uint32 get_freq;
-       UHF_genericWrite(1, &set_freq);
-       return_value = UHF_genericRead(1, &get_freq);
-       /* 3d */
-       uint16 set_pipe_t = 30;
-       uint32 get_pipe_t;
-       return_value = UHF_genericWrite(6, &set_pipe_t);
-       return_value = UHF_genericRead(6, &get_pipe_t);
-
+    return_value = UHF_genericRead(0, sample_scw);
 
     CLIhandler();
 
