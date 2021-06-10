@@ -74,49 +74,24 @@
 uint8	emacAddress[6U] = 	{0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
 uint32 	emacPhyAddress	=	1U;
 
-int main(void){
+
+ int main(void){
 
 /* USER CODE BEGIN (3) */
     _enable_IRQ();
     InitIO();
 
-    gioSetBit(hetPORT2, 22, 1); // Enables the UHF transceiver
-    int i;
-    for (i = 0; i < 0x800000; i++);
+    gioSetBit(hetPORT2, 22, 1); //Enables UHF transceiver
+    gioSetBit(hetPORT2, 23, 1); //Enables S-band transmitter
 
-    int return_value = -2;
-    uint8 sample_scw[12] = {0};
-    return_value = UHF_genericRead(0, sample_scw);
+    int j_delay;
+    for(j_delay = 0; j_delay < 0x800000; j_delay++);
 
-    uint32 pipe_t, sample_freq;
-    return_value = UHF_genericRead(6, &pipe_t);
-    return_value = UHF_genericRead(1, &sample_freq);
-
-    uint16 beacon_t = 15;
-    return_value = UHF_genericWrite(7, &beacon_t);
-
-    sample_scw[1] = 0b11; // UART speed: 115200
-    sample_scw[3] = 0b110; // RF Mode 6: 19200 bps, Fdev = 9600 Hz
-    sample_scw[6] = 0b0; //PIPE Mode off
-    sample_scw[5] = 0b0; //Beacon off
-    return_value = UHF_genericWrite(0, sample_scw);
-
-    int j = 0;
-    int m = 0;
-    sciSetBaudrate(sciREG2, 115200);
-    uint8 transmission_message[76] = "Hello Steven how are you? :) This is a sample message within an ESTTC packet";
-
-    while(m<10){
-        while(j<76){
-            sciSendByte(sciREG2, transmission_message[j]);
-            j++;
-        }
-        for (i = 0; i < 30000000; i++); // delay
-        j=0;
-        m++;
-    }
-
-    return_value = UHF_genericRead(0, sample_scw);
+    uint8_t pa, mode, power;
+    int stx_return;
+    stx_return = STX_getControl(&pa, &mode);
+    stx_return = STX_setPaPower(28);
+    stx_return = STX_getPaPower(&power);
 
     CLIhandler();
 
