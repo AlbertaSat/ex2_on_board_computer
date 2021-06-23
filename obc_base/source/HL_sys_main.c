@@ -85,99 +85,34 @@ uint32 	emacPhyAddress	=	1U;
     gioSetBit(hetPORT2, 23, 1); //Enables S-band transmitter
     gioSetBit(hetPORT2, 21, 1); //Ensures the transmitter is not being reset
 
-
-
     int j_delay;
     for(j_delay = 0; j_delay < 0x800000; j_delay++);
 
     uint8_t pa, mode;
+    uint8_t scrambler, filter, mod, rate;
+    float frequency;
     int stx_return;
-    // 1a
+
+    stx_return = STX_softResetFPGA();
+
+    stx_return = STX_getControl(&pa, &mode);
+    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
+    stx_return = STX_getFrequency(&frequency);
+
+    pa = 1; // pa on
+    mode = 1; // synchronization mode
+    stx_return = STX_setControl(pa, mode);
+
     stx_return = STX_getControl(&pa, &mode);
 
-        // 1b
-//    uint8_t scrambler, filter, mod, rate;
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    rate = 1;
-//    stx_return = STX_setEncoder(scrambler, filter, mod, rate);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    // 1c
-//    mod = 0;
-//    stx_return = STX_setEncoder(scrambler, filter, mod, rate);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    // 1d
-//    filter = 1;
-//    stx_return = STX_setEncoder(scrambler, filter, mod, rate);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    // 1e
-//    scrambler = 1;
-//    stx_return = STX_setEncoder(scrambler, filter, mod, rate);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    // 1f
-//    uint8_t power = 24;
-//    stx_return = STX_setPaPower(power);
-//    stx_return = STX_getPaPower(&power);
-//    // 1g
-//    float frequency = 2250.5;
-//    stx_return = STX_setFrequency(frequency);
-//    stx_return = STX_getFrequency(&frequency);
-//    // 1h
-//    frequency = 22505.0;
-//    stx_return = STX_setFrequency(frequency);
-//    stx_return = STX_getFrequency(&frequency);
-//    // 1i
-//    // stx_return = STX_softResetFPGA();
-//
-//    stx_return = STX_getControl(&pa, &mode);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    stx_return = STX_getPaPower(&power);
-//    stx_return = STX_getFrequency(&frequency);
-    // 1j
-    // Easiest way is to remove stx_return = STX_softResetFPGA();
-    // reflash the code and put a breakpoint, do 1j
-    // and continue the get functions.
-    // 1k
-    // Reflash the code (1i lines are redundant.)
-//    rate = 0;
-//    stx_return = STX_setEncoder(scrambler, filter, mod, rate);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    // 1l
-//    mod = 1;
-//    stx_return = STX_setEncoder(scrambler, filter, mod, rate);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    // 1m
-//    filter = 0;
-//    stx_return = STX_setEncoder(scrambler, filter, mod, rate);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    // 1n
-//    scrambler = 0;
-//    stx_return = STX_setEncoder(scrambler, filter, mod, rate);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    // 1o
-//    power = 30;
-//    stx_return = STX_setPaPower(power);
-//    stx_return = STX_getPaPower(&power);
-//    // 1p
-//    frequency = 2200;
-//    stx_return = STX_setFrequency(frequency);
-//    stx_return = STX_getFrequency(&frequency);
-//
-//    // 2a
-//    uint8_t pwrgd, txl;
-//    stx_return = STX_getStatus(&pwrgd, &txl);
-//    // 2b
-//    int transmit;
-//    stx_return = STX_getTR(&transmit);
-//    // 2c
-//    uint8_t quantity[3] = {0, 1, 2};
-//    uint16_t ptr[3];
-//    int i;
-//    for (i=0; i<3; i++){
-//        stx_return = STX_getBuffer(quantity[i], &ptr[i]);
-//    }
-//    // 2d - 2o
-//    sBand_housekeeping hk;
-//    stx_return = STX_getHK(&hk);
+    pa = 0;
+    mode = 0;
+    stx_return - STX_setControl(pa, mode);
+
+    uint16_t ptr[3];
+    stx_return = STX_getBuffer(0, &ptr[0]);
+    stx_return = STX_getBuffer(1, &ptr[1]);
+    stx_return = STX_getBuffer(2, &ptr[2]);
 
     CLIhandler();
 
