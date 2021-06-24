@@ -56,6 +56,7 @@
 
 #include <stdlib.h>
 #include "sTransmitter.h"
+#include "HL_spi.h"
 
 /* USER CODE END */
 
@@ -91,7 +92,7 @@ uint32 	emacPhyAddress	=	1U;
     uint8_t pa, mode;
     uint8_t scrambler, filter, mod, rate;
     float frequency;
-    int stx_return;
+    int stx_return, TR;
 
     stx_return = STX_softResetFPGA();
 
@@ -100,19 +101,31 @@ uint32 	emacPhyAddress	=	1U;
     stx_return = STX_getFrequency(&frequency);
 
     pa = 1; // pa on
-    mode = 1; // synchronization mode
+    mode = 1; // synch mode
     stx_return = STX_setControl(pa, mode);
 
     stx_return = STX_getControl(&pa, &mode);
+    stx_return = STX_getTR(&TR);
 
-    pa = 0;
-    mode = 0;
-    stx_return - STX_setControl(pa, mode);
+    // SPI
+    spiBASE_t * spi_reg = spiREG3; // SPI2
+
+    uint16_t data = 0b0011010100110101;
+    int i;
+    for(i = 0; i<1000000; i++){
+        SPIMasterTx(spi_reg, &data);
+    }
+
+    stx_return = STX_getTR(&TR);
 
     uint16_t ptr[3];
     stx_return = STX_getBuffer(0, &ptr[0]);
     stx_return = STX_getBuffer(1, &ptr[1]);
     stx_return = STX_getBuffer(2, &ptr[2]);
+
+    pa = 0;
+    mode = 0;
+    stx_return = STX_setControl(pa, mode);
 
     CLIhandler();
 
