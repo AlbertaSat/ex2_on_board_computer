@@ -229,7 +229,7 @@ uint32 	emacPhyAddress	=	1U;
            j++;
        }
        // 6
-       stx_return = STX_getTR(&tr);
+       stx_return = STX_getTR(&tr); // Would probably be faster to read TR GPIO line
        while (tr == 0){ // not sure if int is long enough
            stx_return = STX_getTR(&tr);
        }
