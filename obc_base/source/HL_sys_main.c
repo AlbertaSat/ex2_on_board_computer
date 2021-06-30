@@ -88,134 +88,239 @@ uint32 	emacPhyAddress	=	1U;
     gioSetBit(hetPORT2, 23, 1); //Enables S-band transmitter
     gioSetBit(hetPORT2, 21, 1); //Ensures the transmitter is not being reset
 
+    // Delay to alow the board after enabling
     int j_delay;
     for(j_delay = 0; j_delay < 0x800000; j_delay++);
 
-    srand(time(0));
     uint8_t stx_return;
-    uint8_t pa, mode;
-    stx_return = STX_setControl(0,0);
-    stx_return = STX_setControl(1,1);
-    stx_return = STX_getControl(&pa, &mode);
+    stx_return = STX_softResetFPGA();
 
-//    //3a
-//    uint16_t rand_byte, count;
-//    int tr = 0;
-//
-//    rand_byte = rand() % 65536; // 16 bit number
-//    SPISbandTx(&rand_byte);
-//    stx_return = STX_getTR(&tr);
-//    stx_return = STX_getBuffer(0, &count);
-//
-//    // 3b
-//    int i = 0;
-//    for(i; i < 1280; i++){
-//        rand_byte = rand() % 65536; // 16 bit number
-//        SPISbandTx(&rand_byte);
+//    //For I2C debugging Purposes
+//    uint8_t test_scw[12] = {0};
+//    while(1){
+//        stx_return = STX_setControl(0,0);
+//        //UHF_genericRead(0, test_scw);
 //    }
-//
-//    stx_return = STX_getTR(&tr);
-//    stx_return = STX_getBuffer(0, &count);
-//
-//    // 3cP1
-//    i = 0;
-//    uint16_t stop_count, current_count;
-//    stop_count = 500 + (rand() % 4500);
-//    for(i; i < 5000; i++){
-//        rand_byte = rand() % 65536;
-//        SPISbandTx(&rand_byte);
-//        if(i == stop_count){
-//            gioSetBit(hetPORT1, 9, 1); // Disable the S-band CS line
-//            break;
-//        }
-//    }
-//    stx_return = STX_getTR(&tr);
-//    stx_return = STX_getBuffer(0, &count);
-//    current_count = count;
-//    gioSetBit(hetPORT1, 9, 0); // Enable the S-band CS line
-//
-//    // 3cP2
-//    i = 0;
-//    uint16_t overrun;
-//    for(i; i < (20480 - current_count); i++){
-//        // Sending 16 bits at a time, so every second byte
-//        if((i % 2) == 0){
-//            rand_byte = rand() % 65536;
-//            SPISbandTx(&rand_byte);
-//        }
-//    }
-//    stx_return = STX_getTR(&tr);
-//    stx_return = STX_getBuffer(0, &count);
-//    stx_return = STX_getBuffer(2, &overrun);
-//
-//    // 3d
-//    i = 0;
-//    for(i; i < 50; i++){
-//        rand_byte = rand() % 65536;
-//        SPISbandTx(&rand_byte);
-//    }
-//    stx_return = STX_getTR(&tr);
-//    stx_return = STX_getBuffer(0, &count);
-//    stx_return = STX_getBuffer(2, &overrun);
-//
-//
-//    // 4a
-//    int j = 0;
-//    int k = 0;
-//    uint8_t command[2];
-//
-//
-    uint8_t scrambler, filter, mod, rate, power;
-    float freq;
-//
-//    while(k<100){
-//        for(j; j<5; j++){
-//            command[0] = j;
-//            command[1] = rand() % 256;
-//            i2c_sendCommand(0x26, command, 2);
-//        }
-//
-//        stx_return = STX_getControl(&pa, &mode);
-//        stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//        stx_return = STX_getPaPower(&power);
-//        stx_return = STX_getFrequency(&freq);
-//
-//        stx_return = STX_softResetFPGA();
-//
-//        stx_return = STX_getControl(&pa, &mode);
-//        stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//        stx_return = STX_getPaPower(&power);
-//        stx_return = STX_getFrequency(&freq);
-//        k++;
-//        j = 0;
-//    }
-//
-//    // 4b
-//    uint8_t control_command[2] = {0, 124};
-//    i2c_sendCommand(0x26, control_command, 2);
-//    stx_return = STX_getControl(&pa, &mode);
-//
-//    // 4c
-//    uint8_t encoder_command[3] = {1, 1, 1}; // Effectively 257
-//    i2c_sendCommand(0x26, encoder_command, 3);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
 
-    // 4d
-    stx_return = STX_getControl(&pa, &mode);
-    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-    stx_return = STX_getPaPower(&power);
-    stx_return = STX_getFrequency(&freq);
+    srand(time(0));
 
-//    // 4e
-//    i2cSetBaudrate(i2cREG1, 500);
-//    stx_return = STX_getControl(&pa, &mode);
-//    stx_return = STX_getEncoder(&scrambler, &filter, &mod, &rate);
-//    stx_return = STX_getPaPower(&power);
-//    stx_return = STX_getFrequency(&freq);
+       // 5a
+//    uint8_t papower;
+//    stx_return = STX_getPaPower(&papower);
+//       stx_return = STX_setControl(1, 1);
+//       stx_return = STX_setControl(0, 1);
+//
+//       stx_return = STX_setControl(0, 0);
+//       stx_return = STX_setPaPower(24);
+//       stx_return = STX_setControl(1, 1);
+//       stx_return = STX_getPaPower(&papower);
+//
+//       stx_return = STX_setControl(0, 0);
+//       stx_return = STX_setPaPower(26);
+//       stx_return = STX_setControl(1, 1);
+//       stx_return = STX_getPaPower(&papower);
+//
+//       stx_return = STX_setControl(0, 0);
+//       stx_return = STX_setPaPower(28);
+//       stx_return = STX_setControl(1, 1);
+//       stx_return = STX_getPaPower(&papower);
+//
+//       stx_return = STX_setControl(0, 0);
+//       stx_return = STX_setPaPower(30);
+//       stx_return = STX_setControl(1, 1);
+//       stx_return = STX_getPaPower(&papower);
+//
+//       stx_return = STX_setControl(0, 0);
+//       write_reg(0x03, 0x04);
+//       stx_return = STX_setControl(1, 1);
 
-    // 4f will have to be done within the i2c code I think
+//       // 5b
+//       // 5c
+//       stx_return = STX_setControl(1, 1);
+//       // 5d
+//       // 5e
+//       // 10240 bytes in the buffer
+       uint16_t count, underrun, overrun;
+       int i = 0;
+       uint16_t rand_byte;
+//       for(i; i < 10240; i++){
+//           rand_byte = rand() % 65536; // 16 bit number
+//           SPISbandTx(&rand_byte);
+//       }
+//       stx_return = STX_getBuffer(0, &count);
+//       // data mode
+//       stx_return = STX_setControl(1, 2);
+//       // delay
+       int delay = 210000; // random. with logic analyzer find the good number.
+//       for(i=0;i<delay;i++);
+//       stx_return = STX_setControl(1, 3);
+       int tr;
+//
+//       stx_return = STX_getTR(&tr);
+//       stx_return = STX_getBuffer(0, &count);
+//       // 5f
+//       stx_return = STX_setControl(1, 2);
+//       while(tr == 0){
+//           STX_getTR(&tr);
+//       }
+//       stx_return = STX_setControl(1, 3);
+//       stx_return = STX_getTR(&tr);
+//       stx_return = STX_getBuffer(0, &count);
+//       // 5g
+//       stx_return = STX_setControl(1, 2);
+//       for(i=0;i<delay;i++);
+//       stx_return = STX_setControl(1, 3);
+//       stx_return = STX_getTR(&tr);
+//       stx_return = STX_getBuffer(0, &count);
+//       stx_return = STX_getBuffer(1, &underrun);
 
-    stx_return = STX_setControl(0,0);
+       // 6a
+       // 1
+       stx_return = STX_setControl(0, 0);
+       stx_return = STX_getBuffer(0, &count);
+       stx_return = STX_setEncoder(0,0,1,1);
+       stx_return = STX_setFrequency(2300.0);
+       // 2
+       stx_return = STX_setControl(1, 1);
+       // 3
+       for(i = 0; i < 10240; i++){
+           rand_byte = rand() % 65536; // 16 bit number
+           SPISbandTx(&rand_byte);
+       }
+       stx_return = STX_getBuffer(0, &count);
+       stx_return = STX_getBuffer(2, &overrun);
+       // probably a breakpoint for 5s
+       // 4
+       stx_return = STX_setControl(1, 2);
+       for(i = 0;i<12*delay;i++);
+       // 5
+       stx_return = STX_setControl(1, 1);
+       // 6
+       stx_return = STX_getBuffer(0, &count);
+       stx_return = STX_getBuffer(1, &underrun);
+       stx_return = STX_setControl(0, 0);
+       // 6b
+       // 1
+       stx_return = STX_setControl(0, 0);
+       stx_return = STX_getBuffer(0, &count);
+       stx_return = STX_setEncoder(0,0,1,1);
+       stx_return = STX_setFrequency(2200.0);
+       // 2
+       stx_return = STX_setControl(1, 1);
+       // 3
+       for(i = 0; i < 10240; i++){
+           rand_byte = rand() % 65536; // 16 bit number
+           SPISbandTx(&rand_byte);
+       }
+       stx_return = STX_getBuffer(0, &count);
+       stx_return = STX_getBuffer(2, &overrun);
+       // 4
+       stx_return = STX_setControl(1, 2);
+       // 5
+       int j = 0;
+       while (j< 1000){ // not sure if int is long enough
+           stx_return = STX_getTR(&tr);
+           if (tr == 1){
+               for(i = 0; i < 10240; i++){
+                   rand_byte = rand() % 65536; // 16 bit number
+                   SPISbandTx(&rand_byte);
+               }
+           }
+           j++;
+       }
+       // 6
+       stx_return = STX_getTR(&tr);
+       while (tr == 0){ // not sure if int is long enough
+           stx_return = STX_getTR(&tr);
+       }
+       stx_return = STX_setControl(1, 1);
+       // 7
+       stx_return = STX_getBuffer(0, &count);
+       stx_return = STX_getBuffer(1, &underrun);
+       stx_return = STX_getBuffer(2, &overrun);
+
+
+       /**/
+       // 7a
+       uint8_t pwrgd, txl;
+       stx_return = STX_getStatus(&pwrgd, &txl);
+       // 7b
+       stx_return = STX_getTR(&tr);
+       // 7c-e
+       stx_return = STX_getBuffer(0, &count);
+       stx_return = STX_getBuffer(1, &underrun);
+       stx_return = STX_getBuffer(2, &overrun);
+       // 7f
+       uint8_t power;
+       stx_return = STX_getPaPower(&power);
+       // rest
+       sBand_housekeeping hk;
+       stx_return = STX_getHK(&hk);
+       /**/
+
+
+       // 6b8
+       stx_return = STX_setControl(0, 0);
+
+//       // 8a-b
+//       // Use HalcoGen
+//       // 8c
+//       uint16_t zero_byte = 0;
+//       uint16_t one_byte = 1;
+//       uint16_t next1 = 500 + rand()%500;;
+//       for(i = 0; i < 10240; i++){
+//           if (i%next1 == 0){
+//               SPISbandTx(&one_byte);// occasionally a 1 bit
+//               next1 = 500 + rand()%500;
+//           } else SPISbandTx(&zero_byte); // send 0 most of the time
+//       }
+//       //
+//       stx_return = STX_setControl(1, 2); //* Would this empty the buffer?
+//       // 8d
+//       stx_return = STX_setControl(1, 1);
+//       uint16_t allone_byte = 0xFFFFFFFF;
+//       uint16_t onezero_byte = 0xFFFFFFFE;
+//       for(i = 0; i < 10240; i++){
+//           if (i%next1 == 0){
+//               SPISbandTx(&onezero_byte);
+//               next1 = 500 + rand()%500;
+//           } else SPISbandTx(&allone_byte);
+//       }
+//       stx_return = STX_setControl(1, 2);
+//       // 8e
+//       stx_return = STX_setControl(1, 1);
+//       uint16_t checkers_byte = 0xAAAAAAAA;
+//       for(i = 0; i < 10240; i++){
+//           SPISbandTx(&checkers_byte);
+//       }
+//       stx_return = STX_setControl(1, 2);
+//       // 8f
+//       stx_return = STX_setControl(1, 1);
+//       uint16_t block_size = rand() % 2560;
+//       uint16_t total_bytes = 0;
+//       while (total_bytes < 10240 - block_size){
+//           for(i = 0; i < block_size; i++){
+//               rand_byte = rand() % 65536;
+//               SPISbandTx(&rand_byte);
+//           }
+//           for(i=0;i<(rand()%10 + 1)*delay;i++);
+//           block_size = rand() % 2560;
+//       }
+//       for(i = 0; i < 10240 - total_bytes; i++){
+//           rand_byte = rand() % 65536;
+//           SPISbandTx(&rand_byte);
+//       }
+//       stx_return = STX_setControl(1, 2);
+//       // 8g
+//       while (j< 60000 * delay){
+//           stx_return = STX_setControl(1, 1);
+//           for(i = 0; i < 10240; i++){
+//               rand_byte = rand() % 65536;
+//               SPISbandTx(&rand_byte);
+//           }
+//           j++;
+//           stx_return = STX_setControl(1, 2);// empty the buffer
+//       }
 
     CLIhandler();
 
