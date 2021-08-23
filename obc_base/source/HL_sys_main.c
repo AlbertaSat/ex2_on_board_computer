@@ -77,6 +77,9 @@
 uint8	emacAddress[6U] = 	{0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
 uint32 	emacPhyAddress	=	1U;
 
+void UHF_testScript(void);
+void T2T_testing(void);
+
 int main(void)
 {
 /* USER CODE BEGIN (3) */
@@ -91,273 +94,9 @@ int main(void)
     int j_delay;
     for(j_delay = 0; j_delay < 0x800000; j_delay++);
 
-    uint8_t stx_return;
-//    stx_return = STX_softResetFPGA();
+    UHF_testScript();
 
-//    //For I2C debugging Purposes
-//    uint8_t test_scw[12] = {0};
-//    while(1){
-//        stx_return = STX_setControl(0,0);
-//        //UHF_genericRead(0, test_scw);
-//    }
-
-    srand(time(0));
-
-       // 5a
-//    uint8_t papower;
-//    stx_return = STX_getPaPower(&papower);
-//       stx_return = STX_setControl(1, 1);
-//       stx_return = STX_setControl(0, 1);
-//
-//       stx_return = STX_setControl(0, 0);
-//       stx_return = STX_setPaPower(24);
-//       stx_return = STX_setControl(1, 1);
-//       stx_return = STX_getPaPower(&papower);
-//
-//       stx_return = STX_setControl(0, 0);
-//       stx_return = STX_setPaPower(26);
-//       stx_return = STX_setControl(1, 1);
-//       stx_return = STX_getPaPower(&papower);
-//
-//       stx_return = STX_setControl(0, 0);
-//       stx_return = STX_setPaPower(28);
-//       stx_return = STX_setControl(1, 1);
-//       stx_return = STX_getPaPower(&papower);
-//
-//       stx_return = STX_setControl(0, 0);
-//       stx_return = STX_setPaPower(30);
-//       stx_return = STX_setControl(1, 1);
-//       stx_return = STX_getPaPower(&papower);
-//
-//       stx_return = STX_setControl(0, 0);
-//       write_reg(0x03, 0x04);
-//       stx_return = STX_setControl(1, 1);
-
-//       // 5b
-//       // 5c
-//       stx_return = STX_setControl(1, 1);
-//       // 5d
-//       // 5e
-//       // 10240 bytes in the buffer
-       uint16_t count, underrun, overrun;
-       int i = 0;
-       uint16_t rand_byte;
-//       for(i; i < 10240; i++){
-//           rand_byte = rand() % 65536; // 16 bit number
-//           SPISbandTx(&rand_byte);
-//       }
-//       stx_return = STX_getBuffer(0, &count);
-//       // data mode
-//       stx_return = STX_setControl(1, 2);
-//       // delay
-       int delay = 210000; // random. with logic analyzer find the good number.
-//       for(i=0;i<delay;i++);
-//       stx_return = STX_setControl(1, 3);
-       int tr;
-//
-//       stx_return = STX_getTR(&tr);
-//       stx_return = STX_getBuffer(0, &count);
-//       // 5f
-//       stx_return = STX_setControl(1, 2);
-//       while(tr == 0){
-//           STX_getTR(&tr);
-//       }
-//       stx_return = STX_setControl(1, 3);
-//       stx_return = STX_getTR(&tr);
-//       stx_return = STX_getBuffer(0, &count);
-//       // 5g
-//       stx_return = STX_setControl(1, 2);
-//       for(i=0;i<delay;i++);
-//       stx_return = STX_setControl(1, 3);
-//       stx_return = STX_getTR(&tr);
-//       stx_return = STX_getBuffer(0, &count);
-//       stx_return = STX_getBuffer(1, &underrun);
-//
-//       // 6a
-//       // 1
-//       stx_return = STX_setControl(0, 0);
-//       stx_return = STX_getBuffer(0, &count);
-//       stx_return = STX_setEncoder(0,0,1,1);
-//       stx_return = STX_setFrequency(2300.0);
-//       // 2
-//       stx_return = STX_setControl(1, 1);
-//       // 3
-//       for(i = 0; i < 10240; i++){
-//           rand_byte = rand() % 65536; // 16 bit number
-//           SPISbandTx(&rand_byte);
-//       }
-//       stx_return = STX_getBuffer(0, &count);
-//       stx_return = STX_getBuffer(2, &overrun);
-//       // probably a breakpoint for 5s
-//       // 4
-//       stx_return = STX_setControl(1, 2);
-//       for(i = 0;i<12*delay;i++);
-//       // 5
-//       stx_return = STX_setControl(1, 1);
-//       // 6
-//       stx_return = STX_getBuffer(0, &count);
-//       stx_return = STX_getBuffer(1, &underrun);
-//       stx_return = STX_setControl(0, 0);
-//       // 6b
-//       // 1
-//       stx_return = STX_setControl(0, 0);
-//       stx_return = STX_getBuffer(0, &count);
-//       stx_return = STX_setEncoder(0,0,1,1);
-//       stx_return = STX_setFrequency(2200.0);
-//       // 2
-//       stx_return = STX_setControl(1, 1);
-//       // 3
-//       for(i = 0; i < 10240; i++){
-//           rand_byte = rand() % 65536; // 16 bit number
-//           SPISbandTx(&rand_byte);
-//       }
-//       stx_return = STX_getBuffer(0, &count);
-//       stx_return = STX_getBuffer(2, &overrun);
-//       // 4
-//       stx_return = STX_setControl(1, 2);
-//       // 5
-//       int j = 0;
-//       while (j< 1000){ // not sure if int is long enough
-//           stx_return = STX_getTR(&tr);
-//           if (tr == 1){
-//               for(i = 0; i < 10240; i++){
-//                   rand_byte = rand() % 65536; // 16 bit number
-//                   SPISbandTx(&rand_byte);
-//               }
-//           }
-//           j++;
-//       }
-//       // 6
-//       stx_return = STX_getTR(&tr); // Would probably be faster to read TR GPIO line
-//       while (tr == 0){ // not sure if int is long enough
-//           stx_return = STX_getTR(&tr);
-//       }
-//       stx_return = STX_setControl(1, 1);
-//       // 7
-//       stx_return = STX_getBuffer(0, &count);
-//       stx_return = STX_getBuffer(1, &underrun);
-//       stx_return = STX_getBuffer(2, &overrun);
-//
-//
-//       /**/
-//       // 7a
-//       uint8_t pwrgd, txl;
-//       stx_return = STX_getStatus(&pwrgd, &txl);
-//       // 7b
-//       stx_return = STX_getTR(&tr);
-//       // 7c-e
-//       stx_return = STX_getBuffer(0, &count);
-//       stx_return = STX_getBuffer(1, &underrun);
-//       stx_return = STX_getBuffer(2, &overrun);
-//       // 7f
-//       uint8_t power;
-//       stx_return = STX_getPaPower(&power);
-//       // rest
-//       sBand_housekeeping hk;
-//       stx_return = STX_getHK(&hk);
-//       /**/
-//
-//
-//       // 6b8
-//       stx_return = STX_setControl(0, 0);
-
-//       // 8a-b
-//       // Use HalcoGen
-//         stx_return = STX_setControl(1, 1);
-//              for(i = 0; i < 10240; i++){
-//                  rand_byte = rand() % 65536; // 16 bit number
-//                  SPISbandTx(&rand_byte);
-//              }
-//              stx_return = STX_getBuffer(0, &count);
-//              stx_return = STX_setControl(1, 2);
-//              stx_return = STX_setControl(0, 0);
-//       // 8c
-//       uint16_t zero_byte = 0;
-//       uint16_t one_byte = 1;
-//       uint16_t next1 = 500 + rand()%500;
-//       stx_return = STX_setControl(1, 1);
-//
-//       for(i = 0; i < 10240; i++){
-//           if (i == next1){
-//               SPISbandTx(&one_byte);// occasionally a 1 bit
-//               next1 = 500 + rand()%500 + i;
-//           } else SPISbandTx(&zero_byte); // send 0 most of the time
-//       }
-//       stx_return = STX_getBuffer(0, &count);
-//
-//       stx_return = STX_setControl(1, 2); //* Would this empty the buffer?
-//
-//       // 8d
-//       stx_return = STX_setControl(1, 1);
-//       uint16_t allone_byte = 0xFFFF;
-//       uint16_t onezero_byte = 0xFFFE;
-//       next1 = 500 + rand()%500;
-//       for(i = 0; i < 10240; i++){
-//           if (i == next1){
-//               SPISbandTx(&onezero_byte);
-//               next1 = 500 + rand()%500 + i;
-//           } else SPISbandTx(&allone_byte);
-//       }
-//       stx_return = STX_getBuffer(0, &count);
-//
-//       stx_return = STX_setControl(1, 2);
-//       // 8e
-//       stx_return = STX_setControl(1, 1);
-//       uint16_t checkers_byte = 0xAAAA;
-//       for(i = 0; i < 10240; i++){
-//           SPISbandTx(&checkers_byte);
-//       }
-//       stx_return = STX_getBuffer(0, &count);
-//
-//       stx_return = STX_setControl(1, 2);
-
-//       // 8f
-//       stx_return = STX_setControl(1, 1);
-//       uint16_t block_size = rand() % 2560;
-//       uint16_t total_bytes = 0;
-//       while (total_bytes < (10240 - block_size)){
-//           for(i = 0; i < block_size; i++){
-//               rand_byte = rand() % 65536;
-//               SPISbandTx(&rand_byte);
-//           }
-//           total_bytes += block_size;
-//           for(i=0;i<(rand()%10 + 1)*delay;i++);
-//           block_size = rand() % 2560;
-//       }
-//       for(i = 0; i < 10240 - total_bytes; i++){
-//           rand_byte = rand() % 65536;
-//           SPISbandTx(&rand_byte);
-//       }
-//       stx_return = STX_setControl(1, 2);
-//       stx_return = STX_setControl(0, 0);
-       // 8g
-       int k = 0;
-       int j = 0;
-       int total_bytes = 0;
-       stx_return = STX_setControl(1, 1);
-       for(i = 0; i < 10240; i++){
-           rand_byte = rand() % 65536;
-           SPISbandTx(&rand_byte);
-       }
-       stx_return = STX_setControl(1, 2);// set data mode
-
-       while (j < 600000){
-           stx_return = STX_getBuffer(0, &count);
-
-           for(i = 0; i < (20480 - count); i+=2){
-                rand_byte = rand() % 65536;
-                SPISbandTx(&rand_byte);
-           }
-           total_bytes += i;
-           j++;
-       }
-       stx_return = STX_setControl(1, 1);
-
-       stx_return = STX_getBuffer(0, &count);
-       stx_return = STX_getBuffer(1, &underrun);
-       stx_return = STX_getBuffer(2, &overrun);
-
-       stx_return = STX_setControl(0, 0);
+    T2T_testing();
 
     CLIhandler();
 
@@ -374,6 +113,172 @@ int main(void)
     return 0;
 }
 
+void T2T_testing(void){
+    /* Transceiver to Transceiver (T2T) comms testing */
+    //    // Enter PIPE mode (I2C command)
+    //    uint8_t T2T_test_scw[12] = {0, UHF_UARTBAUD_115200, 0, UHF_RFMODE5, 0, 0, UHF_PIPE_ON, 0, 0, 0, 1, 1};
+    //    uint8_t uhf_return;
+    //    uhf_return = UHF_genericWrite(0, );
+    //    // Wait to receive 1 byte over UART
+    //    uint8_t received_message = 0;
+    //    received_message = sciReceiveByte(sciREG2);
+    //    UHF_genericRead(0, initial_scw);
+}
+
+void UHF_testScript(void){
+
+    uint8_t return_value;
+
+    /* Test Section 2 - Read Commands*/
+    uint32 freq, uptime, transmitted_pckts, received_pckts, received_pckts_crc_err, pipe_t, beacon_t, audio_t;
+    UHF_genericRead(1, &freq);
+    UHF_genericRead(2, &uptime);
+    UHF_genericRead(3, &transmitted_pckts);
+    UHF_genericRead(4, &received_pckts);
+    UHF_genericRead(5, &received_pckts_crc_err);
+    UHF_genericRead(6, &pipe_t);
+    UHF_genericRead(7, &beacon_t);
+    UHF_genericRead(8, &audio_t);
+    float temp;
+    UHF_genericRead(10, &temp);
+    uint8 status;
+    UHF_genericRead(244, &status);
+
+
+    uhf_configStruct source_callsign, dest_callsign, morse_callsign, midi_beacon, beacon_msg;
+    return_value =  UHF_genericRead(245, &dest_callsign);
+    return_value =  UHF_genericRead(246, &source_callsign);
+    return_value =  UHF_genericRead(247, &morse_callsign);
+    return_value =  UHF_genericRead(248, &midi_beacon);
+    uint8 version[4];
+    return_value =  UHF_genericRead(249, &version);
+    uint16 payload_size;
+    return_value = UHF_genericRead(250, &payload_size);
+    return_value =  UHF_genericRead(251, &beacon_msg);
+
+    uhf_framStruct fram_data;
+    fram_data.add = 0x24001;
+    return_value = UHF_genericRead(253, &fram_data);
+
+    /* Test Section 3 - Write Commands - modified */
+           /* 3a - modified */
+        return_value = UHF_genericRead(1, &freq);
+        uint8 set_scw[12]= {0,3,0,5,0,0,0,0,0,0,1,1};
+        uint8 get_scw[12]= {0};
+        return_value = UHF_genericWrite(0, set_scw);
+        return_value = UHF_genericRead(0, get_scw);
+
+           /* 3c */
+           uint32 set_freq = 437875000; //* Why uint32 in EH code?
+           uint32 get_freq;
+           UHF_genericWrite(1, &set_freq);
+           return_value = UHF_genericRead(1, &get_freq);
+           /* 3d */
+           uint16 set_pipe_t = 35; //* Shouldn't be uint8? Read and write are inconsistent.
+           uint32 get_pipe_t;
+           return_value = UHF_genericWrite(6, &set_pipe_t);
+           return_value = UHF_genericRead(6, &get_pipe_t);
+           /* 3e */
+           uint16 set_beacon_t = 65;
+           uint32 get_beacon_t;
+           return_value = UHF_genericWrite(7, &set_beacon_t);
+           return_value = UHF_genericRead(7, &get_beacon_t);
+           set_scw[5]= 1; // beacon on
+           return_value = UHF_genericWrite(0, set_scw);
+           return_value = UHF_genericRead(0, get_scw);
+           set_scw[5]= 0; // beacon off
+           return_value = UHF_genericWrite(0, set_scw);
+           return_value = UHF_genericRead(0, get_scw);
+           /* 3f */
+           uint16 set_audio_t = 0;
+           uint32 get_audio_t;
+           return_value = UHF_genericWrite(8, &set_audio_t);
+           return_value = UHF_genericRead(8, &get_audio_t);
+           /* 3g & 3i*/
+           uint8 confirm = 1;
+           uint8 low_status;
+           return_value = UHF_genericWrite(244, &confirm);
+           return_value = UHF_genericRead(244, &low_status);
+           //* Does it come out of low_power mode or we need a reset?
+           /* 3h */
+             uhf_configStruct set_dest_callsign, get_dest_callsign;
+             set_dest_callsign.len = 6;
+             set_dest_callsign.message[0] = 'V';
+             set_dest_callsign.message[1] = 'E';
+             set_dest_callsign.message[2] = '6';
+             set_dest_callsign.message[3] = 'U';
+             set_dest_callsign.message[4] = 'A';
+             set_dest_callsign.message[5] = 'B';
+             return_value = UHF_genericWrite(245, &set_dest_callsign);
+             return_value = UHF_genericRead(245, &get_dest_callsign);
+
+             /* 3j */
+             int i;
+           uhf_configStruct set_src_callsign, get_src_callsign;
+           set_src_callsign.len = 6;
+           uint8_t src_callsign[6] = "EX2UAB";
+           for (i=0;i<set_src_callsign.len; i++){
+               set_src_callsign.message[i] = src_callsign[i];
+           }
+           return_value = UHF_genericWrite(246, &set_src_callsign);
+           return_value = UHF_genericRead(246, &get_src_callsign);
+           /* 3k - modified */
+           uhf_configStruct set_morse_callsign, get_morse_callsign;
+           set_morse_callsign.len = 24;
+           uint8_t test_morse_callsign[24] = ". -..- ..--- ..- .- -...";
+           for (i=0;i<set_morse_callsign.len; i++){
+               set_morse_callsign.message[i] = test_morse_callsign[i];
+           }
+           return_value = UHF_genericWrite(247, &set_morse_callsign);
+           return_value = UHF_genericRead(247, &get_morse_callsign);
+           /* 3l */
+
+
+           uhf_configStruct *set_midi_beacon = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
+           uhf_configStruct *get_midi_beacon = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
+
+           //* Discuss the length in the test plan. The full MIDI crashes.
+           set_midi_beacon->len = 14;
+           uint8_t midi_callsign[42] = "67H69H71H67H67H69H71H67H71H72H74W71H72H74W";
+           for (i=0;i<(3*set_midi_beacon->len); i++){
+               set_midi_beacon->message[i] = midi_callsign[i];
+           }
+           return_value = UHF_genericWrite(248, set_midi_beacon);
+           return_value = UHF_genericRead(248, get_midi_beacon);
+           vPortFree(set_midi_beacon);
+           vPortFree(get_midi_beacon);
+
+           /* 3m */
+             uhf_configStruct *set_beacon_msg = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
+             uhf_configStruct *get_beacon_msg = (uhf_configStruct *)pvPortMalloc(sizeof(uhf_configStruct));
+             set_beacon_msg->len = 16;
+             uint8_t beacon_callsign[16] = "Hello AlbertaSat";
+             for (i=0;i<set_beacon_msg->len; i++){
+                 set_beacon_msg->message[i] = beacon_callsign[i];
+             }
+             return_value = UHF_genericWrite(251, set_beacon_msg);
+             return_value = UHF_genericRead(251, get_beacon_msg);
+           /* 3n */
+//           uint8 i2c_addr = 0x22;
+//           return_value = UHF_genericWrite(252, &i2c_addr);
+           //* Would we need to update our I2C I/O function to send the next command?
+           /* 3o */
+            uhf_framStruct *set_fram_data = (uhf_framStruct *)pvPortMalloc(sizeof(uhf_framStruct));
+            uhf_framStruct *get_fram_data = (uhf_framStruct *)pvPortMalloc(sizeof(uhf_framStruct));
+           set_fram_data->add = 0x24001; //* uint32: 147457
+           get_fram_data->add = 0x24001;
+           uint8_t test_fram_data[16] = "0123456789ABCDEF";
+           for (i=0;i<16; i++){
+               set_fram_data->data[i] = test_fram_data[i];
+           }
+           return_value = UHF_genericWrite(253, set_fram_data);
+           return_value = UHF_genericRead(253, get_fram_data);
+
+           /* Additional tests */
+           /* Read some info */
+           uint32 secure_key;
+           return_value = UHF_genericRead(255, &secure_key);
+}
 
 /* USER CODE BEGIN (4) */
 

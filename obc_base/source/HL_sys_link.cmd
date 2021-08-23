@@ -56,9 +56,9 @@ MEMORY
     KERNEL  (RX) : origin=0x00000020 length=0x00008000 
     FLASH0  (RX) : origin=0x00008020 length=0x001F7FE0
     FLASH1  (RX) : origin=0x00200000 length=0x00200000
-    STACKS  (RW) : origin=0x08000000 length=0x00000800
-    KRAM    (RW) : origin=0x08000800 length=0x00000800
-    RAM     (RW) : origin=(0x08000800+0x00000800) length=(0x0007f800 - 0x00000800)
+    STACKS  (RW) : origin=0x08000000 length=0x00000e00
+    KRAM    (RW) : origin=0x08000e00 length=0x00000800
+    RAM     (RW) : origin=(0x08000e00+0x00000800) length=(0x0007f200 - 0x00000800)
     
 /* USER CODE BEGIN (2) */
 	SDRAM  (RWX) : origin=0x80000000 length=0x07FFFFFF//experimental
@@ -85,13 +85,12 @@ SECTIONS
     .kernelBSS    : {} > KRAM
     .kernelHEAP   : {} > RAM
     .bss          : {} > RAM
-    .data         : {} > RAM
-    .sysmem		  : {} > RAM // ADDED March 10, 2021
+    .data         : {} > RAM    
 
 /* USER CODE BEGIN (4) */
- 	.blinky_section :  RUN = SDRAM, LOAD = FLASH0 | FLASH1
+ 	/*.blinky_section :  RUN = SDRAM, LOAD = FLASH0 | FLASH1
 		   LOAD_START(BlinkyLoadStart), LOAD_END(BlinkyLoadEnd),  LOAD_SIZE(BlinkySize),
-		   RUN_START(BlinkyStartAddr ), RUN_END(BlinkyEndAddr )
+		   RUN_START(BlinkyStartAddr ), RUN_END(BlinkyEndAddr )*/
 /* USER CODE END */
 }
 

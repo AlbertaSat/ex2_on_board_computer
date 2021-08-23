@@ -99,6 +99,7 @@ void _c_int00(void)
 {
 	register resetSource_t rstSrc;
 /* USER CODE BEGIN (5) */
+	//emif_SDRAM_StartupInit();
 /* USER CODE END */
 
     /* Initialize Core Registers to avoid CCM Error */

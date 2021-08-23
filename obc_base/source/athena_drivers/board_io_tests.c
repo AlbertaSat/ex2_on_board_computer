@@ -525,6 +525,7 @@ void blinky()
         for(i=0;i<1000000;i++);
     }
 }
+/*
 #pragma SET_CODE_SECTION()
 
 extern uint32 BlinkyLoadStart;
@@ -538,6 +539,7 @@ extern uint32 BlinkyEndAddr;
  *
  *  Currently not working
  */
+/*
 void SDRAM_Test(){
 
     int i;
@@ -551,3 +553,4 @@ void SDRAM_Test(){
     blinky();
 
 }
+*/
